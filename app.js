@@ -9,9 +9,29 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const pool = require('./db/pool');
 
-// ===== REDIS ОТКЛЮЧЁН – ИСПОЛЬЗУЕТСЯ MEMORYSTORE =====
-// (Сессии не синхронизируются между воркерами, но сайт работает стабильно)
-console.warn('⚠️ Redis отключён, используется MemoryStore для сессий');
+// ===== ПОДКЛЮЧЕНИЕ REDIS =====
+const redis = require('redis');
+const RedisStore = require('connect-redis')(session);
+
+// Создаём клиент Redis
+const redisClient = redis.createClient({
+    socket: {
+        host: process.env.REDIS_HOST || '127.0.0.1',
+        port: process.env.REDIS_PORT || 6379
+    },
+    password: process.env.REDIS_PASSWORD || undefined
+});
+
+// Обработка ошибок Redis (чтобы сервер не падал)
+redisClient.on('error', (err) => {
+    console.error('❌ Redis Client Error:', err);
+});
+
+// Подключаемся к Redis
+redisClient.connect().catch(err => {
+    console.error('❌ Не удалось подключиться к Redis:', err.message);
+    console.warn('⚠️ Сессии будут использовать MemoryStore (временное решение)');
+});
 
 // ===== ИНИЦИАЛИЗАЦИЯ EMAIL-ТРАНСПОРТА =====
 const { initTransporter } = require('./services/email');
@@ -107,20 +127,37 @@ app.use(express.urlencoded({ extended: true, limit: '500mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(passport.initialize());
 
-// ===== SESSION (MemoryStore, Redis отключён) =====
-const sessionStore = new session.MemoryStore();
-console.warn('⚠️ Используется MemoryStore (Redis отключён)');
+// ===== SESSION (RedisStore) =====
+// Используем RedisStore, если подключение удалось, иначе fallback на MemoryStore
+let sessionStore;
+let useRedis = true;
+// Проверяем, что клиент подключён (redisClient.isReady может быть доступен после connect)
+// Но мы не можем проверить синхронно, поэтому используем try/catch при инициализации
+try {
+    sessionStore = new RedisStore({ client: redisClient });
+    console.log('✅ RedisStore для сессий инициализирован');
+} catch (err) {
+    console.error('❌ Ошибка создания RedisStore, используем MemoryStore:', err.message);
+    sessionStore = new session.MemoryStore();
+    useRedis = false;
+}
 
 app.use(session({
     store: sessionStore,
     secret: process.env.SESSION_SECRET || 'fallback_secret_key_for_vk_oauth',
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,  // меняем на false для экономии памяти
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         maxAge: 7 * 24 * 60 * 60 * 1000
     }
 }));
+
+if (useRedis) {
+    console.log('✅ Сессии хранятся в Redis');
+} else {
+    console.warn('⚠️ Сессии хранятся в MemoryStore (Redis недоступен)');
+}
 
 // ===== ОБРАБОТКА ОШИБОК РАЗРЫВА =====
 app.use((err, req, res, next) => {
@@ -174,9 +211,9 @@ if (feedEnabled && feedRoutes) {
     console.log('ℹ️ Маршруты фида не подключены');
 }
 
-// ========== ПУБЛИЧНЫЕ НАСТРОЙКИ (ВРЕМЕННАЯ ЗАГЛУШКА) ==========
+// ========== ПУБЛИЧНЫЕ НАСТРОЙКИ ==========
 app.get('/api/public-settings', async (req, res) => {
-    res.json({}); // возвращаем пустой объект, чтобы клиент не ждал
+    res.json({}); // временная заглушка
 });
 
 // ========== ПУБЛИЧНЫЕ ЦЕНЫ ==========

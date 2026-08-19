@@ -2,13 +2,19 @@ const express = require('express');
 const router = express.Router();
 const { Pool } = require('pg');
 
+// ===== ПОДКЛЮЧЕНИЕ К БД (БЕЗ ХАРДКОДА) =====
 const pool = new Pool({
     user: process.env.DB_USER || 'postgres',
     host: process.env.DB_HOST || 'localhost',
-    database: process.env.DB_NAME || 'ironads',
-    password: process.env.DB_PASSWORD || 'Sautievshau22$',
+    database: process.env.DB_NAME || 'ironmarket_db',
+    password: process.env.DB_PASSWORD,
     port: 5432,
 });
+
+if (!process.env.DB_PASSWORD) {
+    console.error('❌ DB_PASSWORD не задан в .env');
+    process.exit(1);
+}
 
 // Маршрут для sitemap.xml
 router.get('/sitemap.xml', async (req, res) => {

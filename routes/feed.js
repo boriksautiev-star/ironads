@@ -4,13 +4,19 @@ const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 
+// ===== ПОДКЛЮЧЕНИЕ К БД (БЕЗ ХАРДКОДА) =====
 const pool = new Pool({
     user: process.env.DB_USER || 'postgres',
     host: process.env.DB_HOST || 'localhost',
-    database: process.env.DB_NAME || 'ironads',
-    password: process.env.DB_PASSWORD || 'Sautievshau22$',
+    database: process.env.DB_NAME || 'ironmarket_db',
+    password: process.env.DB_PASSWORD,
     port: 5432,
 });
+
+if (!process.env.DB_PASSWORD) {
+    console.error('❌ DB_PASSWORD не задан в .env');
+    process.exit(1);
+}
 
 // Список email агентства "Семья"
 const AGENCY_EMAILS = [

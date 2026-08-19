@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const axios = require('axios');
 const fs = require('fs');
 const fsPromises = fs.promises;
@@ -5,15 +7,21 @@ const path = require('path');
 const { XMLParser } = require('fast-xml-parser');
 const { Pool } = require('pg');
 
+// ===== ПОДКЛЮЧЕНИЕ К БД (БЕЗ ХАРДКОДА) =====
 const pool = new Pool({
     user: process.env.DB_USER || 'postgres',
     host: process.env.DB_HOST || 'localhost',
     database: process.env.DB_NAME || 'ironmarket_db',
-    password: process.env.DB_PASSWORD || 'Sautievshau22$',
+    password: process.env.DB_PASSWORD,
     port: 5432,
     max: 20,
     idleTimeoutMillis: 30000,
 });
+
+if (!process.env.DB_PASSWORD) {
+    console.error('❌ ОШИБКА: переменная окружения DB_PASSWORD не задана!');
+    process.exit(1);
+}
 
 const PARTNER_USER_ID = 56;
 const FEED_URL = 'https://feed-p.topnlab.ru/export/superxata/bFZxQUY3ckxtYXFiaWIvSw,,/feed.xml';
@@ -51,7 +59,7 @@ async function releaseLock() {
     }
 }
 
-// ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
+// ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (без изменений) =====
 function safeString(value) {
     return value && typeof value === 'string' ? value.trim() : null;
 }
@@ -133,7 +141,6 @@ function buildTitle(offer, location) {
     return title;
 }
 
-// ===== ОПРЕДЕЛЕНИЕ ТИПА (приоритет описанию) =====
 function determineType(offer) {
     const offerType = safeString(offer.type) || '';
     const dealStatus = safeString(offer['deal-status']) || '';
@@ -160,7 +167,7 @@ function determineType(offer) {
         return 'sell';
     }
     if (offerLower.includes('обмен') || dealLower.includes('exchange')) {
-        return 'sell'; // маппим обмен в продажу
+        return 'sell';
     }
 
     const rentWeak = ['аренд', 'сдач', 'наём', 'наем', 'rent', 'lease'];
@@ -175,7 +182,6 @@ function determineType(offer) {
     return 'sell';
 }
 
-// ===== ОПРЕДЕЛЕНИЕ КАТЕГОРИИ =====
 function getCategoryId(offer) {
     const propertyType = safeString(offer['property-type']) || '';
     const category = safeString(offer.category) || '';
@@ -216,7 +222,6 @@ function getCategoryId(offer) {
     return 5;
 }
 
-// ===== НОРМАЛИЗАЦИЯ НАЗВАНИЯ ГОРОДА =====
 function normalizeCityName(name) {
     if (!name) return '';
     let normalized = name
@@ -233,105 +238,124 @@ function normalizeCityName(name) {
     return normalized;
 }
 
-// ===== ПОИСК ИЛИ СОЗДАНИЕ ГОРОДА =====
+const cityCache = new Map();
+
 async function findOrCreateCity(cityName, regionName) {
     if (!cityName) return null;
-
     const normalizedCity = normalizeCityName(cityName);
     if (!normalizedCity) return null;
 
+    const regionKey = regionName ? regionName.trim() : '';
+    const cacheKey = `${normalizedCity}|${regionKey}`;
+    if (cityCache.has(cacheKey)) {
+        return cityCache.get(cacheKey);
+    }
+
     let result = await pool.query(
-        `SELECT id, region_id FROM cities WHERE LOWER(name) = LOWER($1)`,
+        `SELECT id FROM cities WHERE LOWER(name) = LOWER($1)`,
         [normalizedCity]
     );
     if (result.rows.length > 0) {
-        return result.rows[0].id;
+        const id = result.rows[0].id;
+        cityCache.set(cacheKey, id);
+        return id;
     }
 
-    if (regionName) {
-        const normalizedRegion = regionName.trim();
-        let regionResult = await pool.query(
+    let regionId = null;
+    if (regionKey) {
+        const regionResult = await pool.query(
             `SELECT id FROM regions WHERE LOWER(name) = LOWER($1)`,
-            [normalizedRegion]
+            [regionKey]
         );
-        let regionId = null;
         if (regionResult.rows.length === 0) {
             const newRegion = await pool.query(
                 `INSERT INTO regions (name, sort_order) VALUES ($1, 0) RETURNING id`,
-                [normalizedRegion]
+                [regionKey]
             );
             regionId = newRegion.rows[0].id;
-            console.log(`➕ Создан новый регион: "${normalizedRegion}" (ID ${regionId})`);
+            console.log(`➕ Создан новый регион: "${regionKey}" (ID ${regionId})`);
         } else {
             regionId = regionResult.rows[0].id;
         }
-
-        result = await pool.query(
-            `SELECT id FROM cities WHERE LOWER(name) = LOWER($1) AND region_id = $2`,
-            [normalizedCity, regionId]
-        );
-        if (result.rows.length > 0) {
-            return result.rows[0].id;
-        }
-
-        const newCity = await pool.query(
-            `INSERT INTO cities (name, region_id, is_popular, sort_order)
-             VALUES ($1, $2, false, 0)
-             RETURNING id`,
-            [normalizedCity, regionId]
-        );
-        console.log(`➕ Создан новый город: "${normalizedCity}" (регион: ${normalizedRegion}, ID ${newCity.rows[0].id})`);
-        return newCity.rows[0].id;
-    } else {
-        const newCity = await pool.query(
-            `INSERT INTO cities (name, region_id, is_popular, sort_order)
-             VALUES ($1, NULL, false, 0)
-             RETURNING id`,
-            [normalizedCity]
-        );
-        console.log(`➕ Создан новый город без региона: "${normalizedCity}" (ID ${newCity.rows[0].id})`);
-        return newCity.rows[0].id;
     }
+
+    const newCity = await pool.query(
+        `INSERT INTO cities (name, region_id, is_popular, sort_order)
+         VALUES ($1, $2, false, 0)
+         RETURNING id`,
+        [normalizedCity, regionId]
+    );
+    const id = newCity.rows[0].id;
+    cityCache.set(cacheKey, id);
+    console.log(`➕ Создан новый город: "${normalizedCity}" (регион: ${regionKey || 'без региона'}, ID ${id})`);
+    return id;
 }
 
-// ===== ЗАГРУЗКА И СОХРАНЕНИЕ ФОТО =====
-const TEMP_DIR = path.join(__dirname, '../public/uploads/topnlab/temp');
 const FINAL_DIR = path.join(__dirname, '../public/uploads/topnlab');
+const TEMP_DIR = path.join(FINAL_DIR, 'temp');
 
 async function ensureDirs() {
-    await fsPromises.mkdir(TEMP_DIR, { recursive: true });
     await fsPromises.mkdir(FINAL_DIR, { recursive: true });
+    await fsPromises.mkdir(TEMP_DIR, { recursive: true });
 }
 
-// Скачивание одного изображения
-async function downloadImage(url, filename) {
-    const response = await axios({
-        url,
-        method: 'GET',
-        responseType: 'stream',
-        timeout: 30000,
-    });
-    const tempPath = path.join(TEMP_DIR, filename);
-    const writer = fs.createWriteStream(tempPath);
-    response.data.pipe(writer);
-    return new Promise((resolve, reject) => {
-        writer.on('finish', resolve);
-        writer.on('error', reject);
-    });
-}
-
-async function cleanTempDir() {
-    try {
-        const files = await fsPromises.readdir(TEMP_DIR);
-        for (const file of files) {
-            await fsPromises.unlink(path.join(TEMP_DIR, file));
+async function downloadImageWithRetry(url, filename, retries = 2) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const response = await axios({
+                url,
+                method: 'GET',
+                responseType: 'stream',
+                timeout: 30000,
+            });
+            const filePath = path.join(FINAL_DIR, filename);
+            const writer = fs.createWriteStream(filePath);
+            response.data.pipe(writer);
+            await new Promise((resolve, reject) => {
+                writer.on('finish', resolve);
+                writer.on('error', reject);
+            });
+            return true;
+        } catch (err) {
+            if (attempt === retries) {
+                console.warn(`⚠️ Не удалось загрузить ${url} после ${retries} попыток:`, err.message);
+                return false;
+            }
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
         }
-    } catch (err) {
-        if (err.code !== 'ENOENT') console.warn('⚠️ Не удалось очистить temp:', err.message);
+    }
+    return false;
+}
+
+async function downloadPhotosInParallel(items, concurrency = 5) {
+    const tasks = [];
+    for (const item of items) {
+        const { externalId, images, listingId } = item;
+        const imageUrls = Array.isArray(images) ? images : (images ? [images] : []);
+        const limited = imageUrls.slice(0, 10);
+        const downloaded = [];
+        for (let i = 0; i < limited.length; i++) {
+            const url = limited[i];
+            const filename = `${externalId}_${i}.jpg`;
+            const success = await downloadImageWithRetry(url, filename);
+            if (success) {
+                downloaded.push({ filename, url });
+            }
+        }
+        if (downloaded.length > 0) {
+            await pool.query('DELETE FROM listing_media WHERE listing_id = $1', [listingId]);
+            for (let i = 0; i < downloaded.length; i++) {
+                const filePath = `/uploads/topnlab/${downloaded[i].filename}`;
+                await pool.query(
+                    `INSERT INTO listing_media (listing_id, file_path, file_order, media_type, file_type, created_at)
+                     VALUES ($1, $2, $3, $4, $5, NOW())`,
+                    [listingId, filePath, i, 'image', 'image']
+                );
+            }
+        }
     }
 }
 
-// ===== ОСНОВНАЯ ФУНКЦИЯ ИМПОРТА (С ИСПРАВЛЕННОЙ ЛОГИКОЙ ОБНОВЛЕНИЯ) =====
 async function importTopnlab() {
     if (!await acquireLock()) {
         console.log('⏳ Импорт уже выполняется другим процессом, пропускаем');
@@ -347,7 +371,6 @@ async function importTopnlab() {
 
     try {
         await ensureDirs();
-        await cleanTempDir();
 
         console.log(`[${new Date().toISOString()}] 📥 Начинаем импорт фида TopNLab...`);
 
@@ -381,13 +404,14 @@ async function importTopnlab() {
 
         console.log(`📦 Найдено ${offers.length} объявлений`);
 
-        const externalIds = [];
-
         const userProfile = await pool.query(
             'SELECT phone, whatsapp, telegram FROM users WHERE id = $1',
             [PARTNER_USER_ID]
         );
         const userContacts = userProfile.rows[0] || {};
+
+        const externalIds = [];
+        const processedOffers = [];
 
         for (const offer of offers) {
             const internalId = offer['_internal-id'];
@@ -418,7 +442,7 @@ async function importTopnlab() {
             }
 
             const type = determineType(offer);
-            console.log(`🔍 Объявление ${internalId}: тип = ${type} (offerType=${safeString(offer.type) || '?'}, dealStatus=${safeString(offer['deal-status']) || '?'})`);
+            const categoryId = getCategoryId(offer);
 
             const phoneFromFeed = safeString(agent.phone) || null;
             const finalPhone = phoneFromFeed || userContacts.phone || null;
@@ -455,181 +479,231 @@ async function importTopnlab() {
                 sauna: safeString(offer.sauna) === '1',
             };
 
-            const categoryId = getCategoryId(offer);
+            processedOffers.push({
+                externalId: internalId,
+                title,
+                description,
+                price: priceValue,
+                currency,
+                region: regionName,
+                city: cityName,
+                address,
+                lat,
+                lng,
+                type,
+                categoryId,
+                cityId,
+                phone: finalPhone,
+                whatsapp: finalWhatsapp,
+                telegram: finalTelegram,
+                showPhone,
+                showWhatsapp,
+                showTelegram,
+                extraFields: JSON.stringify(extraFields),
+                images,
+            });
+        }
 
-            const existing = await pool.query(
-                'SELECT id FROM listings WHERE external_id = $1 AND source = $2',
-                [internalId, 'topnlab']
-            );
+        if (externalIds.length === 0) {
+            console.warn('⚠️ Нет объявлений с internal-id, пропускаем');
+            return;
+        }
 
-            let listingId;
+        const existingResult = await pool.query(
+            `SELECT external_id, id FROM listings WHERE source = 'topnlab' AND external_id = ANY($1)`,
+            [externalIds]
+        );
+        const existingMap = new Map();
+        existingResult.rows.forEach(row => {
+            existingMap.set(row.external_id, row.id);
+        });
 
-            // ===== ОБРАБОТКА СУЩЕСТВУЮЩЕГО ОБЪЯВЛЕНИЯ =====
-            if (existing.rows.length > 0) {
-                listingId = existing.rows[0].id;
-                console.log(`🔄 Обновление объявления ID ${listingId} (${internalId})`);
-
-                // 1. Обновляем текстовые данные (в транзакции)
-                const client = await pool.connect();
-                try {
-                    await client.query('BEGIN');
-                    await client.query(
-                        `UPDATE listings SET
-                            title = $1,
-                            description = $2,
-                            price = $3,
-                            currency = $4,
-                            region = $5,
-                            city = $6,
-                            address = $7,
-                            latitude = $8,
-                            longitude = $9,
-                            type = $10,
-                            extra_data = $11,
-                            category_id = $12,
-                            city_id = $13,
-                            status = 'active',
-                            archived_at = NULL
-                        WHERE id = $14`,
-                        [title, description, priceValue, currency, regionName, cityName, address, lat, lng, type, JSON.stringify(extraFields), categoryId, cityId, listingId]
-                    );
-                    await client.query('COMMIT');
-                    stats.updated++;
-                } catch (err) {
-                    await client.query('ROLLBACK');
-                    console.error(`❌ Ошибка обновления текстовых данных для ${internalId}:`, err.message);
-                    stats.errors++;
-                    continue; // пропускаем обновление фото, если данные не обновились
-                } finally {
-                    client.release();
-                }
-
-                // 2. Обновляем фото (вне транзакции, чтобы ошибки фото не мешали)
-                const imageCount = Math.min(images.length, 10);
-                const downloadedPaths = [];
-                for (let i = 0; i < imageCount; i++) {
-                    const imgUrl = images[i];
-                    const filename = `${internalId}_${i}.jpg`;
-                    try {
-                        await downloadImage(imgUrl, filename);
-                        downloadedPaths.push(filename);
-                    } catch (err) {
-                        console.warn(`⚠️ Не удалось загрузить фото ${i+1} для ${internalId}:`, err.message);
-                    }
-                }
-
-                if (downloadedPaths.length > 0) {
-                    // Удаляем старые файлы и записи
-                    const oldMedia = await pool.query(
-                        'SELECT file_path FROM listing_media WHERE listing_id = $1',
-                        [listingId]
-                    );
-                    for (const row of oldMedia.rows) {
-                        const filePath = path.join(FINAL_DIR, path.basename(row.file_path));
-                        try {
-                            await fsPromises.unlink(filePath);
-                        } catch (err) {
-                            if (err.code !== 'ENOENT') {
-                                console.warn(`⚠️ Не удалось удалить файл ${filePath}:`, err.message);
-                            }
-                        }
-                    }
-                    await pool.query('DELETE FROM listing_media WHERE listing_id = $1', [listingId]);
-
-                    // Перемещаем новые файлы и вставляем записи
-                    for (let i = 0; i < downloadedPaths.length; i++) {
-                        const tempFile = path.join(TEMP_DIR, downloadedPaths[i]);
-                        const finalFile = path.join(FINAL_DIR, downloadedPaths[i]);
-                        await fsPromises.rename(tempFile, finalFile);
-                        const filePath = `/uploads/topnlab/${downloadedPaths[i]}`;
-                        await pool.query(
-                            `INSERT INTO listing_media (listing_id, file_path, file_order, media_type, file_type, created_at)
-                             VALUES ($1, $2, $3, $4, $5, NOW())`,
-                            [listingId, filePath, i, 'image', 'image']
-                        );
-                    }
-                    console.log(`✅ Фото обновлены для ${listingId} (${downloadedPaths.length} шт.)`);
-                } else {
-                    console.warn(`⚠️ Фото не загружены для ${listingId}, оставлены старые`);
-                }
-
-            // ===== СОЗДАНИЕ НОВОГО ОБЪЯВЛЕНИЯ =====
+        const newOffers = [];
+        const updateOffers = [];
+        for (const offer of processedOffers) {
+            if (existingMap.has(offer.externalId)) {
+                offer.listingId = existingMap.get(offer.externalId);
+                updateOffers.push(offer);
             } else {
-                // Сначала загружаем фото (для нового объявления фото обязательны)
-                const imageCount = Math.min(images.length, 10);
-                const downloadedPaths = [];
-                for (let i = 0; i < imageCount; i++) {
-                    const imgUrl = images[i];
-                    const filename = `${internalId}_${i}.jpg`;
-                    try {
-                        await downloadImage(imgUrl, filename);
-                        downloadedPaths.push(filename);
-                    } catch (err) {
-                        console.warn(`⚠️ Не удалось загрузить фото ${i+1} для ${internalId}:`, err.message);
-                    }
-                }
-
-                if (downloadedPaths.length === 0 && images.length > 0) {
-                    console.warn(`⚠️ Не удалось загрузить ни одного фото для ${internalId}, пропускаем`);
-                    continue;
-                }
-
-                // Вставляем запись в БД
-                const client = await pool.connect();
-                try {
-                    await client.query('BEGIN');
-                    const result = await client.query(
-                        `INSERT INTO listings (
-                            title, description, price, currency, region, city, address,
-                            latitude, longitude, type, user_id, external_id, source,
-                            extra_data, category_id, city_id,
-                            phone, whatsapp, telegram,
-                            show_phone, show_whatsapp, show_telegram,
-                            status, created_at, updated_at
-                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, 'active', NOW(), NOW())
-                        RETURNING id`,
-                        [
-                            title, description, priceValue, currency, regionName, cityName, address,
-                            lat, lng, type, PARTNER_USER_ID, internalId, 'topnlab',
-                            JSON.stringify(extraFields), categoryId, cityId,
-                            finalPhone, finalWhatsapp, finalTelegram,
-                            showPhone, showWhatsapp, showTelegram
-                        ]
-                    );
-                    listingId = result.rows[0].id;
-                    stats.added++;
-
-                    // Сохраняем фото
-                    for (let i = 0; i < downloadedPaths.length; i++) {
-                        const tempFile = path.join(TEMP_DIR, downloadedPaths[i]);
-                        const finalFile = path.join(FINAL_DIR, downloadedPaths[i]);
-                        await fsPromises.rename(tempFile, finalFile);
-                        const filePath = `/uploads/topnlab/${downloadedPaths[i]}`;
-                        await client.query(
-                            `INSERT INTO listing_media (listing_id, file_path, file_order, media_type, file_type, created_at)
-                             VALUES ($1, $2, $3, $4, $5, NOW())`,
-                            [listingId, filePath, i, 'image', 'image']
-                        );
-                    }
-                    await client.query('COMMIT');
-                    console.log(`✅ Добавлено новое объявление ID ${listingId} (${internalId}) (${downloadedPaths.length} фото)`);
-                } catch (err) {
-                    await client.query('ROLLBACK');
-                    console.error(`❌ Ошибка создания объявления ${internalId}:`, err.message);
-                    stats.errors++;
-                    // Удаляем уже загруженные временные файлы
-                    for (const f of downloadedPaths) {
-                        try {
-                            await fsPromises.unlink(path.join(TEMP_DIR, f));
-                        } catch (_) {}
-                    }
-                } finally {
-                    client.release();
-                }
+                newOffers.push(offer);
             }
         }
 
-        // ---- Архивация отсутствующих ----
+        console.log(`🆕 Новых: ${newOffers.length}, 🔄 Обновляемых: ${updateOffers.length}`);
+
+        // ---- Массовое обновление (без изменения updated_at) ----
+        if (updateOffers.length > 0) {
+            const client = await pool.connect();
+            try {
+                await client.query('BEGIN');
+
+                await client.query(`
+                    CREATE TEMP TABLE tmp_listings_update (
+                        external_id VARCHAR(255) PRIMARY KEY,
+                        title TEXT,
+                        description TEXT,
+                        price NUMERIC,
+                        currency VARCHAR(10),
+                        region VARCHAR(255),
+                        city VARCHAR(255),
+                        address TEXT,
+                        latitude NUMERIC,
+                        longitude NUMERIC,
+                        type VARCHAR(20),
+                        category_id INTEGER,
+                        city_id INTEGER,
+                        phone VARCHAR(20),
+                        whatsapp VARCHAR(20),
+                        telegram VARCHAR(20),
+                        show_phone BOOLEAN,
+                        show_whatsapp BOOLEAN,
+                        show_telegram BOOLEAN,
+                        extra_data JSONB
+                    )
+                `);
+
+                const values = updateOffers.map(o => [
+                    o.externalId,
+                    o.title,
+                    o.description,
+                    o.price,
+                    o.currency,
+                    o.region,
+                    o.city,
+                    o.address,
+                    o.lat,
+                    o.lng,
+                    o.type,
+                    o.categoryId,
+                    o.cityId,
+                    o.phone,
+                    o.whatsapp,
+                    o.telegram,
+                    o.showPhone,
+                    o.showWhatsapp,
+                    o.showTelegram,
+                    o.extraFields,
+                ]);
+
+                const placeholders = values.map((_, i) => 
+                    `($${i * 20 + 1}, $${i * 20 + 2}, $${i * 20 + 3}, $${i * 20 + 4}, $${i * 20 + 5}, $${i * 20 + 6}, $${i * 20 + 7}, $${i * 20 + 8}, $${i * 20 + 9}, $${i * 20 + 10}, $${i * 20 + 11}, $${i * 20 + 12}, $${i * 20 + 13}, $${i * 20 + 14}, $${i * 20 + 15}, $${i * 20 + 16}, $${i * 20 + 17}, $${i * 20 + 18}, $${i * 20 + 19}, $${i * 20 + 20})`
+                ).join(',');
+
+                const flatValues = values.flat();
+                await client.query(`
+                    INSERT INTO tmp_listings_update (
+                        external_id, title, description, price, currency, region, city, address,
+                        latitude, longitude, type, category_id, city_id, phone, whatsapp, telegram,
+                        show_phone, show_whatsapp, show_telegram, extra_data
+                    ) VALUES ${placeholders}
+                `, flatValues);
+
+                await client.query(`
+                    UPDATE listings AS l
+                    SET
+                        title = tmp.title,
+                        description = tmp.description,
+                        price = tmp.price,
+                        currency = tmp.currency,
+                        region = tmp.region,
+                        city = tmp.city,
+                        address = tmp.address,
+                        latitude = tmp.latitude,
+                        longitude = tmp.longitude,
+                        type = tmp.type,
+                        category_id = tmp.category_id,
+                        city_id = tmp.city_id,
+                        phone = tmp.phone,
+                        whatsapp = tmp.whatsapp,
+                        telegram = tmp.telegram,
+                        show_phone = tmp.show_phone,
+                        show_whatsapp = tmp.show_whatsapp,
+                        show_telegram = tmp.show_telegram,
+                        extra_data = tmp.extra_data,
+                        status = 'active',
+                        archived_at = NULL
+                    FROM tmp_listings_update AS tmp
+                    WHERE l.external_id = tmp.external_id AND l.source = 'topnlab'
+                `);
+
+                await client.query('COMMIT');
+                stats.updated = updateOffers.length;
+                console.log(`✅ Обновлено ${stats.updated} объявлений (массово, без изменения updated_at)`);
+            } catch (err) {
+                await client.query('ROLLBACK');
+                console.error('❌ Ошибка массового обновления:', err.message);
+                stats.errors += updateOffers.length;
+            } finally {
+                client.release();
+            }
+        }
+
+        // ---- Массовая вставка новых ----
+        if (newOffers.length > 0) {
+            const client = await pool.connect();
+            try {
+                await client.query('BEGIN');
+
+                const values = newOffers.map(o => [
+                    o.externalId,
+                    o.title,
+                    o.description,
+                    o.price,
+                    o.currency,
+                    o.region,
+                    o.city,
+                    o.address,
+                    o.lat,
+                    o.lng,
+                    o.type,
+                    PARTNER_USER_ID,
+                    'topnlab',
+                    o.categoryId,
+                    o.cityId,
+                    o.phone,
+                    o.whatsapp,
+                    o.telegram,
+                    o.showPhone,
+                    o.showWhatsapp,
+                    o.showTelegram,
+                    o.extraFields,
+                ]);
+
+                const placeholders = values.map((_, i) => 
+                    `($${i * 23 + 1}, $${i * 23 + 2}, $${i * 23 + 3}, $${i * 23 + 4}, $${i * 23 + 5}, $${i * 23 + 6}, $${i * 23 + 7}, $${i * 23 + 8}, $${i * 23 + 9}, $${i * 23 + 10}, $${i * 23 + 11}, $${i * 23 + 12}, $${i * 23 + 13}, $${i * 23 + 14}, $${i * 23 + 15}, $${i * 23 + 16}, $${i * 23 + 17}, $${i * 23 + 18}, $${i * 23 + 19}, $${i * 23 + 20}, $${i * 23 + 21}, $${i * 23 + 22}, $${i * 23 + 23})`
+                ).join(',');
+
+                const flatValues = values.flat();
+                const insertResult = await client.query(`
+                    INSERT INTO listings (
+                        external_id, title, description, price, currency, region, city, address,
+                        latitude, longitude, type, user_id, source,
+                        category_id, city_id,
+                        phone, whatsapp, telegram,
+                        show_phone, show_whatsapp, show_telegram,
+                        extra_data, status, created_at, updated_at
+                    ) VALUES ${placeholders}
+                    RETURNING id, external_id
+                `, flatValues);
+
+                for (const row of insertResult.rows) {
+                    const offer = newOffers.find(o => o.externalId === row.external_id);
+                    if (offer) offer.listingId = row.id;
+                }
+
+                await client.query('COMMIT');
+                stats.added = newOffers.length;
+                console.log(`✅ Добавлено ${stats.added} новых объявлений (массово)`);
+            } catch (err) {
+                await client.query('ROLLBACK');
+                console.error('❌ Ошибка массовой вставки:', err.message);
+                stats.errors += newOffers.length;
+            } finally {
+                client.release();
+            }
+        }
+
+        // ---- Архивация ----
         if (externalIds.length > 0) {
             const placeholders = externalIds.map((_, i) => `$${i+1}`).join(',');
             const result = await pool.query(
@@ -655,14 +729,32 @@ async function importTopnlab() {
             }
         }
 
-        console.log(`[${new Date().toISOString()}] ✅ Импорт TopNLab завершён`);
+        // ---- Фоновая загрузка фото ----
+        const photoTasks = [];
+        for (const offer of [...newOffers, ...updateOffers]) {
+            if (offer.listingId && offer.images && offer.images.length > 0) {
+                photoTasks.push({
+                    externalId: offer.externalId,
+                    listingId: offer.listingId,
+                    images: offer.images,
+                });
+            }
+        }
+
+        if (photoTasks.length > 0) {
+            console.log(`📷 Начинаем фоновую загрузку фото для ${photoTasks.length} объявлений...`);
+            downloadPhotosInParallel(photoTasks, 5)
+                .then(() => console.log('✅ Фото загружены успешно'))
+                .catch(err => console.error('❌ Ошибка при загрузке фото:', err.message));
+        }
+
+        console.log(`[${new Date().toISOString()}] ✅ Импорт TopNLab завершён (текстовые данные)`);
         console.log(`📊 Статистика: добавлено ${stats.added}, обновлено ${stats.updated}, заархивировано ${stats.archived}, ошибок ${stats.errors}`);
 
     } catch (error) {
         console.error(`[${new Date().toISOString()}] ❌ Ошибка импорта TopNLab:`, error.message);
         console.error(error.stack);
     } finally {
-        await cleanTempDir();
         await releaseLock();
         console.log('🔓 Блокировка импорта снята');
     }
