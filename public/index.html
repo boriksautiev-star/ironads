@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>IronAds - Доска объявлений по всей России</title>
+    <meta name="description" content="IronAds — доска объявлений по всей России. Размещайте объявления о продаже, покупке, услугах. Просто и удобно.">
+    <meta name="keywords" content="доска объявлений, бесплатные объявления, продажа, покупка, услуги, Россия">
+    <meta property="og:title" content="IronAds - доска объявлений по всей России">
+    <meta property="og:description" content="Размещайте и находите объявления в любом городе России. Бесплатно и без регистрации.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ironads.ru/">
+    <meta property="og:image" content="https://ironads.ru/og-image.png">
+    <meta property="og:site_name" content="IronAds">
+
+    <!-- ===== МЕТА-ТЕГИ ДЛЯ IOS (УЛУЧШЕННЫЙ PWA) ===== -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="IronAds">
+
+    <!-- Иконки для iOS -->
+    <link rel="apple-touch-icon" href="/icons/icon-152.png" sizes="152x152">
+    <link rel="apple-touch-icon" href="/icons/icon-167.png" sizes="167x167">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" sizes="192x192">
+    <link rel="apple-touch-icon" href="/icons/icon-512.png" sizes="512x512">
+
+    <!-- Splash screen (загрузочный экран) для разных iPhone -->
+    <!-- iPhone SE (640x1136) -->
+    <link rel="apple-touch-startup-image" href="/splash/launch-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
+    <!-- iPhone 8/7/6s (750x1334) -->
+    <link rel="apple-touch-startup-image" href="/splash/launch-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
+    <!-- iPhone 8/7/6s Plus (1242x2208) -->
+    <link rel="apple-touch-startup-image" href="/splash/launch-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)">
+    <!-- iPhone X/XS/11 Pro (1125x2436) -->
+    <link rel="apple-touch-startup-image" href="/splash/launch-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+    <!-- iPhone XR/11 (828x1792) -->
+    <link rel="apple-touch-startup-image" href="/splash/launch-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)">
+    <!-- iPhone XS Max/11 Pro Max (1242x2688) -->
+    <link rel="apple-touch-startup-image" href="/splash/launch-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)">
+    <!-- iPhone 12/13/14 (1170x2532) -->
+    <link rel="apple-touch-startup-image" href="/splash/launch-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
+    <!-- iPhone 12/13/14 Pro Max (1284x2778) -->
+    <link rel="apple-touch-startup-image" href="/splash/launch-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)">
+    <!-- iPhone 14 Plus (1290x2796) -->
+    <link rel="apple-touch-startup-image" href="/splash/launch-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)">
+    <!-- iPad Pro 12.9" (2048x2732) -->
+    <link rel="apple-touch-startup-image" href="/splash/launch-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)">
+    <!-- iPad Pro 11" (1668x2388) -->
+    <link rel="apple-touch-startup-image" href="/splash/launch-1668x2388.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* ===== ОТСТУП ПОД ШАПКУ (ФИКСИРОВАННЫЙ) ===== */
+        body {
+            padding-top: 150px !important;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding-top: 100px !important;
+            }
+        }
+        h1 {
+            margin-top: 0;
+        }
+
+        /* ===== ОСТАЛЬНЫЕ СТИЛИ (БЕЗ ИЗМЕНЕНИЙ) ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding-top: 0; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+        .filter-card { background: white; border-radius: 1.25rem; padding: 1rem 1rem; margin-bottom: 1.5rem; }
+        .filter-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
+        .filter-group { flex: 1; min-width: 140px; }
+        .filter-group label { display: block; margin-bottom: 0.25rem; font-weight: 500; font-size: 0.7rem; color: #6b7280; }
+        .filter-group input, .filter-group select { width: 100%; padding: 0.5rem 0.7rem; border: 1px solid #e5e7eb; border-radius: 0.75rem; font-size: 0.85rem; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.6rem 1.2rem; border: none; border-radius: 0.75rem; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-secondary { background: #f3f4f6; color: #374151; padding: 0.5rem 1rem; border: none; border-radius: 0.625rem; cursor: pointer; font-size: 0.8125rem; transition: all 0.2s; }
+        .btn-secondary:hover { background: #e5e7eb; }
+        .view-toggle-group { display: flex; gap: 0.5rem; margin-left: 0.5rem; align-items: center; flex-wrap: wrap; }
+        .view-toggle { background: #f1f5f9; border: none; padding: 0.3rem 0.6rem; border-radius: 1.5rem; cursor: pointer; font-size: 0.75rem; font-weight: 500; transition: 0.2s; }
+        .view-toggle.active { background: #667eea; color: white; }
+        .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+        .listings-list { display: flex; flex-direction: column; gap: 1rem; }
+        .listing-card { background: white; border-radius: 1.25rem; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); transition: all 0.3s; cursor: pointer; position: relative; min-height: 350px; }
+        .listing-card:hover { transform: translateY(-8px); box-shadow: 0 12px 30px rgba(0,0,0,0.15); }
+        .favorite-btn { position: absolute; top: 0.75rem; right: 0.75rem; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 2.25rem; height: 2.25rem; font-size: 1.25rem; cursor: pointer; z-index: 2; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .favorite-btn:hover { transform: scale(1.1); }
+        .favorite-btn.active { color: #ef4444; }
+        .remove-fav-btn { background: #fee2e2; color: #dc2626; border: none; padding: 0.25rem 0.75rem; border-radius: 1.5rem; cursor: pointer; font-size: 0.75rem; margin-top: 0.5rem; transition: all 0.2s; }
+        .remove-fav-btn:hover { background: #fecaca; }
+        body.dark-theme .remove-fav-btn { background: #7f1d1d; color: #fca5a5; }
+        body.dark-theme .remove-fav-btn:hover { background: #991b1b; }
+        .listing-image { width: 100%; height: 200px; background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .listing-image img { width: 100%; height: 100%; object-fit: cover; }
+        .listing-info { padding: 1rem; }
+        .listing-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; color: #1f2937; }
+        .listing-price { font-size: 1.2rem; font-weight: 800; color: #667eea; margin-bottom: 0.6rem; }
+        .listing-meta { font-size: 0.7rem; color: #9ca3af; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+        .listing-meta a { color: #667eea; text-decoration: none; }
+        .rating-stars { display: inline-flex; align-items: center; gap: 0.125rem; background: #fbbf24; padding: 0.125rem 0.375rem; border-radius: 1.25rem; font-size: 0.6875rem; font-weight: bold; color: #333; }
+        .listing-description { font-size: 0.8rem; color: #6b7280; line-height: 1.4; max-height: 4.2em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+        .listing-row-description { font-size: 0.7rem; color: #6b7280; line-height: 1.3; max-height: 3.9em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+        .listing-type-badge { font-size: 0.65rem; background: #e5e7eb; padding: 0.1rem 0.6rem; border-radius: 1rem; display: inline-block; font-weight: 600; }
+        .listing-type-badge.sell { background: #dbeafe; color: #1e40af; }
+        .listing-type-badge.buy { background: #fef3c7; color: #92400e; }
+        .listing-row { background: white; border-radius: 1rem; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s; cursor: pointer; display: flex; gap: 1rem; padding: 0.8rem; position: relative; }
+        .listing-row:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+        .listing-row .favorite-btn { position: absolute; top: 0.8rem; right: 0.8rem; }
+        .listing-row-image { width: 100px; height: 100px; background: #f0f0f0; border-radius: 0.75rem; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .listing-row-image img { width: 100%; height: 100%; object-fit: cover; }
+        .listing-row-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .listing-row-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; color: #1f2937; }
+        .listing-row-price { font-size: 1.1rem; font-weight: 800; color: #667eea; margin-bottom: 0.3rem; }
+        .listing-row-meta { font-size: 0.65rem; color: #9ca3af; display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 0.25rem; }
+        .tabs { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .tab { padding: 0.6rem 1.2rem; background: rgba(255,255,255,0.2); border: none; border-radius: 2rem; cursor: pointer; font-size: 0.8rem; font-weight: 500; color: white; transition: all 0.2s; }
+        .tab.active { background: white; color: #667eea; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .map-container { width: 100%; height: 500px; border-radius: 1.25rem; overflow: hidden; margin-top: 1rem; display: none; }
+        .map-container.active { display: block; }
+        .map-container.highlight { outline: 3px solid #667eea; outline-offset: 4px; }
+        #map { width: 100%; height: 100%; }
+        .location-controls { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.5rem; position: relative; }
+        .location-dropdown { display: none; background: white; border-radius: 0.75rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 0.5rem; width: 100%; max-width: 350px; margin-top: 0.5rem; position: absolute; top: 100%; left: 0; z-index: 10; }
+        .location-dropdown.active { display: block; }
+        .location-dropdown .option-btn { display: block; width: 100%; padding: 0.5rem 0.8rem; border: none; background: transparent; text-align: left; cursor: pointer; font-size: 0.85rem; border-radius: 0.5rem; transition: 0.2s; }
+        .location-dropdown .option-btn:hover { background: #f1f5f9; }
+        .location-btn-wrapper { position: relative; display: inline-block; }
+        .location-btn-wrapper .btn-secondary { padding: 0.3rem 0.8rem; font-size: 0.75rem; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1001; justify-content: center; align-items: center; }
+        .modal-content { background: white; border-radius: 1.5rem; padding: 1.5rem; width: 90%; max-width: 650px; max-height: 85vh; overflow-y: auto; animation: modalFadeIn 0.2s ease; }
+        @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 500; color: #374151; font-size: 0.8rem; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.6rem 0.8rem; border: 1px solid #e5e7eb; border-radius: 0.75rem; font-size: 0.85rem; font-family: inherit; }
+        .category-select-group { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+        .category-select-group .form-group { flex: 1; margin-bottom: 0; }
+        .row-select-group { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .row-select-group .form-group { flex: 1; margin-bottom: 0; }
+        .map-small { width: 100%; height: 200px; border-radius: 0.75rem; margin-top: 0.5rem; border: 1px solid #e5e7eb; transition: border 0.2s; }
+        .map-small.highlight { border: 3px solid #667eea; }
+        .map-search-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; position: relative; }
+        .map-search-row input { flex: 1; min-width: 120px; padding: 0.4rem 0.7rem; border: 1px solid #e5e7eb; border-radius: 0.75rem; font-size: 0.85rem; }
+        .map-search-row .btn-secondary { padding: 0.3rem 0.8rem; font-size: 0.75rem; }
+        .suggest-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 0.75rem; max-height: 200px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .suggest-list .suggest-item { padding: 0.5rem 0.7rem; cursor: pointer; font-size: 0.85rem; }
+        .suggest-list .suggest-item:hover { background: #f1f5f9; }
+        .checkbox-group { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
+        .checkbox-group input { width: 18px; height: 18px; cursor: pointer; }
+        .checkbox-group label { margin: 0; cursor: pointer; font-weight: normal; }
+        .error-message { color: #dc2626; font-size: 0.75rem; margin-top: 0.25rem; margin-left: 1.5rem; }
+        .success-message { background: #10b981; color: white; padding: 0.5rem 1rem; border-radius: 0.75rem; margin-top: 0.5rem; font-size: 0.85rem; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        .media-list { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; }
+        .media-item { position: relative; width: 80px; height: 80px; border: 2px solid #e5e7eb; border-radius: 0.75rem; overflow: hidden; background: #f8f9fa; }
+        .media-item img, .media-item video { width: 100%; height: 100%; object-fit: cover; }
+        .media-item .main-badge { position: absolute; top: 5px; left: 5px; background: #fbbf24; color: #333; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: bold; }
+        .media-item .media-actions { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: space-around; padding: 4px; }
+        .media-item .media-actions button { background: none; border: none; color: white; cursor: pointer; font-size: 0.65rem; padding: 2px 4px; border-radius: 4px; }
+        .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.2rem; }
+        .pagination { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; flex-wrap: wrap; }
+        .pagination button { padding: 0.4rem 0.7rem; background: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 500; font-size: 0.8rem; transition: all 0.2s; }
+        .pagination button:hover { background: #e0e0e0; transform: translateY(-2px); }
+        .pagination button.active { background: #667eea; color: white; }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .loading { text-align: center; padding: 2rem; color: white; font-size: 1rem; }
+        .hidden { display: none; }
+        .notification { position: fixed; bottom: 1.5rem; right: 1.5rem; background: white; padding: 0.75rem 1.2rem; border-radius: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 1000; display: none; animation: slideIn 0.3s ease; font-weight: 500; font-size: 0.85rem; }
+        .notification.success { background: #10b981; color: white; }
+        .notification.error { background: #ef4444; color: white; }
+        .online-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; margin-left: 6px; margin-bottom: 2px; box-shadow: 0 0 0 2px white; }
+        .badge { background-color: #ef4444; color: white; border-radius: 50%; padding: 2px 5px; font-size: 0.6rem; margin-left: 6px; display: inline-block; min-width: 16px; text-align: center; }
+        .badge.hidden { display: none; }
+        .listing-actions { display: flex; gap: 0.4rem; margin-top: 0.6rem; flex-wrap: wrap; }
+        .listing-actions button { flex: 1; padding: 0.3rem; border-radius: 0.5rem; border: none; cursor: pointer; font-size: 0.7rem; font-weight: 500; }
+        .btn-view-listing { background: #667eea; color: white; }
+        .btn-edit-listing { background: #f3f4f6; color: #374151; }
+        .btn-delete-listing { background: #fee2e2; color: #dc2626; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-loading { opacity: 0.7; cursor: wait; pointer-events: none; }
+        .btn-loading::after { content: " ⏳"; font-size: 0.9rem; }
+        .btn-bump-listing { background: #f59e0b; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.75rem; font-weight: 500; transition: 0.2s; }
+        .btn-bump-listing.disabled { background: #9ca3af; cursor: not-allowed; }
+        body.dark-theme .btn-bump-listing { background: #d97706; }
+        body.dark-theme .btn-bump-listing.disabled { background: #4b5563; }
+        .listing-card .listing-image { border-radius: 1.25rem 1.25rem 0 0; overflow: hidden; }
+        @media (max-width: 768px) {
+            .container { padding: 0.8rem; }
+            .filter-card { padding: 0.8rem; margin-bottom: 1rem; }
+            .filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+            .filter-group { min-width: 0; }
+            .filter-group:last-child { grid-column: span 2; }
+            .filter-group label { font-size: 0.65rem; }
+            .filter-group input, .filter-group select { padding: 0.4rem 0.5rem; font-size: 0.8rem; }
+            .btn-primary { width: 100%; padding: 0.5rem; font-size: 0.85rem; }
+            .listings-grid { grid-template-columns: 1fr; gap: 1rem; }
+            .listing-row { flex-direction: column; gap: 0.6rem; }
+            .listing-row-image { width: 100%; height: 120px; }
+            .modal-content { padding: 1rem; }
+            .media-item { width: 70px; height: 70px; }
+            .row-select-group { flex-direction: column; }
+            .map-container { height: 300px; }
+            .map-small { height: 150px; }
+            .map-search-row input { min-width: 80px; }
+            .location-dropdown { max-width: 100%; }
+            .location-controls { flex-direction: column; align-items: stretch; }
+        }
+        /* ===== КОНТАКТЫ НА КАРТОЧКАХ ===== */
+        .listing-card .contact-buttons {
+            display: flex;
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .listing-card .contact-btn-sm {
+            padding: 0.2rem 0.6rem;
+            border: none;
+            border-radius: 1.5rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            transition: 0.2s;
+            color: white;
+            background: #9ca3af;
+        }
+        .listing-card .contact-btn-sm:hover {
+            transform: scale(1.05);
+        }
+        .listing-card .contact-btn-sm.btn-phone-sm {
+            background: #10b981;
+        }
+        .listing-card .contact-btn-sm.btn-whatsapp-sm {
+            background: #25D366;
+        }
+        .listing-card .contact-btn-sm.btn-telegram-sm {
+            background: #0088cc;
+        }
+        .listing-card .contact-btn-sm.btn-loading-sm {
+            opacity: 0.6;
+            cursor: wait;
+        }
+        .listing-row .contact-buttons {
+            display: flex;
+            gap: 0.4rem;
+            margin-top: 0.3rem;
+            flex-wrap: wrap;
+        }
+        .listing-row .contact-btn-sm {
+            padding: 0.2rem 0.6rem;
+            border: none;
+            border-radius: 1.5rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            transition: 0.2s;
+            color: white;
+            background: #9ca3af;
+        }
+        .listing-row .contact-btn-sm:hover {
+            transform: scale(1.05);
+        }
+        .listing-row .contact-btn-sm.btn-phone-sm {
+            background: #10b981;
+        }
+        .listing-row .contact-btn-sm.btn-whatsapp-sm {
+            background: #25D366;
+        }
+        .listing-row .contact-btn-sm.btn-telegram-sm {
+            background: #0088cc;
+        }
+        .listing-row .contact-btn-sm.btn-loading-sm {
+            opacity: 0.6;
+            cursor: wait;
+        }
+        /* ===== МОДАЛКА ТЕЛЕФОНА ===== */
+        .phone-number-display {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+            padding: 0.5rem 0 1rem;
+            color: #1f2937;
+            word-break: break-all;
+        }
+        body.dark-theme .phone-number-display {
+            color: #e2e8f0;
+        }
+        .phone-modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .phone-modal-actions button {
+            flex: 1;
+            min-width: 120px;
+            padding: 0.6rem 1rem;
+            border: none;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        .phone-modal-actions button:active {
+            transform: scale(0.96);
+        }
+        .btn-call {
+            background: #10b981;
+            color: white;
+        }
+        .btn-copy {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+        body.dark-theme .btn-copy {
+            background: #334155;
+            color: #e2e8f0;
+        }
+        .btn-copy.copied {
+            background: #10b981;
+            color: white;
+        }
+        .phone-modal-close {
+            margin-top: 1rem;
+            background: transparent;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-align: center;
+            width: 100%;
+        }
+        body.dark-theme .phone-modal-close {
+            color: #94a3b8;
+        }
+        .phone-modal-close:hover {
+            text-decoration: underline;
+        }
+        /* ===== СТИЛИ ДЛЯ БЛОКА КАТЕГОРИИ С КНОПКОЙ i ===== */
+        #categoryInfoBar {
+            display: none;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(4px);
+            border-radius: 1rem;
+            padding: 0.6rem 1.2rem;
+            margin: 1rem 0;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        #categoryNameDisplay {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        #categoryInfoBtn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        #categoryInfoBtn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+        /* ===== СТИЛИ ДЛЯ МОДАЛКИ ОПИСАНИЯ КАТЕГОРИИ ===== */
+        #categoryDescriptionModal .modal-content {
+            max-width: 600px;
+        }
+        #descModalBody {
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .category-description-content {
+            color: inherit;
+        }
+        .category-description-content h3,
+        .category-description-content h4 {
+            color: inherit;
+            margin-top: 0.5rem;
+            margin-bottom: 0.3rem;
+        }
+        .category-description-content p {
+            margin-bottom: 0.5rem;
+        }
+        .category-description-content ul {
+            padding-left: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        /* ===== АДАПТАЦИЯ БЛОКА "ПОПУЛЯРНЫЕ ГОРОДА" ===== */
+        #popularCities {
+            background: white;
+            border-radius: 1.25rem;
+            padding: 0.8rem 1rem;
+            margin: 1rem 0;
+            transition: background 0.2s;
+        }
+        #citiesToggleLabel {
+            font-weight: bold;
+            color: #333;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        #citiesToggleIcon {
+            font-size: 0.8rem;
+            display: none;
+        }
+        #toggleCitiesBtn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            color: #667eea;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.5rem;
+        }
+        #citiesList {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            justify-content: center;
+            align-items: center;
+            margin-top: 0.5rem;
+        }
+        #citiesList a {
+            color: #4a5bb5;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+        /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ ПОПУЛЯРНЫХ ГОРОДОВ ===== */
+        @media (max-width: 768px) {
+            #popularCities {
+                padding: 0.6rem 0.8rem !important;
+                margin: 0.75rem 0 !important;
+            }
+            #citiesToggleLabel {
+                font-size: 0.85rem !important;
+                cursor: pointer !important;
+                user-select: none;
+            }
+            #citiesToggleIcon {
+                display: inline-block !important;
+            }
+            #toggleCitiesBtn {
+                display: inline-block !important;
+            }
+            #citiesList {
+                display: none !important;
+                margin-top: 0.5rem !important;
+                gap: 0.4rem !important;
+                justify-content: flex-start !important;
+                flex-wrap: wrap !important;
+            }
+            #citiesList.open {
+                display: flex !important;
+            }
+            #citiesList a {
+                font-size: 0.75rem !important;
+                padding: 0.2rem 0.4rem;
+                background: rgba(255,255,255,0.1);
+                border-radius: 0.5rem;
+            }
+            body.dark-theme #citiesList a {
+                background: rgba(255,255,255,0.05);
+            }
+            body.dark-theme #citiesList a:hover {
+                background: rgba(255,255,255,0.1);
+            }
+            .listing-card .contact-buttons {
+                justify-content: center;
+            }
+            .listing-row .contact-buttons {
+                justify-content: center;
+            }
+        }
+        body.dark-theme .category-description-content {
+            color: #e2e8f0 !important;
+        }
+        body.dark-theme .category-description-content h3,
+        body.dark-theme .category-description-content h4 {
+            color: #f1f5f9 !important;
+        }
+        body.dark-theme .category-description-content p,
+        body.dark-theme .category-description-content li {
+            color: #cbd5e1 !important;
+        }
+        body.dark-theme #categoryInfoBar {
+            background: rgba(30,41,59,0.8) !important;
+        }
+        body.dark-theme #categoryInfoBtn {
+            background: rgba(255,255,255,0.1) !important;
+            color: #e2e8f0 !important;
+        }
+        body.dark-theme #categoryInfoBtn:hover {
+            background: rgba(255,255,255,0.2) !important;
+        }
+        body.dark-theme #popularCities {
+            background: #1e293b !important;
+            border: 1px solid #334155;
+        }
+        body.dark-theme #citiesToggleLabel {
+            color: #f1f5f9 !important;
+        }
+        body.dark-theme #citiesList a {
+            color: #93c5fd !important;
+        }
+        body.dark-theme #citiesList a:hover {
+            color: #60a5fa !important;
+            text-decoration: underline !important;
+        }
+        body.dark-theme #toggleCitiesBtn {
+            color: #93c5fd !important;
+        }
+        body.dark-theme #toggleCitiesBtn:hover {
+            color: #60a5fa !important;
+        }
+        body.dark-theme .phone-number-display {
+            color: #e2e8f0 !important;
+        }
+        body.dark-theme .phone-modal-close {
+            color: #94a3b8 !important;
+        }
+    </style>
+    <link rel="stylesheet" href="/dark-theme.css">
+</head>
+<body>
+    <header id="main-header"></header>
+
+    <div class="container">
+        <!-- H1 заголовок для SEO -->
+        <h1 style="color: white; font-size: 2rem; text-align: center; margin-bottom: 1.5rem;">IronAds доска объявлений по всей России</h1>
+
+        <!-- Главная страница -->
+        <div id="mainPage">
+            <div class="filter-card">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>Группа</label>
+                        <select id="filterGroup">
+                            <option value="all">Все группы</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" id="subgroupFilterGroup" style="display: none;">
+                        <label>Подгруппа</label>
+                        <select id="filterSubgroup">
+                            <option value="all">Все подгруппы</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" id="categoryFilterGroup" style="display: none;">
+                        <label>Категория</label>
+                        <select id="filterCategory">
+                            <option value="all">Все категории</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Регион</label>
+                        <select id="filterRegion">
+                            <option value="all">Все регионы</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" id="cityFilterGroup" style="display: none;">
+                        <label>Город</label>
+                        <select id="filterCity">
+                            <option value="all">Все города</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Тип</label>
+                        <select id="filterType">
+                            <option value="all">Все</option>
+                            <option value="sell">Продам</option>
+                            <option value="buy">Куплю</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Сортировка</label>
+                        <select id="filterSort">
+                            <option value="date_desc">📅 По дате (новые)</option>
+                            <option value="date_asc">📅 По дате (старые)</option>
+                            <option value="price_asc">💰 По цене (дешёвые)</option>
+                            <option value="price_desc">💰 По цене (дорогие)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group"><label>Цена от (₽)</label><input type="number" id="minPrice" placeholder="0"></div>
+                    <div class="filter-group"><label>Цена до (₽)</label><input type="number" id="maxPrice" placeholder="1000000"></div>
+                    <div class="filter-group"><label>Поиск</label><input type="text" id="searchText" placeholder="Поиск..." autocomplete="off"></div>
+                    <div class="filter-group">
+                        <label>Радиус (км)</label>
+                        <input type="number" id="filterRadius" placeholder="10" value="10" min="1" max="100">
+                    </div>
+                    <div class="filter-group"><button class="btn-primary" id="searchBtn">Найти</button></div>
+                </div>
+                <div class="view-toggle-group" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+                    <button class="view-toggle active" data-view="grid" id="viewGrid">📋 Список</button>
+                    <button class="view-toggle" data-view="map" id="viewMap">🗺️ Карта</button>
+                    <div class="location-btn-wrapper">
+                        <button class="btn-secondary" id="locationToggleBtn" style="font-size:0.75rem; padding:0.3rem 0.8rem;">📍 Местоположение</button>
+                        <div class="location-dropdown" id="locationDropdown">
+                            <button class="option-btn" id="autoLocationBtn">📍 Определить автоматически</button>
+                            <button class="option-btn" id="mapLocationBtn">🗺️ Указать на карте</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Блок популярных городов -->
+            <div id="popularCities">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                    <span id="citiesToggleLabel" style="font-weight: bold; color: #333; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                        🏙️ Популярные города
+                        <span id="citiesToggleIcon" style="font-size: 0.8rem; display: none;">▼</span>
+                    </span>
+                    <button id="toggleCitiesBtn" style="display: none; background: none; border: none; font-size: 1rem; cursor: pointer; color: #667eea; padding: 0.2rem 0.5rem; border-radius: 0.5rem;">▼</button>
+                </div>
+                <div id="citiesList" style="display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; align-items: center; margin-top: 0.5rem;">
+                    <a href="/city/vladikavkaz">Владикавказ</a>
+                    <a href="/city/moskva">Москва</a>
+                    <a href="/city/spb">Санкт-Петербург</a>
+                    <a href="/city/novosibirsk">Новосибирск</a>
+                    <a href="/city/ekaterinburg">Екатеринбург</a>
+                    <a href="/city/kazan">Казань</a>
+                    <a href="/city/nizhny-novgorod">Нижний Новгород</a>
+                    <a href="/city/krasnoyarsk">Красноярск</a>
+                    <a href="/city/chelyabinsk">Челябинск</a>
+                    <a href="/city/ufa">Уфа</a>
+                </div>
+            </div>
+
+            <!-- Динамическое описание категории (устарело, но пока оставим) -->
+            <div id="categoryDescription" style="color: white; text-align: center; padding: 0.5rem; font-size: 1.1rem; background: rgba(0,0,0,0.2); border-radius: 1rem; margin-bottom: 0.5rem;"></div>
+
+            <!-- Блок категории с кнопкой i -->
+            <div id="categoryInfoBar" style="display: none; background: rgba(255,255,255,0.1); backdrop-filter: blur(4px); border-radius: 1rem; padding: 0.6rem 1.2rem; margin: 1rem 0; color: white; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                <span id="categoryNameDisplay" style="font-size: 1.2rem; font-weight: 600;"></span>
+                <button id="categoryInfoBtn" style="background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.2rem; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;">ⓘ</button>
+            </div>
+
+            <div id="listingsContainer">
+                <div id="listings" class="listings-grid"></div>
+                <div id="mapContainer" class="map-container">
+                    <div id="map"></div>
+                </div>
+            </div>
+            <div id="pagination" class="pagination"></div>
+            <div id="loadingIndicator" class="loading" style="display: none;">Загрузка...</div>
+        </div>
+
+        <!-- Страница избранного -->
+        <div id="favoritesPage" class="hidden">
+            <div class="filter-card"><h2 style="margin:0; font-size: 1.2rem;">❤️ Мои избранные объявления</h2></div>
+            <div id="favoritesList" class="listings-grid"></div>
+            <div id="favoritesLoading" class="loading" style="display: none;">Загрузка...</div>
+        </div>
+
+        <!-- Личный кабинет -->
+        <div id="profilePage" class="hidden">
+            <div class="filter-card">
+                <h3 style="font-size: 1.1rem;">👤 Личный кабинет</h3>
+                <div class="form-group"><label>Имя пользователя</label><input type="text" id="profileUsername" disabled style="background:#f5f5f5;"></div>
+                <div class="form-group"><label>Телефон</label><input type="text" id="profilePhone"></div>
+                <div class="form-group"><label>Email</label><input type="email" id="profileEmail"></div>
+                <button class="btn-primary" onclick="updateProfile()">Сохранить изменения</button>
+                <button class="btn-secondary" id="backFromProfileBtn">← Назад</button>
+            </div>
+            <div class="filter-card">
+                <h3 style="font-size: 1.1rem;">➕ Создать объявление</h3>
+                <div class="form-group"><label>Название</label><input type="text" id="listingTitle" placeholder="iPhone 14 Pro"></div>
+                <div class="form-group"><label>Цена от (₽) *</label><input type="number" id="listingPrice" placeholder="Минимальная цена"></div>
+                <div class="form-group"><label>Цена до (₽) (если диапазон)</label><input type="number" id="listingPriceMax" placeholder="Максимальная цена"></div>
+                <div class="form-group"><label>Описание</label><textarea id="listingDescription" rows="2"></textarea></div>
+                <div class="form-group"><label>Категория</label><select id="listingCategory"></select></div>
+                <div class="row-select-group">
+                    <div class="form-group"><label>Регион</label><select id="listingRegion"><option value="">-- Выберите регион --</option></select></div>
+                    <div class="form-group" id="listingCityGroup" style="display: none;"><label>Город</label><select id="listingCity"><option value="">-- Сначала выберите регион --</option></select></div>
+                </div>
+                <div class="form-group"><label>Фото (до 10 шт)</label><input type="file" id="listingMedia" multiple accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/heic,image/heif"></div>
+                <button class="btn-primary" id="submitCreateListingBtn">Опубликовать</button>
+            </div>
+            <div class="tabs">
+                <button class="tab active" data-tab="my">📋 Мои объявления</button>
+                <button class="tab" data-tab="fav">❤️ Избранное</button>
+                <button class="tab" data-tab="archive">📦 Архив</button>
+            </div>
+            <div id="myListings" class="listings-grid"></div>
+            <div id="favoritesInProfile" class="hidden listings-grid"></div>
+            <div id="archivedListings" class="hidden listings-grid"></div>
+        </div>
+    </div>
+
+    <!-- Модалки создания, редактирования, логина, регистрации -->
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <h3>➕ Новое объявление</h3>
+            <div class="form-group"><label>Название</label><input type="text" id="listingTitleModal" placeholder="iPhone 14 Pro"></div>
+            <div class="form-group"><label>Цена от (₽) *</label><input type="number" id="listingPriceModal" placeholder="Минимальная цена" required></div>
+            <div class="form-group"><label>Цена до (₽) (если диапазон)</label><input type="number" id="listingPriceMaxModal" placeholder="Максимальная цена"></div>
+            <div class="form-group"><label>Описание</label><textarea id="listingDescriptionModal" rows="3"></textarea></div>
+            <div class="category-select-group">
+                <div class="form-group"><label>Группа</label><select id="modalGroup"><option value="">-- Выберите группу --</option></select></div>
+                <div class="form-group" id="modalSubgroupGroup" style="display: none;"><label>Подгруппа</label><select id="modalSubgroup"><option value="">-- Сначала выберите группу --</option></select></div>
+                <div class="form-group" id="modalCategoryGroup" style="display: none;"><label>Категория</label><select id="modalCategory"><option value="">-- Сначала выберите подгруппу --</option></select></div>
+            </div>
+            <div class="form-group"><label>Тип объявления</label><select id="listingTypeModal"><option value="sell">Продам</option><option value="buy">Куплю</option></select></div>
+            <div class="row-select-group">
+                <div class="form-group"><label>Регион</label><select id="modalRegion"><option value="">-- Выберите регион --</option></select></div>
+                <div class="form-group" id="modalCityGroup" style="display: none;"><label>Город</label><select id="modalCity"><option value="">-- Сначала выберите регион --</option></select></div>
+            </div>
+            <div class="form-group">
+                <label>Местоположение на карте</label>
+                <div id="createMap" class="map-small" style="height:200px;"></div>
+                <div class="map-search-row" style="position:relative;">
+                    <input type="text" id="createMapSearch" placeholder="Введите адрес или город..." autocomplete="off">
+                    <button class="btn-secondary" id="createMapSearchBtn">🔍 Найти</button>
+                    <button class="btn-secondary" id="createMapClearBtn">🗑️ Очистить</button>
+                    <button class="btn-secondary" id="createMapGeoBtn">📍 Моё местоположение</button>
+                    <div class="suggest-list" id="createSuggestList"></div>
+                </div>
+                <input type="hidden" id="createLat">
+                <input type="hidden" id="createLng">
+                <small style="color:#6b7280;">Начните вводить адрес — появятся подсказки</small>
+            </div>
+            <div class="form-group"><label>Фото (до 10 шт)</label><input type="file" id="listingMediaModal" multiple accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/heic,image/heif"></div>
+            <div class="form-group">
+                <label>Телефон для связи</label>
+                <input type="text" id="createPhone" placeholder="+7 (999) 123-45-67">
+                <small style="color:#6b7280; display:block; margin-top:4px;">Оставьте пустым, чтобы использовать контакты из профиля.</small>
+            </div>
+            <div class="form-group">
+                <label>WhatsApp (номер)</label>
+                <input type="text" id="createWhatsapp" placeholder="+7 (999) 123-45-67">
+            </div>
+            <div class="form-group">
+                <label>Telegram (username или номер)</label>
+                <input type="text" id="createTelegram" placeholder="@username или +79991234567">
+            </div>
+            <div class="checkbox-group" style="margin-top:0.5rem;">
+                <input type="checkbox" id="createShowPhone" checked>
+                <label>Показывать телефон в объявлении</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="createShowWhatsapp" checked>
+                <label>Показывать WhatsApp</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="createShowTelegram" checked>
+                <label>Показывать Telegram</label>
+            </div>
+            <div class="form-actions"><button class="btn-secondary" onclick="closeModal('createModal')">Отмена</button><button class="btn-primary" id="submitCreateModalBtn">Опубликовать</button></div>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3>✏️ Редактировать объявление</h3>
+            <input type="hidden" id="editId">
+            <div class="form-group"><label>Название</label><input type="text" id="editTitle"></div>
+            <div class="form-group"><label>Цена от (₽) *</label><input type="number" id="editPriceMin" placeholder="Минимальная цена" required></div>
+            <div class="form-group"><label>Цена до (₽) (если диапазон)</label><input type="number" id="editPriceMax" placeholder="Максимальная цена"></div>
+            <div class="form-group"><label>Описание</label><textarea id="editDescription" rows="2"></textarea></div>
+            <div class="category-select-group">
+                <div class="form-group"><label>Группа</label><select id="editGroup"><option value="">-- Выберите группу --</option></select></div>
+                <div class="form-group" id="editSubgroupGroup" style="display: none;"><label>Подгруппа</label><select id="editSubgroup"><option value="">-- Сначала выберите группу --</option></select></div>
+                <div class="form-group" id="editCategoryGroup" style="display: none;"><label>Категория</label><select id="editCategorySelect"><option value="">-- Сначала выберите подгруппу --</option></select></div>
+            </div>
+            <div class="form-group"><label>Тип объявления</label><select id="editType"><option value="sell">Продам</option><option value="buy">Куплю</option></select></div>
+            <div class="row-select-group">
+                <div class="form-group"><label>Регион</label><select id="editRegion"><option value="">-- Выберите регион --</option></select></div>
+                <div class="form-group" id="editCityGroup" style="display: none;"><label>Город</label><select id="editCity"><option value="">-- Сначала выберите регион --</option></select></div>
+            </div>
+            <div class="form-group">
+                <label>Местоположение на карте</label>
+                <div id="editMap" class="map-small" style="height:200px;"></div>
+                <div class="map-search-row" style="position:relative;">
+                    <input type="text" id="editMapSearch" placeholder="Введите адрес или город..." autocomplete="off">
+                    <button class="btn-secondary" id="editMapSearchBtn">🔍 Найти</button>
+                    <button class="btn-secondary" id="editMapClearBtn">🗑️ Очистить</button>
+                    <button class="btn-secondary" id="editMapGeoBtn">📍 Моё местоположение</button>
+                    <div class="suggest-list" id="editSuggestList"></div>
+                </div>
+                <input type="hidden" id="editLat">
+                <input type="hidden" id="editLng">
+                <small style="color:#6b7280;">Начните вводить адрес — появятся подсказки</small>
+            </div>
+            <div class="form-group"><label>Фотографии</label><div id="editMediaList" class="media-list"></div><label>Добавить фото</label><input type="file" id="editMedia" multiple accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/heic,image/heif"></div>
+            <div class="form-group">
+                <label>Телефон для связи</label>
+                <input type="text" id="editPhone" placeholder="+7 (999) 123-45-67">
+            </div>
+            <div class="form-group">
+                <label>WhatsApp (номер)</label>
+                <input type="text" id="editWhatsapp" placeholder="+7 (999) 123-45-67">
+            </div>
+            <div class="form-group">
+                <label>Telegram (username или номер)</label>
+                <input type="text" id="editTelegram" placeholder="@username или +79991234567">
+            </div>
+            <div class="checkbox-group" style="margin-top:0.5rem;">
+                <input type="checkbox" id="editShowPhone" checked>
+                <label>Показывать телефон</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="editShowWhatsapp" checked>
+                <label>Показывать WhatsApp</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="editShowTelegram" checked>
+                <label>Показывать Telegram</label>
+            </div>
+            <div class="form-actions"><button class="btn-secondary" onclick="closeModal('editModal')">Отмена</button><button class="btn-primary" id="submitUpdateModalBtn">Сохранить изменения</button></div>
+        </div>
+    </div>
+
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <h3>🔐 Вход</h3>
+            <div class="form-group"><label>Имя пользователя</label><input type="text" id="loginUsername"></div>
+            <div class="form-group"><label>Пароль</label><input type="password" id="loginPassword"></div>
+            <div class="form-group" id="loginCaptchaContainer"></div>
+            <div style="text-align: right; margin-bottom: 1rem;"><a href="/forgot-password.html" style="font-size: 0.75rem; color: #667eea;">Забыли пароль?</a></div>
+            <div class="form-actions"><button class="btn-secondary" onclick="closeModal('loginModal')">Отмена</button><button class="btn-primary" onclick="login()">Войти</button></div>
+            <div style="text-align: center; margin-top: 1rem;"><a href="/auth/yandex" class="btn-oauth" style="display: inline-block; background: #FC3F1D; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none;">Войти через Яндекс</a></div>
+            <div style="text-align: center; margin-top: 1rem;"><a href="#" onclick="event.preventDefault(); showRegisterModal();" style="font-size: 0.8rem;">Нет аккаунта? Зарегистрироваться</a></div>
+        </div>
+    </div>
+
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <h3>📝 Регистрация</h3>
+            <div class="form-group"><label>Имя пользователя</label><input type="text" id="regUsername" required></div>
+            <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="your@email.com" required></div>
+            <div class="form-group"><label>Пароль</label><input type="password" id="regPassword" required></div>
+            <div class="form-group"><label>Телефон</label><input type="text" id="regPhone" placeholder="+79991234567"></div>
+            <div class="row-select-group">
+                <div class="form-group"><label>Регион</label><select id="regRegion"><option value="">-- Выберите регион --</option></select></div>
+                <div class="form-group" id="regCityGroup" style="display: none;"><label>Город</label><select id="regCity"><option value="">-- Сначала выберите регион --</option></select></div>
+            </div>
+            <div class="form-group">
+                <label>Контрольный вопрос (для восстановления пароля)</label>
+                <div style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
+                    <label><input type="radio" name="questionType" value="predefined" checked> Выбрать из списка</label>
+                    <label><input type="radio" name="questionType" value="custom"> Свой вопрос</label>
+                </div>
+                <select id="securityQuestionSelect" style="width:100%;">
+                    <option value="">-- Выберите вопрос --</option>
+                    <option value="Кличка вашего первого домашнего питомца?">Кличка вашего первого домашнего питомца?</option>
+                    <option value="Имя вашей первой учительницы?">Имя вашей первой учительницы?</option>
+                    <option value="Марка вашего первого автомобиля?">Марка вашего первого автомобиля?</option>
+                    <option value="Город, где вы родились?">Город, где вы родились?</option>
+                    <option value="Любимый фильм?">Любимый фильм?</option>
+                    <option value="Любимая книга?">Любимая книга?</option>
+                </select>
+                <input type="text" id="securityQuestionCustom" placeholder="Введите свой вопрос" style="display: none; width:100%; margin-top: 0.5rem;">
+            </div>
+            <div class="form-group">
+                <label>Ответ на контрольный вопрос</label>
+                <input type="text" id="securityAnswer" required placeholder="Ответ (запомните его)">
+                <small style="color:#6c757d; font-size:0.7rem;">Ответ нужен для восстановления пароля. Регистр не важен.</small>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="regAcceptTerms" required>
+                <label>Я принимаю <a href="/terms.html" target="_blank" style="color: #667eea;">условия пользовательского соглашения</a></label>
+            </div>
+            <div class="form-group" id="registerCaptchaContainer"></div>
+            <div id="regTermsError" class="error-message"></div>
+            <div id="regSuccessMessage" class="success-message" style="display: none;"></div>
+            <div class="form-actions"><button class="btn-secondary" onclick="closeModal('registerModal')">Отмена</button><button class="btn-primary" onclick="register()">Зарегистрироваться</button></div>
+        </div>
+    </div>
+
+    <!-- Модалка описания категории -->
+    <div id="categoryDescriptionModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 id="descModalTitle" style="margin: 0;"></h3>
+                <button onclick="closeCategoryDescription()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✕</button>
+            </div>
+            <div id="descModalBody" style="max-height: 400px; overflow-y: auto; font-size: 0.95rem; line-height: 1.6;"></div>
+        </div>
+    </div>
+
+    <!-- Модалка для отображения номера телефона -->
+    <div id="phoneModal" class="modal">
+        <div class="modal-content" style="text-align:center;">
+            <h3 style="margin-bottom:0.5rem;">📞 Номер телефона</h3>
+            <div class="phone-number-display" id="phoneNumberDisplay"></div>
+            <div class="phone-modal-actions">
+                <button class="btn-call" id="phoneCallBtn"><i class="fas fa-phone"></i> Позвонить</button>
+                <button class="btn-copy" id="phoneCopyBtn"><i class="fas fa-copy"></i> Скопировать</button>
+            </div>
+            <button class="phone-modal-close" onclick="closeModal('phoneModal')">✕ Закрыть</button>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+    <span id="username" style="display:none;"></span>
+    <span id="unreadBadge" class="badge hidden"></span>
+    <div id="userInfo" style="display:none;"></div>
+
+    <!-- Внешние скрипты -->
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=97d0fa92-e83f-48a4-b404-4a55881bc4a8&suggest_apikey=97d0fa92-e83f-48a4-b404-4a55881bc4a8&lang=ru_RU" defer></script>
+    <script src="https://js.hcaptcha.com/1/api.js?hl=ru" async defer></script>
+    <script src="/js/common.js" defer></script>
+    <script src="/js/main.js" defer></script>
+
+    <!-- Скрипт переключения популярных городов -->
+    <script>
+        (function initCitiesToggle() {
+            const citiesList = document.getElementById('citiesList');
+            const toggleBtn = document.getElementById('toggleCitiesBtn');
+            const label = document.getElementById('citiesToggleLabel');
+            const icon = document.getElementById('citiesToggleIcon');
+            if (!citiesList || !toggleBtn) return;
+            function toggleCities() {
+                citiesList.classList.toggle('open');
+                toggleBtn.textContent = citiesList.classList.contains('open') ? '▲' : '▼';
+                if (icon) icon.textContent = citiesList.classList.contains('open') ? '▲' : '▼';
+            }
+            toggleBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleCities();
+            });
+            if (label) {
+                label.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 768) {
+                        toggleCities();
+                    }
+                });
+            }
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    citiesList.classList.remove('open');
+                    citiesList.style.display = 'flex';
+                    toggleBtn.textContent = '▼';
+                    if (icon) icon.textContent = '▼';
+                } else {
+                    if (!citiesList.classList.contains('open')) {
+                        citiesList.style.display = 'none';
+                    }
+                }
+            });
+            if (window.innerWidth <= 768) {
+                citiesList.style.display = 'none';
+                toggleBtn.textContent = '▼';
+                if (icon) icon.textContent = '▼';
+            } else {
+                citiesList.style.display = 'flex';
+            }
+        })();
+    </script>
+
+    <!-- ===== ПРИНУДИТЕЛЬНОЕ ПРИМЕНЕНИЕ ОТСТУПА ===== -->
+    <script>
+        // Этот скрипт гарантирует, что отступ 150px будет применён даже если JS-корректировка попытается его перезаписать
+        (function() {
+            // Отключаем встроенную автокорректировку (если она есть)
+            if (window.adjustHeaderOffset) {
+                window.adjustHeaderOffset = function() {
+                    // Ничего не делаем
+                };
+            }
+            // Принудительно устанавливаем отступ с !important
+            document.body.style.setProperty('padding-top', '150px', 'important');
+            // Также для мобильных — отдельно, но в CSS уже есть медиа-запрос
+            // Если нужно, можно и для мобильных переопределить
+            if (window.innerWidth <= 768) {
+                document.body.style.setProperty('padding-top', '100px', 'important');
+            }
+            console.log('🔒 Отступ зафиксирован: 150px (ПК) / 100px (моб.)');
+        })();
+    </script>
+</body>
+</html>

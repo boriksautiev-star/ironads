@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Мои чаты - IronAds</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 1.25rem; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .back-link { display: inline-block; margin-bottom: 1rem; color: white; text-decoration: none; cursor: pointer; font-size: 0.875rem; }
+        .tabs { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; }
+        .tab { padding: 0.625rem 1.5rem; background: rgba(255,255,255,0.2); border: none; border-radius: 1.875rem; cursor: pointer; color: white; font-weight: 500; transition: 0.2s; }
+        .tab.active { background: white; color: #667eea; }
+        .chat-list { background: white; border-radius: 1rem; overflow: hidden; }
+        .chat-item { padding: 1rem 1.25rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s; }
+        .chat-item:hover { background: #f8f9fa; }
+        .chat-info { flex: 1; }
+        .chat-title { font-weight: 600; margin-bottom: 0.25rem; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .chat-title a { color: #333; text-decoration: none; }
+        .chat-title a:hover { text-decoration: underline; }
+        .chat-preview { font-size: 0.75rem; color: #999; }
+        .unread-badge { background: #ef4444; color: white; border-radius: 1.25rem; padding: 0.125rem 0.625rem; font-size: 0.75rem; font-weight: 600; min-width: 28px; text-align: center; }
+        .chat-actions { display: flex; gap: 0.5rem; margin-left: 0.75rem; }
+        .chat-actions button { background: none; border: none; font-size: 1.125rem; cursor: pointer; padding: 0.25rem 0.5rem; border-radius: 0.375rem; color: #999; transition: 0.2s; }
+        .chat-actions button:hover { background: #f0f0f0; }
+        .empty { text-align: center; padding: 3.125rem 1.25rem; color: #999; background: white; border-radius: 1rem; }
+        .notification { position: fixed; bottom: 1.25rem; right: 1.25rem; background: white; padding: 0.75rem 1.25rem; border-radius: 0.75rem; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000; display: none; }
+        .notification.success { background: #10b981; color: white; }
+        .notification.error { background: #ef4444; color: white; }
+        .online-indicator, .offline-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 6px; }
+        .online-indicator { background-color: #10b981; }
+        .offline-indicator { background-color: #9ca3af; }
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .tabs { justify-content: center; }
+            .tab { padding: 0.5rem 1rem; font-size: 0.875rem; }
+        }
+    </style>
+    <link rel="stylesheet" href="/dark-theme.css">
+</head>
+<body>
+    <header id="main-header"></header>
+    <div class="container">
+        <a class="back-link" href="/">← На главную</a>
+        <div class="tabs">
+            <button class="tab active" onclick="showActiveChats()">📋 Активные</button>
+            <button class="tab" onclick="showArchivedChats()">📦 Архив</button>
+        </div>
+        <div id="chatList" class="chat-list"><div class="empty">Загрузка...</div></div>
+    </div>
+    <div id="notification" class="notification"></div>
+
+    <script>
+        const API_URL = '/api';
+        let currentToken = localStorage.getItem('token');
+        if (!currentToken) window.location.href = '/';
+
+        function showNotification(m, t) { const n = document.getElementById('notification'); n.textContent = m; n.className = `notification ${t}`; n.style.display = 'block'; setTimeout(() => n.style.display = 'none', 3000); }
+        function escapeHtml(t) { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+        let currentView = 'active';
+
+        async function showActiveChats() { 
+            currentView = 'active'; 
+            document.querySelectorAll('.tab').forEach((t,i)=>{ if(i===0) t.classList.add('active'); else t.classList.remove('active'); }); 
+            await loadChats('/chats'); 
+        }
+        async function showArchivedChats() { 
+            currentView = 'archived'; 
+            document.querySelectorAll('.tab').forEach((t,i)=>{ if(i===1) t.classList.add('active'); else t.classList.remove('active'); }); 
+            await loadChats('/chats/archived'); 
+        }
+
+        async function loadChats(url) {
+            try {
+                const resp = await fetch(`${API_URL}${url}`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
+                if (!resp.ok) throw new Error();
+                const chats = await resp.json();
+                const container = document.getElementById('chatList');
+                if (!chats.length) { container.innerHTML = '<div class="empty">У вас пока нет чатов</div>'; return; }
+                let currentUserId = null;
+                try { currentUserId = JSON.parse(atob(currentToken.split('.')[1])).userId; } catch(e) {}
+                container.innerHTML = chats.map(chat => {
+                    let otherName = '', otherIsOnline = false, otherId = null;
+                    if (currentUserId) {
+                        if (chat.seller_id === currentUserId) { otherName = chat.buyer_name; otherId = chat.buyer_id; otherIsOnline = chat.other_is_online; }
+                        else { otherName = chat.seller_name; otherId = chat.seller_id; otherIsOnline = chat.other_is_online; }
+                    }
+                    const unreadCount = chat.unread_count || 0;
+                    return `
+                        <div class="chat-item" onclick="openChat(${chat.id})">
+                            <div class="chat-info">
+                                <div class="chat-title">
+                                    <a href="/profile.html?id=${otherId}" onclick="event.stopPropagation()">👤 ${escapeHtml(otherName)}</a>
+                                    ${otherIsOnline ? '<span class="online-indicator"></span>' : '<span class="offline-indicator"></span>'}
+                                </div>
+                                <div class="chat-preview">📦 ${escapeHtml(chat.listing_title)}</div>
+                            </div>
+                            <div class="chat-actions">
+                                ${currentView === 'active' ? `<button onclick="event.stopPropagation(); archiveChat(${chat.id})" title="Архивировать">📦</button>` : `<button onclick="event.stopPropagation(); restoreChat(${chat.id})" title="Восстановить">🔄</button>`}
+                                <button onclick="event.stopPropagation(); deleteChat(${chat.id})" title="Удалить">🗑️</button>
+                            </div>
+                            ${unreadCount > 0 ? `<div class="unread-badge">${unreadCount}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            } catch(e) { console.error(e); document.getElementById('chatList').innerHTML = '<div class="empty">Ошибка загрузки</div>'; }
+        }
+
+        async function archiveChat(id) { 
+            await fetch(`${API_URL}/chats/${id}/archive`, { method: 'POST', headers: { 'Authorization': `Bearer ${currentToken}` } }); 
+            showNotification('Чат архивирован', 'success'); 
+            showActiveChats(); 
+        }
+        async function restoreChat(id) { 
+            await fetch(`${API_URL}/chats/${id}/restore`, { method: 'POST', headers: { 'Authorization': `Bearer ${currentToken}` } }); 
+            showNotification('Чат восстановлен', 'success'); 
+            showArchivedChats(); 
+        }
+        async function deleteChat(id) { 
+            if (!confirm('Удалить чат?')) return; 
+            await fetch(`${API_URL}/chats/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${currentToken}` } }); 
+            showNotification('Чат удалён', 'success'); 
+            if (currentView === 'active') showActiveChats(); else showArchivedChats(); 
+        }
+        function openChat(id) { window.location.href = `/chat.html?chatId=${id}`; }
+
+        showActiveChats();
+
+        // PWA установка (глобальная переменная deferredPrompt не конфликтует с common.js)
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('installPwaBtn');
+            if (installBtn) {
+                installBtn.style.display = 'inline-block';
+                installBtn.onclick = () => {
+                    installBtn.style.display = 'none';
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+                };
+            }
+        });
+        if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+            const installBtn = document.getElementById('installPwaBtn');
+            if (installBtn) {
+                installBtn.style.display = 'inline-block';
+                installBtn.onclick = () => alert('Нажмите "Поделиться" → "На экран домой"');
+            }
+        }
+    </script>
+    <script src="/register-sw.js"></script>
+    <script src="/js/common.js"></script>
+</body>
+</html>

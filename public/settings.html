@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Настройки профиля - IronAds</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body { font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .container { max-width: 800px; margin: 0 auto; padding: 1.5rem; }
+        .header { background: white; border-radius: 1.25rem; padding: 1rem 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .logo { font-size: 1.75rem; font-weight: 800; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; background-clip: text; color: transparent; cursor: pointer; }
+        .nav { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+        .nav button, .btn-login, .btn-logout, .back-btn { padding: 0.625rem 1.25rem; border: none; border-radius: 0.75rem; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s; }
+        .btn-login { background: #667eea; color: white; }
+        .btn-logout { background: #ef4444; color: white; }
+        .back-btn { background: #f3f4f6; color: #374151; }
+        .settings-card { background: white; border-radius: 1.5rem; padding: 2rem; margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .settings-card h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; color: #1f2937; display: flex; align-items: center; gap: 10px; padding-bottom: 1rem; border-bottom: 1px solid #f0f0f0; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151; font-size: 0.875rem; }
+        .form-group input, .form-group select { width: 100%; padding: 0.75rem 1rem; border: 1px solid #e5e7eb; border-radius: 0.75rem; font-size: 0.875rem; transition: all 0.2s; font-family: inherit; }
+        .form-group input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+        .form-hint { font-size: 0.75rem; color: #6b7280; margin-top: 5px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 0.75rem; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(102,126,234,0.4); }
+        .btn-secondary { background: #f3f4f6; color: #374151; padding: 0.625rem 1.25rem; border: none; border-radius: 0.75rem; cursor: pointer; font-weight: 500; }
+        .btn-danger { background: #fee2e2; color: #dc2626; padding: 0.625rem 1.25rem; border: none; border-radius: 0.75rem; cursor: pointer; font-weight: 500; }
+        .btn-sm { padding: 0.3rem 0.8rem; font-size: 0.8rem; }
+        .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; flex-wrap: wrap; }
+        .checkbox-group { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.9375rem; }
+        .checkbox-group input { width: 20px; height: 20px; cursor: pointer; }
+        .checkbox-group label { margin: 0; cursor: pointer; }
+        .notification { position: fixed; bottom: 1.5rem; right: 1.5rem; background: white; padding: 0.875rem 1.5rem; border-radius: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 1000; display: none; animation: slideIn 0.3s ease; font-weight: 500; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+        .notification.success { background: #10b981; color: white; }
+        .notification.error { background: #ef4444; color: white; }
+        .badge { background-color: #ef4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.6875rem; margin-left: 6px; display: inline-block; min-width: 18px; text-align: center; }
+        .badge.hidden { display: none; }
+        .font-control { display: inline-flex; gap: 5px; align-items: center; margin-left: 10px; }
+        .font-btn { background: #f3f4f6; border: none; border-radius: 20px; padding: 5px 12px; cursor: pointer; font-size: 0.875rem; font-weight: bold; color: #333; transition: 0.2s; }
+        .font-btn:hover { background: #e5e7eb; transform: scale(1.05); }
+        .font-btn.reset { background: #e5e7eb; color: #374151; }
+        .install-pwa-btn { background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 40px; cursor: pointer; font-size: 0.75rem; font-weight: 500; display: inline-block; margin-left: 8px; }
+        .row-select-group { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .row-select-group .form-group { flex: 1; margin-bottom: 0; }
+
+        /* Стили для блока привязки соцсетей */
+        .social-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .social-item:last-child { border-bottom: none; }
+        .social-label {
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .social-status {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .social-status.connected { color: #10b981; }
+        .social-status.disconnected { color: #6b7280; }
+        .social-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .social-actions .btn-sm { min-width: 100px; }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .settings-card { padding: 1.25rem; }
+            .form-actions { flex-direction: column; }
+            .form-actions button { width: 100%; }
+            .header { flex-direction: column; text-align: center; padding: 0.75rem 1rem; }
+            .nav { justify-content: center; }
+            .font-control { justify-content: center; margin-left: 0; }
+            .row-select-group { flex-direction: column; }
+            .social-item { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+            .social-actions { justify-content: center; }
+        }
+    </style>
+    <link rel="stylesheet" href="/dark-theme.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo" onclick="window.location.href='/'">IronAds</div>
+            <div class="nav">
+                <div class="font-control">
+                    <button class="font-btn" id="fontIncrease">A+</button>
+                    <button class="font-btn" id="fontDecrease">A-</button>
+                    <button class="font-btn reset" id="fontReset">A</button>
+                </div>
+                <button id="themeToggleBtn" class="theme-toggle-btn" >🌙</button>
+                <button class="btn-login" id="chatsBtn" onclick="goToChats()">💬 Чаты <span id="unreadBadge" class="badge hidden">0</span></button>
+                <button id="installPwaBtn" class="install-pwa-btn">📲 Установить приложение</button>
+                <button class="back-btn" onclick="goBack()">← Назад</button>
+            </div>
+        </div>
+
+        <!-- Смена имени пользователя -->
+        <div class="settings-card">
+            <h2>👤 Изменить имя пользователя</h2>
+            <div class="form-group">
+                <label>Новое имя</label>
+                <input type="text" id="newUsername" placeholder="Введите новое имя">
+                <div class="form-hint">Минимум 3 символа. Имя должно быть уникальным.</div>
+            </div>
+            <div class="form-actions">
+                <button class="btn-primary" onclick="changeUsername()">Сохранить имя</button>
+            </div>
+        </div>
+
+        <!-- Смена пароля -->
+        <div class="settings-card">
+            <h2>🔐 Сменить пароль</h2>
+            <div class="form-group">
+                <label>Текущий пароль</label>
+                <input type="password" id="currentPassword" placeholder="Введите текущий пароль">
+            </div>
+            <div class="form-group">
+                <label>Новый пароль</label>
+                <input type="password" id="newPassword" placeholder="Введите новый пароль">
+                <div class="form-hint">Минимум 6 символов</div>
+            </div>
+            <div class="form-group">
+                <label>Подтверждение пароля</label>
+                <input type="password" id="confirmPassword" placeholder="Повторите новый пароль">
+            </div>
+            <div class="form-actions">
+                <button class="btn-primary" onclick="changePassword()">Сменить пароль</button>
+            </div>
+        </div>
+
+        <!-- Контактные данные с WhatsApp и Telegram -->
+        <div class="settings-card">
+            <h2>📧 Контактные данные</h2>
+            <div class="form-group"><label>Email</label><input type="email" id="settingsEmail" placeholder="your@email.com"></div>
+            <div class="form-group"><label>Телефон</label><input type="tel" id="settingsPhone" placeholder="+7 (999) 123-45-67"></div>
+            <div class="form-group"><label>WhatsApp (номер)</label><input type="text" id="settingsWhatsapp" placeholder="+7 (999) 123-45-67"></div>
+            <div class="form-group"><label>Telegram (username или номер)</label><input type="text" id="settingsTelegram" placeholder="@username или +79991234567"></div>
+            <div class="row-select-group">
+                <div class="form-group"><label>Регион</label><select id="settingsRegion"><option value="">-- Выберите регион --</option></select></div>
+                <div class="form-group" id="settingsCityGroup" style="display: none;"><label>Город</label><select id="settingsCity"><option value="">-- Сначала выберите регион --</option></select></div>
+            </div>
+            <div class="form-actions"><button class="btn-secondary" onclick="saveBasicSettings()">💾 Сохранить изменения</button></div>
+        </div>
+
+        <!-- Блок привязки аккаунтов -->
+        <div class="settings-card">
+            <h2>🔗 Привязанные аккаунты</h2>
+            <div id="socialLinks">
+                <div class="social-item">
+                    <span class="social-label">ВКонтакте</span>
+                    <span class="social-status" id="vkStatus">Загрузка...</span>
+                    <div class="social-actions">
+                        <button id="vkLinkBtn" class="btn-primary btn-sm">Привязать</button>
+                        <button id="vkUnlinkBtn" class="btn-danger btn-sm" style="display:none;">Отвязать</button>
+                    </div>
+                </div>
+                <div class="social-item">
+                    <span class="social-label">Яндекс</span>
+                    <span class="social-status" id="yandexStatus">Загрузка...</span>
+                    <div class="social-actions">
+                        <button id="yandexLinkBtn" class="btn-primary btn-sm">Привязать</button>
+                        <button id="yandexUnlinkBtn" class="btn-danger btn-sm" style="display:none;">Отвязать</button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-hint" style="margin-top: 10px;">
+                Привяжите социальные сети, чтобы иметь возможность входить в аккаунт без пароля.
+                После привязки вы сможете войти через VK или Яндекс, даже если забыли пароль.
+            </div>
+        </div>
+
+        <!-- Конфиденциальность и уведомления (заглушки) -->
+        <div class="settings-card">
+            <h2>🔒 Конфиденциальность</h2>
+            <div class="checkbox-group"><input type="checkbox" id="showPhoneToBuyers"><label>Показывать телефон только покупателям (рекомендуется)</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="showOnlineStatus"><label>Показывать статус «онлайн»</label></div>
+        </div>
+        <div class="settings-card">
+            <h2>📧 Уведомления</h2>
+            <div class="checkbox-group"><input type="checkbox" id="notifyNewMessage"><label>Уведомлять о новых сообщениях по email</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="notifyNewResponse"><label>Уведомлять о новых откликах на объявления</label></div>
+        </div>
+
+        <!-- Опасная зона -->
+        <div class="settings-card">
+            <h2>⚠️ Опасная зона</h2>
+            <div class="form-actions"><button class="btn-danger" onclick="requestDataExport()">📥 Экспортировать мои данные</button><button class="btn-danger" onclick="deleteAccount()">🗑️ Удалить аккаунт</button></div>
+            <div class="form-hint" style="margin-top:15px;">Удаление аккаунта приведёт к безвозвратной потере всех объявлений и чатов.</div>
+        </div>
+    </div>
+    <div id="notification" class="notification"></div>
+
+    <script>
+        const API_URL = '/api';
+        let currentToken = localStorage.getItem('token');
+        if (!currentToken) window.location.href = '/';
+
+        function showNotification(message, type) {
+            const n = document.getElementById('notification');
+            n.textContent = message;
+            n.className = `notification ${type}`;
+            n.style.display = 'block';
+            setTimeout(() => n.style.display = 'none', 3000);
+        }
+
+        function goHome() { window.location.href = '/'; }
+        function goBack() { window.location.href = '/profile.html'; }
+        function goToChats() { window.location.href = '/chats.html'; }
+        function logout() { localStorage.removeItem('token'); window.location.href = '/'; }
+
+        async function updateUnreadCount() {
+            if (!currentToken) return;
+            try {
+                const resp = await fetch(`${API_URL}/chats/unread/count`, {
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const badge = document.getElementById('unreadBadge');
+                    if (data.count > 0) {
+                        badge.textContent = data.count > 99 ? '99+' : data.count;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadRegionsForSelect(selectId) {
+            try {
+                const resp = await fetch('/api/cities/regions/all');
+                const regions = await resp.json();
+                regions.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+                const select = document.getElementById(selectId);
+                if (!select) return;
+                select.innerHTML = '<option value="">-- Выберите регион --</option>';
+                regions.forEach(region => {
+                    select.innerHTML += `<option value="${region.id}">${escapeHtml(region.name)}</option>`;
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadCitiesByRegionForSelect(regionId, targetSelectId, cityGroupId) {
+            if (!regionId) {
+                const select = document.getElementById(targetSelectId);
+                if (select) select.innerHTML = '<option value="">-- Сначала выберите регион --</option>';
+                const group = document.getElementById(cityGroupId);
+                if (group) group.style.display = 'none';
+                return;
+            }
+            try {
+                const resp = await fetch(`/api/cities?region_id=${regionId}&limit=500`);
+                const cities = await resp.json();
+                cities.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+                const select = document.getElementById(targetSelectId);
+                select.innerHTML = '<option value="">-- Выберите город --</option>';
+                cities.forEach(city => {
+                    select.innerHTML += `<option value="${city.id}">${escapeHtml(city.name)}</option>`;
+                });
+                const group = document.getElementById(cityGroupId);
+                if (group) group.style.display = 'block';
+            } catch(e) { console.error(e); }
+        }
+
+        function updateSocialStatus(user) {
+            console.log('🔄 updateSocialStatus вызван, user:', user);
+            const vkStatus = document.getElementById('vkStatus');
+            const yandexStatus = document.getElementById('yandexStatus');
+            const vkLinkBtn = document.getElementById('vkLinkBtn');
+            const vkUnlinkBtn = document.getElementById('vkUnlinkBtn');
+            const yandexLinkBtn = document.getElementById('yandexLinkBtn');
+            const yandexUnlinkBtn = document.getElementById('yandexUnlinkBtn');
+
+            if (!vkStatus || !yandexStatus) {
+                console.error('❌ Элементы статусов не найдены!');
+                return;
+            }
+
+            if (user.vk_id) {
+                vkStatus.textContent = '✅ Привязан';
+                vkStatus.className = 'social-status connected';
+                vkLinkBtn.style.display = 'none';
+                vkUnlinkBtn.style.display = 'inline-block';
+            } else {
+                vkStatus.textContent = '❌ Не привязан';
+                vkStatus.className = 'social-status disconnected';
+                vkLinkBtn.style.display = 'inline-block';
+                vkUnlinkBtn.style.display = 'none';
+            }
+
+            if (user.yandex_id) {
+                yandexStatus.textContent = '✅ Привязан';
+                yandexStatus.className = 'social-status connected';
+                yandexLinkBtn.style.display = 'none';
+                yandexUnlinkBtn.style.display = 'inline-block';
+            } else {
+                yandexStatus.textContent = '❌ Не привязан';
+                yandexStatus.className = 'social-status disconnected';
+                yandexLinkBtn.style.display = 'inline-block';
+                yandexUnlinkBtn.style.display = 'none';
+            }
+            console.log('✅ Статусы обновлены');
+        }
+
+        function initSocialButtons() {
+            console.log('🔧 initSocialButtons вызван');
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.warn('Нет токена!');
+                return;
+            }
+
+            document.getElementById('vkLinkBtn').addEventListener('click', function() {
+                const width = 600, height = 600;
+                const left = (window.innerWidth - width) / 2;
+                const top = (window.innerHeight - height) / 2;
+                window.open(`/auth/link/vk?token=${encodeURIComponent(token)}`, '_blank', `width=${width},height=${height},left=${left},top=${top}`);
+            });
+
+            document.getElementById('vkUnlinkBtn').addEventListener('click', async function() {
+                if (!confirm('Отвязать VK от аккаунта? Вы сможете привязать его снова позже.')) return;
+                try {
+                    const resp = await fetch(`${API_URL}/auth/unlink/vk`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (resp.ok) {
+                        showNotification('VK отвязан', 'success');
+                        loadSettings();
+                    } else {
+                        const err = await resp.json();
+                        showNotification(err.error || 'Ошибка отвязки', 'error');
+                    }
+                } catch(e) {
+                    showNotification('Ошибка соединения', 'error');
+                }
+            });
+
+            document.getElementById('yandexLinkBtn').addEventListener('click', function() {
+                const width = 600, height = 600;
+                const left = (window.innerWidth - width) / 2;
+                const top = (window.innerHeight - height) / 2;
+                window.open(`/auth/link/yandex?token=${encodeURIComponent(token)}`, '_blank', `width=${width},height=${height},left=${left},top=${top}`);
+            });
+
+            document.getElementById('yandexUnlinkBtn').addEventListener('click', async function() {
+                if (!confirm('Отвязать Яндекс от аккаунта? Вы сможете привязать его снова позже.')) return;
+                try {
+                    const resp = await fetch(`${API_URL}/auth/unlink/yandex`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (resp.ok) {
+                        showNotification('Яндекс отвязан', 'success');
+                        loadSettings();
+                    } else {
+                        const err = await resp.json();
+                        showNotification(err.error || 'Ошибка отвязки', 'error');
+                    }
+                } catch(e) {
+                    showNotification('Ошибка соединения', 'error');
+                }
+            });
+
+            // Проверяем параметры URL после возврата
+            const urlParams = new URLSearchParams(window.location.search);
+            const linked = urlParams.get('linked');
+            if (linked === 'vk') {
+                showNotification('VK успешно привязан!', 'success');
+                window.history.replaceState({}, document.title, window.location.pathname);
+                loadSettings();
+            } else if (linked === 'yandex') {
+                showNotification('Яндекс успешно привязан!', 'success');
+                window.history.replaceState({}, document.title, window.location.pathname);
+                loadSettings();
+            }
+        }
+
+        async function loadSettings() {
+            try {
+                const response = await fetch(`${API_URL}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+                if (response.ok) {
+                    const user = await response.json();
+                    console.log('📥 Данные пользователя загружены:', user);
+                    document.getElementById('settingsEmail').value = user.email || '';
+                    document.getElementById('settingsPhone').value = user.phone || '';
+                    document.getElementById('settingsWhatsapp').value = user.whatsapp || '';
+                    document.getElementById('settingsTelegram').value = user.telegram || '';
+                    if (user.city_id) {
+                        const cityResp = await fetch(`/api/cities/${user.city_id}`);
+                        const cityData = await cityResp.json();
+                        if (cityData.region_id) {
+                            document.getElementById('settingsRegion').value = cityData.region_id;
+                            await loadCitiesByRegionForSelect(cityData.region_id, 'settingsCity', 'settingsCityGroup');
+                            document.getElementById('settingsCity').value = user.city_id;
+                        }
+                    }
+                    const prefs = user.preferences || {};
+                    document.getElementById('showPhoneToBuyers').checked = prefs.showPhoneToBuyers !== false;
+                    document.getElementById('showOnlineStatus').checked = prefs.showOnlineStatus !== false;
+                    document.getElementById('notifyNewMessage').checked = prefs.notifyNewMessage !== false;
+                    document.getElementById('notifyNewResponse').checked = prefs.notifyNewResponse !== false;
+
+                    updateSocialStatus(user);
+                } else if (response.status === 401) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/';
+                }
+            } catch (error) { console.error('❌ Ошибка загрузки настроек:', error); }
+        }
+
+        async function changeUsername() {
+            const newUsername = document.getElementById('newUsername').value.trim();
+            if (!newUsername) {
+                showNotification('Введите новое имя пользователя', 'error');
+                return;
+            }
+            if (newUsername.length < 3) {
+                showNotification('Имя пользователя должно содержать минимум 3 символа', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`${API_URL}/auth/username`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
+                    body: JSON.stringify({ newUsername })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showNotification('Имя пользователя изменено!', 'success');
+                    document.getElementById('newUsername').value = '';
+                    setTimeout(() => { window.location.reload(); }, 1500);
+                } else {
+                    showNotification(data.error || 'Ошибка', 'error');
+                }
+            } catch (error) {
+                showNotification('Ошибка соединения', 'error');
+            }
+        }
+
+        async function changePassword() {
+            const oldPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (!oldPassword || !newPassword || !confirmPassword) {
+                showNotification('Заполните все поля', 'error');
+                return;
+            }
+            if (newPassword.length < 6) {
+                showNotification('Новый пароль должен содержать минимум 6 символов', 'error');
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                showNotification('Пароли не совпадают', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`${API_URL}/auth/change-password`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
+                    body: JSON.stringify({ oldPassword, newPassword })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showNotification('Пароль успешно изменён!', 'success');
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                } else {
+                    showNotification(data.error || 'Ошибка', 'error');
+                }
+            } catch (error) {
+                showNotification('Ошибка соединения', 'error');
+            }
+        }
+
+        async function saveBasicSettings() {
+            const email = document.getElementById('settingsEmail').value.trim();
+            const phone = document.getElementById('settingsPhone').value.trim();
+            const whatsapp = document.getElementById('settingsWhatsapp').value.trim();
+            const telegram = document.getElementById('settingsTelegram').value.trim();
+            const city_id = document.getElementById('settingsCity').value || null;
+            try {
+                const response = await fetch(`${API_URL}/auth/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
+                    body: JSON.stringify({ email, phone, city_id, whatsapp, telegram })
+                });
+                if (response.ok) {
+                    showNotification('Настройки сохранены!', 'success');
+                } else {
+                    const error = await response.json();
+                    showNotification(error.error || 'Ошибка сохранения', 'error');
+                }
+            } catch (error) {
+                showNotification('Ошибка соединения', 'error');
+            }
+        }
+
+        function requestDataExport() { showNotification('Функция экспорта данных будет доступна в ближайшее время', 'success'); }
+        async function deleteAccount() {
+            if (!confirm('ВНИМАНИЕ! Это действие безвозвратно удалит все ваши объявления, чаты и личную информацию. Продолжить?')) return;
+            if (!confirm('Вы уверены? Восстановить аккаунт будет невозможно.')) return;
+            try {
+                const response = await fetch(`${API_URL}/auth/delete-account`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+                if (response.ok) {
+                    localStorage.removeItem('token');
+                    showNotification('Аккаунт удалён', 'success');
+                    setTimeout(() => { window.location.href = '/'; }, 2000);
+                } else { showNotification('Ошибка удаления аккаунта', 'error'); }
+            } catch (error) { showNotification('Ошибка соединения', 'error'); }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+        }
+
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 DOM загружен, инициализация...');
+            if (!localStorage.getItem('token')) {
+                window.location.href = '/';
+                return;
+            }
+            loadSettings();
+            loadRegionsForSelect('settingsRegion');
+            updateUnreadCount();
+            setInterval(updateUnreadCount, 30000);
+            window.addEventListener('focus', updateUnreadCount);
+            initSocialButtons();
+
+            document.getElementById('settingsRegion')?.addEventListener('change', async (e) => {
+                const regionId = e.target.value;
+                await loadCitiesByRegionForSelect(regionId, 'settingsCity', 'settingsCityGroup');
+            });
+        });
+
+        // Управление шрифтом
+        (function() {
+            const STORAGE_KEY = '_font_size';
+            let currentRootSize = localStorage.getItem(STORAGE_KEY) ? parseFloat(localStorage.getItem(STORAGE_KEY)) : 16;
+            function setRootSize(size) {
+                if (size < 12) size = 12;
+                if (size > 24) size = 24;
+                document.documentElement.style.fontSize = size + 'px';
+                localStorage.setItem(STORAGE_KEY, size);
+                currentRootSize = size;
+            }
+            const incBtn = document.getElementById('fontIncrease');
+            const decBtn = document.getElementById('fontDecrease');
+            const resetBtn = document.getElementById('fontReset');
+            if (incBtn) incBtn.addEventListener('click', () => setRootSize(currentRootSize + 1));
+            if (decBtn) decBtn.addEventListener('click', () => setRootSize(currentRootSize - 1));
+            if (resetBtn) resetBtn.addEventListener('click', () => setRootSize(16));
+            if (currentRootSize !== 16) document.documentElement.style.fontSize = currentRootSize + 'px';
+        })();
+
+        // Тёмная тема
+        (function() {
+            const STORAGE_KEY = 'ironads_theme';
+            const applyTheme = (theme) => {
+                if (theme === 'dark') {
+                    document.body.classList.add('dark-theme');
+                    const btn = document.getElementById('themeToggleBtn');
+                    if (btn) btn.textContent = '☀️';
+                } else {
+                    document.body.classList.remove('dark-theme');
+                    const btn = document.getElementById('themeToggleBtn');
+                    if (btn) btn.textContent = '🌙';
+                }
+                localStorage.setItem(STORAGE_KEY, theme);
+            };
+            const savedTheme = localStorage.getItem(STORAGE_KEY);
+            if (savedTheme === 'dark') {
+                applyTheme('dark');
+            } else if (savedTheme === 'light') {
+                applyTheme('light');
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                applyTheme('dark');
+            } else {
+                applyTheme('light');
+            }
+            const toggleBtn = document.getElementById('themeToggleBtn');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    const isDark = document.body.classList.contains('dark-theme');
+                    applyTheme(isDark ? 'light' : 'dark');
+                });
+            }
+        })();
+
+        // PWA установка
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('installPwaBtn');
+            if (installBtn) {
+                installBtn.style.display = 'inline-block';
+                installBtn.onclick = () => {
+                    installBtn.style.display = 'none';
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+                };
+            }
+        });
+        if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+            const installBtn = document.getElementById('installPwaBtn');
+            if (installBtn) {
+                installBtn.style.display = 'inline-block';
+                installBtn.onclick = () => alert('Нажмите "Поделиться" → "На экран домой"');
+            }
+        }
+    </script>
+    <script src="/register-sw.js"></script>
+    <script src="/js/common.js"></script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модерация - IronAds</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 1.25rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: white; border-radius: 1.25rem; padding: 1rem 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .logo { font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; background-clip: text; color: transparent; cursor: pointer; }
+        .nav { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+        .nav button, .logout-btn { padding: 0.5rem 1rem; border: none; border-radius: 0.75rem; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s; }
+        .logout-btn { background: #ef4444; color: white; }
+        .btn-login { background: #667eea; color: white; }
+        .font-control { display: inline-flex; gap: 5px; align-items: center; margin-left: 10px; }
+        .font-btn { background: #f3f4f6; border: none; border-radius: 20px; padding: 5px 12px; cursor: pointer; font-size: 0.875rem; font-weight: bold; color: #333; transition: 0.2s; }
+        .font-btn:hover { background: #e5e7eb; transform: scale(1.05); }
+        .font-btn.reset { background: #e5e7eb; color: #374151; }
+        .install-pwa-btn { background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 40px; cursor: pointer; font-size: 0.75rem; font-weight: 500; display: inline-block; margin-left: 8px; }
+        .badge { background-color: #ef4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.6875rem; margin-left: 6px; display: inline-block; min-width: 18px; text-align: center; }
+        .badge.hidden { display: none; }
+        @media (max-width: 768px) { .container { padding: 1rem; } .header { flex-direction: column; text-align: center; padding: 0.75rem 1rem; } .nav { justify-content: center; } .font-control { justify-content: center; margin-left: 0; } }
+        .tabs { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .tab { background: rgba(255,255,255,0.2); border: none; padding: 0.625rem 1.5rem; border-radius: 2.5rem; color: white; cursor: pointer; font-size: 1rem; font-weight: 500; transition: 0.2s; }
+        .tab.active { background: white; color: #667eea; }
+        .complaint-card, .blocked-card { background: white; border-radius: 1.25rem; padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .complaint-header, .blocked-header { display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 0.875rem; color: #6b7280; }
+        .complaint-reason { background: #f3f4f6; padding: 0.75rem; border-radius: 0.75rem; margin: 0.75rem 0; }
+        .actions { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+        .btn-approve { background: #10b981; color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 0.75rem; cursor: pointer; }
+        .btn-reject { background: #ef4444; color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 0.75rem; cursor: pointer; }
+        .btn-view { background: #3b82f6; color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 0.75rem; cursor: pointer; }
+        .btn-restore { background: #f59e0b; color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 0.75rem; cursor: pointer; }
+        .empty { text-align: center; padding: 3.125rem; background: white; border-radius: 1.25rem; color: #9ca3af; }
+        .notification { position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 0.625rem 1.25rem; border-radius: 2.5rem; display: none; z-index: 1000; font-size: 0.875rem; }
+        .blocked-image { width: 80px; height: 80px; background: #f0f0f0; border-radius: 8px; overflow: hidden; margin-right: 1rem; flex-shrink: 0; }
+        .blocked-image img { width: 100%; height: 100%; object-fit: cover; }
+        .blocked-info { flex: 1; }
+        .blocked-row { display: flex; align-items: center; margin-bottom: 0.75rem; }
+        @media (max-width: 768px) { .tabs { justify-content: center; } .tab { padding: 0.5rem 1rem; font-size: 0.875rem; } }
+    </style>
+    <link rel="stylesheet" href="/dark-theme.css">
+
+<style>
+/* Компактная шапка для мобильных */
+@media (max-width: 768px) {
+    .header {
+        padding: 0.5rem 0.75rem !important;
+        flex-wrap: nowrap !important;
+        gap: 0.5rem !important;
+    }
+    .logo {
+        font-size: 1.2rem !important;
+        white-space: nowrap;
+    }
+    .nav {
+        gap: 0.25rem !important;
+        flex-wrap: nowrap !important;
+    }
+    .nav button, .nav .btn-login, .nav .btn-logout, .nav .btn-primary, .nav .btn-secondary, .nav .install-pwa-btn {
+        padding: 0.4rem 0.6rem !important;
+        font-size: 0.7rem !important;
+        min-width: auto !important;
+    }
+    /* Скрываем текст на кнопках, оставляем только иконки */
+    .nav button span.btn-text, .nav .btn-login span.btn-text, .nav .btn-logout span.btn-text, .nav .btn-primary span.btn-text, .nav .btn-secondary span.btn-text {
+        display: none;
+    }
+    /* Но для кнопки "Чаты" и "Выйти" оставляем эмодзи */
+    .nav button .emoji-only, .nav .btn-logout .emoji-only {
+        display: inline;
+    }
+    /* Регулятор шрифта делаем более компактным или сворачиваем в дропдаун */
+    .font-control {
+        position: relative;
+        gap: 2px;
+    }
+    .font-btn {
+        padding: 0.3rem 0.5rem !important;
+        font-size: 0.7rem !important;
+    }
+    .font-btn.reset {
+        display: none; /* скрываем кнопку сброса, оставляем только +/- */
+    }
+    .install-pwa-btn {
+        font-size: 0.7rem !important;
+        padding: 0.3rem 0.6rem !important;
+    }
+    /* Убираем лишние отступы у модалок */
+    .modal-content {
+        padding: 1rem;
+    }
+}
+/* Для очень маленьких телефонов (до 480px) скрываем кнопку "Установить приложение", если нужно */
+@media (max-width: 480px) {
+    .install-pwa-btn {
+        display: none;
+    }
+}
+</style>
+
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="logo" onclick="window.location.href='/'">IronAds</div>
+        <div class="nav">
+            <div class="font-control">
+                <button class="font-btn" id="fontIncrease">A+</button>
+                <button class="font-btn" id="fontDecrease">A-</button>
+                <button class="font-btn reset" id="fontReset">A</button>
+            </div>
+            <button id="themeToggleBtn" class="theme-toggle-btn" >🌙</button>
+            <button class="btn-login" id="chatsBtn" onclick="goToChats()">💬 Чаты <span id="unreadBadge" class="badge hidden">0</span></button>
+            <button id="installPwaBtn" class="install-pwa-btn">📲 Установить приложение</button>
+            <button class="logout-btn" onclick="logout()">Выйти</button>
+        </div>
+    </div>
+    <div class="tabs">
+        <button class="tab active" data-tab="complaints">📋 Новые жалобы</button>
+        <button class="tab" data-tab="blocked">🚫 Заблокированные объявления</button>
+    </div>
+    <div id="complaintsTab"></div>
+    <div id="blockedTab" style="display: none;"></div>
+</div>
+<div id="notification" class="notification"></div>
+
+<script>
+    const API_URL = '/api';
+    let currentToken = localStorage.getItem('token');
+    if (!currentToken) window.location.href = '/';
+
+    function showNotification(msg, type) {
+        const n = document.getElementById('notification');
+        n.textContent = msg;
+        n.style.backgroundColor = type === 'success' ? '#10b981' : '#ef4444';
+        n.style.display = 'block';
+        setTimeout(() => n.style.display = 'none', 3000);
+    }
+
+    function goToChats() { window.location.href = '/chats.html'; }
+    function logout() { localStorage.removeItem('token'); window.location.href = '/'; }
+
+    async function updateUnreadCount() {
+        if (!currentToken) return;
+        try {
+            const resp = await fetch(`${API_URL}/chats/unread/count`, {
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+            if (resp.ok) {
+                const data = await resp.json();
+                const badge = document.getElementById('unreadBadge');
+                if (data.count > 0) {
+                    badge.textContent = data.count > 99 ? '99+' : data.count;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    async function loadComplaints() {
+        try {
+            const resp = await fetch(`${API_URL}/admin/complaints`, {
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+            if (resp.status === 403) {
+                window.location.href = '/';
+                return;
+            }
+            const complaints = await resp.json();
+            const container = document.getElementById('complaintsTab');
+            if (!complaints.length) {
+                container.innerHTML = '<div class="empty">Нет новых жалоб</div>';
+                return;
+            }
+            let html = '';
+            for (let c of complaints) {
+                let target = '';
+                let viewButton = '';
+                if (c.listing_id) {
+                    target = `Объявление: ${c.listing_title || 'ID ' + c.listing_id}`;
+                    viewButton = `<button class="btn-view" onclick="window.open('/listing.html?id=${c.listing_id}', '_blank')">👁️ Просмотреть объявление</button>`;
+                } else {
+                    target = `Пользователь: ${c.complained_username || 'ID ' + c.complained_user_id}`;
+                }
+                html += `
+                    <div class="complaint-card">
+                        <div class="complaint-header">
+                            <span>Жалоба #${c.id}</span>
+                            <span>${new Date(c.created_at).toLocaleString()}</span>
+                        </div>
+                        <div>👤 Пожаловался: ${c.complainant_name}</div>
+                        <div>🎯 Объект: ${target}</div>
+                        <div class="complaint-reason"><strong>Причина:</strong><br>${escapeHtml(c.reason)}</div>
+                        <div class="actions">
+                            ${viewButton}
+                            <button class="btn-approve" onclick="handleComplaint(${c.id}, 'approve')">✅ Принять и применить меры</button>
+                            <button class="btn-reject" onclick="handleComplaint(${c.id}, 'reject')">❌ Отклонить</button>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        } catch(e) { console.error(e); }
+    }
+
+    async function loadBlockedListings() {
+        try {
+            const resp = await fetch(`${API_URL}/admin/blocked-listings`, {
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+            const listings = await resp.json();
+            const container = document.getElementById('blockedTab');
+            if (!listings.length) {
+                container.innerHTML = '<div class="empty">Нет заблокированных объявлений (за последние 30 дней)</div>';
+                return;
+            }
+            let html = '';
+            for (let l of listings) {
+                let imageHtml = '';
+                if (l.first_media && l.first_media.file_path) {
+                    imageHtml = `<div class="blocked-image"><img src="${l.first_media.file_path}" onerror="this.onerror=null;this.parentElement.innerHTML='📷'"></div>`;
+                } else {
+                    imageHtml = `<div class="blocked-image">📷</div>`;
+                }
+                html += `
+                    <div class="blocked-card">
+                        <div class="blocked-header">
+                            <span>Объявление #${l.id}</span>
+                            <span>Заблокировано: ${new Date(l.blocked_at).toLocaleString()}</span>
+                        </div>
+                        <div class="blocked-row">
+                            ${imageHtml}
+                            <div class="blocked-info">
+                                <div><strong>${escapeHtml(l.title)}</strong></div>
+                                <div>Автор: ${escapeHtml(l.username)}</div>
+                                <div>Причина блокировки: ${escapeHtml(l.block_reason || 'Не указана')}</div>
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <button class="btn-view" onclick="window.open('/listing.html?id=${l.id}', '_blank')">👁️ Просмотреть</button>
+                            <button class="btn-restore" onclick="restoreListing(${l.id})">🔄 Восстановить</button>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        } catch(e) { console.error(e); }
+    }
+
+    async function handleComplaint(complaintId, action) {
+        try {
+            const resp = await fetch(`${API_URL}/admin/complaints/${complaintId}/${action}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+            if (resp.ok) {
+                showNotification('Жалоба обработана', 'success');
+                loadComplaints();
+                if (document.querySelector('[data-tab="blocked"]').classList.contains('active')) {
+                    loadBlockedListings();
+                }
+            } else {
+                const err = await resp.json();
+                showNotification(err.error || 'Ошибка', 'error');
+            }
+        } catch(e) { showNotification('Ошибка соединения', 'error'); }
+    }
+
+    async function restoreListing(listingId) {
+        if (!confirm('Восстановить это объявление? Оно снова станет активным.')) return;
+        try {
+            const resp = await fetch(`${API_URL}/admin/listings/${listingId}/restore`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+            if (resp.ok) {
+                showNotification('Объявление восстановлено', 'success');
+                loadBlockedListings();
+            } else {
+                const err = await resp.json();
+                showNotification(err.error || 'Ошибка', 'error');
+            }
+        } catch(e) { showNotification('Ошибка соединения', 'error'); }
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+    }
+
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.getAttribute('data-tab');
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            if (tabName === 'complaints') {
+                document.getElementById('complaintsTab').style.display = 'block';
+                document.getElementById('blockedTab').style.display = 'none';
+                loadComplaints();
+            } else {
+                document.getElementById('complaintsTab').style.display = 'none';
+                document.getElementById('blockedTab').style.display = 'block';
+                loadBlockedListings();
+            }
+        });
+    });
+
+    loadComplaints();
+    updateUnreadCount();
+    setInterval(updateUnreadCount, 30000);
+    window.addEventListener('focus', updateUnreadCount);
+
+    (function() {
+        const STORAGE_KEY = 'IronAds_font_size';
+        let currentRootSize = localStorage.getItem(STORAGE_KEY) ? parseFloat(localStorage.getItem(STORAGE_KEY)) : 16;
+        function setRootSize(size) {
+            if (size < 12) size = 12;
+            if (size > 24) size = 24;
+            document.documentElement.style.fontSize = size + 'px';
+            localStorage.setItem(STORAGE_KEY, size);
+            currentRootSize = size;
+        }
+        const incBtn = document.getElementById('fontIncrease');
+        const decBtn = document.getElementById('fontDecrease');
+        const resetBtn = document.getElementById('fontReset');
+        if (incBtn) incBtn.addEventListener('click', () => setRootSize(currentRootSize + 1));
+        if (decBtn) decBtn.addEventListener('click', () => setRootSize(currentRootSize - 1));
+        if (resetBtn) resetBtn.addEventListener('click', () => setRootSize(16));
+        if (currentRootSize !== 16) document.documentElement.style.fontSize = currentRootSize + 'px';
+    })();
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        const installBtn = document.getElementById('installPwaBtn');
+        if (installBtn) {
+            installBtn.style.display = 'inline-block';
+            installBtn.onclick = () => {
+                installBtn.style.display = 'none';
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+            };
+        }
+    });
+    if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+        const installBtn = document.getElementById('installPwaBtn');
+        if (installBtn) {
+            installBtn.style.display = 'inline-block';
+            installBtn.onclick = () => alert('Нажмите "Поделиться" → "На экран домой"');
+        }
+    }
+</script>
+<script src="/register-sw.js"></script>
+
+<script>
+(function() {
+    const STORAGE_KEY = 'ironads_theme';
+    const applyTheme = (theme) => {
+        if (theme === 'dark') {
+            document.body.classList.add('dark-theme');
+            const btn = document.getElementById('themeToggleBtn');
+            if (btn) btn.textContent = '☀️';
+        } else {
+            document.body.classList.remove('dark-theme');
+            const btn = document.getElementById('themeToggleBtn');
+            if (btn) btn.textContent = '🌙';
+        }
+        localStorage.setItem(STORAGE_KEY, theme);
+    };
+    const savedTheme = localStorage.getItem(STORAGE_KEY);
+    if (savedTheme === 'dark') {
+        applyTheme('dark');
+    } else if (savedTheme === 'light') {
+        applyTheme('light');
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        applyTheme('dark');
+    } else {
+        applyTheme('light');
+    }
+    const toggleBtn = document.getElementById('themeToggleBtn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            const isDark = document.body.classList.contains('dark-theme');
+            applyTheme(isDark ? 'light' : 'dark');
+        });
+    }
+})();
+</script>
+</body>
+</html>

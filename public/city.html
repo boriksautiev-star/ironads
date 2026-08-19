@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Объявления в городе – IronAds</title>
+    <meta name="description" content="Объявления в городе на IronAds. Размещайте и находите предложения.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding-top: 0; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+        .filter-card { background: white; border-radius: 1.25rem; padding: 1rem 1rem; margin-bottom: 1.5rem; }
+        .city-header { background: rgba(255,255,255,0.1); backdrop-filter: blur(4px); border-radius: 1.25rem; padding: 1.5rem; margin-bottom: 1.5rem; color: white; }
+        .city-header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .city-description { font-size: 1rem; line-height: 1.6; opacity: 0.95; max-width: 800px; }
+        .filter-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
+        .filter-group { flex: 1; min-width: 140px; }
+        .filter-group label { display: block; margin-bottom: 0.25rem; font-weight: 500; font-size: 0.7rem; color: #6b7280; }
+        .filter-group input, .filter-group select { width: 100%; padding: 0.5rem 0.7rem; border: 1px solid #e5e7eb; border-radius: 0.75rem; font-size: 0.85rem; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.6rem 1.2rem; border: none; border-radius: 0.75rem; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-secondary { background: #f3f4f6; color: #374151; padding: 0.5rem 1rem; border: none; border-radius: 0.625rem; cursor: pointer; font-size: 0.8125rem; transition: all 0.2s; }
+        .btn-secondary:hover { background: #e5e7eb; }
+        .view-toggle-group { display: flex; gap: 0.5rem; margin-left: 0.5rem; align-items: center; flex-wrap: wrap; }
+        .view-toggle { background: #f1f5f9; border: none; padding: 0.3rem 0.6rem; border-radius: 1.5rem; cursor: pointer; font-size: 0.75rem; font-weight: 500; transition: 0.2s; }
+        .view-toggle.active { background: #667eea; color: white; }
+        .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+        .listings-list { display: flex; flex-direction: column; gap: 1rem; }
+        .listing-card { background: white; border-radius: 1.25rem; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); transition: all 0.3s; cursor: pointer; position: relative; min-height: 350px; }
+        .listing-card:hover { transform: translateY(-8px); box-shadow: 0 12px 30px rgba(0,0,0,0.15); }
+        .favorite-btn { position: absolute; top: 0.75rem; right: 0.75rem; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 2.25rem; height: 2.25rem; font-size: 1.25rem; cursor: pointer; z-index: 2; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .favorite-btn:hover { transform: scale(1.1); }
+        .favorite-btn.active { color: #ef4444; }
+        .listing-image { width: 100%; height: 200px; background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .listing-image img { width: 100%; height: 100%; object-fit: cover; }
+        .listing-info { padding: 1rem; }
+        .listing-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; color: #1f2937; }
+        .listing-price { font-size: 1.2rem; font-weight: 800; color: #667eea; margin-bottom: 0.6rem; }
+        .listing-meta { font-size: 0.7rem; color: #9ca3af; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+        .listing-meta a { color: #667eea; text-decoration: none; }
+        .rating-stars { display: inline-flex; align-items: center; gap: 0.125rem; background: #fbbf24; padding: 0.125rem 0.375rem; border-radius: 1.25rem; font-size: 0.6875rem; font-weight: bold; color: #333; }
+        .listing-description { font-size: 0.8rem; color: #6b7280; line-height: 1.4; max-height: 4.2em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+        .listing-row { background: white; border-radius: 1rem; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s; cursor: pointer; display: flex; gap: 1rem; padding: 0.8rem; position: relative; }
+        .listing-row:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+        .listing-row .favorite-btn { position: absolute; top: 0.8rem; right: 0.8rem; }
+        .listing-row-image { width: 100px; height: 100px; background: #f0f0f0; border-radius: 0.75rem; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .listing-row-image img { width: 100%; height: 100%; object-fit: cover; }
+        .listing-row-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .listing-row-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; color: #1f2937; }
+        .listing-row-price { font-size: 1.1rem; font-weight: 800; color: #667eea; margin-bottom: 0.3rem; }
+        .listing-row-meta { font-size: 0.65rem; color: #9ca3af; display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 0.25rem; }
+        .pagination { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; flex-wrap: wrap; }
+        .pagination button { padding: 0.4rem 0.7rem; background: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 500; font-size: 0.8rem; transition: all 0.2s; }
+        .pagination button:hover { background: #e0e0e0; transform: translateY(-2px); }
+        .pagination button.active { background: #667eea; color: white; }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .loading { text-align: center; padding: 2rem; color: white; font-size: 1rem; }
+        .hidden { display: none; }
+        .notification { position: fixed; bottom: 1.5rem; right: 1.5rem; background: white; padding: 0.75rem 1.2rem; border-radius: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 1000; display: none; animation: slideIn 0.3s ease; font-weight: 500; font-size: 0.85rem; }
+        .notification.success { background: #10b981; color: white; }
+        .notification.error { background: #ef4444; color: white; }
+        .online-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; margin-left: 6px; margin-bottom: 2px; box-shadow: 0 0 0 2px white; }
+        .badge { background-color: #ef4444; color: white; border-radius: 50%; padding: 2px 5px; font-size: 0.6rem; margin-left: 6px; display: inline-block; min-width: 16px; text-align: center; }
+        .badge.hidden { display: none; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1001; justify-content: center; align-items: center; }
+        .modal-content { background: white; border-radius: 1.5rem; padding: 1.5rem; width: 90%; max-width: 650px; max-height: 85vh; overflow-y: auto; animation: modalFadeIn 0.2s ease; }
+        .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.2rem; }
+        .back-link { display: inline-block; margin-bottom: 1rem; color: white; text-decoration: none; cursor: pointer; font-size: 0.9rem; }
+        @media (max-width: 768px) {
+            .container { padding: 0.8rem; }
+            .filter-card { padding: 0.8rem; margin-bottom: 1rem; }
+            .filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+            .filter-group { min-width: 0; }
+            .filter-group:last-child { grid-column: span 2; }
+            .filter-group label { font-size: 0.65rem; }
+            .filter-group input, .filter-group select { padding: 0.4rem 0.5rem; font-size: 0.8rem; }
+            .btn-primary { width: 100%; padding: 0.5rem; font-size: 0.85rem; }
+            .listings-grid { grid-template-columns: 1fr; gap: 1rem; }
+            .listing-row { flex-direction: column; gap: 0.6rem; }
+            .listing-row-image { width: 100%; height: 120px; }
+            .city-header h1 { font-size: 1.5rem; }
+            .city-description { font-size: 0.9rem; }
+        }
+    </style>
+    <link rel="stylesheet" href="/dark-theme.css">
+</head>
+<body>
+    <header id="main-header"></header>
+
+    <div class="container">
+        <a class="back-link" href="/" id="backToMain">← На главную</a>
+
+        <!-- Заголовок города (загружается через JS) -->
+        <div class="city-header" id="cityHeader">
+            <h1 id="cityTitle">Загрузка...</h1>
+            <div id="cityDescription" class="city-description"></div>
+        </div>
+
+        <!-- Фильтры -->
+        <div class="filter-card">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Категория</label>
+                    <select id="filterCategory">
+                        <option value="all">Все категории</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Тип</label>
+                    <select id="filterType">
+                        <option value="all">Все</option>
+                        <option value="sell">Продам</option>
+                        <option value="buy">Куплю</option>
+                        <option value="exchange">Обмен</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Сортировка</label>
+                    <select id="filterSort">
+                        <option value="date_desc">📅 По дате (новые)</option>
+                        <option value="date_asc">📅 По дате (старые)</option>
+                        <option value="price_asc">💰 По цене (дешёвые)</option>
+                        <option value="price_desc">💰 По цене (дорогие)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Цена от (₽)</label>
+                    <input type="number" id="minPrice" placeholder="0">
+                </div>
+                <div class="filter-group">
+                    <label>Цена до (₽)</label>
+                    <input type="number" id="maxPrice" placeholder="1000000">
+                </div>
+                <div class="filter-group">
+                    <label>Поиск</label>
+                    <input type="text" id="searchText" placeholder="Поиск..." autocomplete="off">
+                </div>
+                <div class="filter-group">
+                    <button class="btn-primary" id="searchBtn">Найти</button>
+                </div>
+            </div>
+            <div class="view-toggle-group" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+                <button class="view-toggle active" data-view="grid" id="viewGrid">📋 Список</button>
+                <button class="view-toggle" data-view="map" id="viewMap">🗺️ Карта</button>
+            </div>
+        </div>
+
+        <!-- Список объявлений -->
+        <div id="listingsContainer">
+            <div id="listings" class="listings-grid"></div>
+            <div id="mapContainer" class="map-container" style="display:none; width:100%; height:500px; border-radius:1.25rem; overflow:hidden; margin-top:1rem;">
+                <div id="map"></div>
+            </div>
+        </div>
+        <div id="pagination" class="pagination"></div>
+        <div id="loadingIndicator" class="loading" style="display: none;">Загрузка...</div>
+    </div>
+
+    <!-- Модалки -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <h3>🔐 Вход</h3>
+            <div class="form-group"><label>Имя пользователя</label><input type="text" id="loginUsername"></div>
+            <div class="form-group"><label>Пароль</label><input type="password" id="loginPassword"></div>
+            <div class="form-actions"><button class="btn-secondary" onclick="closeModal('loginModal')">Отмена</button><button class="btn-primary" onclick="login()">Войти</button></div>
+        </div>
+    </div>
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <h3>📝 Регистрация</h3>
+            <div class="form-group"><label>Имя пользователя</label><input type="text" id="regUsername"></div>
+            <div class="form-group"><label>Пароль</label><input type="password" id="regPassword"></div>
+            <div class="form-group"><label>Телефон</label><input type="text" id="regPhone"></div>
+            <div class="form-actions"><button class="btn-secondary" onclick="closeModal('registerModal')">Отмена</button><button class="btn-primary" onclick="register()">Зарегистрироваться</button></div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+    <span id="username" style="display:none;"></span>
+    <span id="unreadBadge" class="badge hidden"></span>
+    <div id="userInfo" style="display:none;"></div>
+
+    <!-- Внешние скрипты -->
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=97d0fa92-e83f-48a4-b404-4a55881bc4a8&suggest_apikey=97d0fa92-e83f-48a4-b404-4a55881bc4a8&lang=ru_RU" defer></script>
+    <script src="/js/common.js" defer></script>
+
+    <script>
+        // ========== ОСНОВНАЯ ЛОГИКА ДЛЯ СТРАНИЦЫ ГОРОДА ==========
+        const API_URL = '/api';
+        let currentToken = localStorage.getItem('token');
+        let currentPage = 1;
+        let totalPages = 1;
+        let isLoading = false;
+        let favoritedStatus = {};
+        let currentMapMode = false;
+        let map = null;
+        let clusterer = null;
+        let mapInitPromise = null;
+        let userLocation = null;
+        let selectedLocation = null;
+        let mapObjects = null;
+
+        // Получаем slug из URL
+        const pathParts = window.location.pathname.split('/');
+        const citySlug = pathParts[pathParts.length - 1] || '';
+        let cityData = null;
+
+        // ===== ГЛАВНОЕ ИСПРАВЛЕНИЕ: определяем refreshCurrentListings для перерисовки при смене вида =====
+        window.refreshCurrentListings = function() {
+            applyFilters();
+        };
+
+        function showNotification(m, t) {
+            const n = document.getElementById('notification');
+            n.textContent = m;
+            n.className = 'notification ' + t;
+            n.style.display = 'block';
+            setTimeout(() => n.style.display = 'none', 3000);
+        }
+
+        function showModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+        function escapeHtml(str) {
+            if (!str) return '';
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        async function loadCityData() {
+            try {
+                const resp = await fetch(`${API_URL}/cities/slug/${citySlug}`);
+                if (!resp.ok) {
+                    if (resp.status === 404) {
+                        window.location.href = '/';
+                        return;
+                    }
+                    throw new Error('Ошибка загрузки');
+                }
+                cityData = await resp.json();
+                document.title = cityData.seo_title || cityData.title || `Объявления в ${cityData.city_name}`;
+                document.getElementById('cityTitle').textContent = cityData.title || `Объявления в ${cityData.city_name}`;
+                if (cityData.description) {
+                    document.getElementById('cityDescription').innerHTML = cityData.description;
+                } else {
+                    document.getElementById('cityDescription').textContent = `Найдите объявления в ${cityData.city_name}.`;
+                }
+                // Обновляем мета-описание
+                const metaDesc = document.querySelector('meta[name="description"]');
+                if (metaDesc && cityData.seo_description) {
+                    metaDesc.content = cityData.seo_description;
+                }
+                // Загружаем категории и применяем фильтр
+                await loadCategories();
+                applyFilters();
+            } catch(e) {
+                console.error(e);
+                window.location.href = '/';
+            }
+        }
+
+        async function loadCategories() {
+            try {
+                const resp = await fetch(`${API_URL}/categories`);
+                const cats = await resp.json();
+                const select = document.getElementById('filterCategory');
+                select.innerHTML = '<option value="all">Все категории</option>';
+                cats.forEach(c => {
+                    select.innerHTML += `<option value="${c.id}">${c.icon || '📂'} ${c.name}</option>`;
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function applyFilters() {
+            if (isLoading) return;
+            isLoading = true;
+            document.getElementById('loadingIndicator').style.display = 'block';
+
+            const categoryId = document.getElementById('filterCategory').value;
+            const type = document.getElementById('filterType').value;
+            const sort = document.getElementById('filterSort').value;
+            const min = document.getElementById('minPrice').value;
+            const max = document.getElementById('maxPrice').value;
+            const search = document.getElementById('searchText').value;
+
+            let url = `${API_URL}/listings/filter?page=${currentPage}&limit=22`;
+            if (categoryId !== 'all') url += `&category_id=${categoryId}`;
+            if (cityData && cityData.city_id) url += `&city_id=${cityData.city_id}`;
+            if (type !== 'all') url += `&type=${type}`;
+            if (sort) url += `&sort=${sort}`;
+            if (min) url += `&min_price=${min}`;
+            if (max) url += `&max_price=${max}`;
+            if (search) url += `&search=${encodeURIComponent(search)}`;
+
+            if (currentMapMode && selectedLocation) {
+                url += `&lat=${selectedLocation.lat}&lng=${selectedLocation.lng}&radius=10`;
+            }
+
+            try {
+                const resp = await fetch(url);
+                const data = await resp.json();
+                const listings = data.listings || [];
+                totalPages = data.pagination ? data.pagination.pages : 1;
+
+                if (currentToken) {
+                    for (let l of listings) {
+                        if (favoritedStatus[l.id] === undefined) {
+                            try {
+                                const favResp = await fetch(`${API_URL}/listings/favorites/check/${l.id}`, {
+                                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                                });
+                                const favData = await favResp.json();
+                                favoritedStatus[l.id] = favData.favorited;
+                            } catch(e) { favoritedStatus[l.id] = false; }
+                        }
+                    }
+                }
+
+                if (currentMapMode) {
+                    renderMapListings(listings);
+                } else {
+                    renderListings(listings);
+                    renderPagination();
+                }
+            } catch(e) {
+                console.error(e);
+                showNotification('Ошибка загрузки', 'error');
+            } finally {
+                document.getElementById('loadingIndicator').style.display = 'none';
+                isLoading = false;
+            }
+        }
+
+        // ========== ИСПРАВЛЕННАЯ ФУНКЦИЯ РЕНДЕРИНГА ==========
+        function renderListings(listings) {
+            const container = document.getElementById('listings');
+            if (!listings.length) {
+                container.innerHTML = '<div style="color:white;text-align:center;padding:40px;">😕 В этом городе пока нет объявлений</div>';
+                return;
+            }
+            const view = window.listingViewMode || 'grid-large';
+            let html = '';
+            if (view === 'list') {
+                for (let l of listings) {
+                    let imageHtml = '<div class="listing-row-image">📷</div>';
+                    if (l.first_media && l.first_media.file_path) {
+                        imageHtml = `<div class="listing-row-image"><img src="${l.first_media.file_path}" alt="${escapeHtml(l.title)}" width="100" height="100" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.parentElement.innerHTML='📷'"></div>`;
+                    }
+                    const isFav = favoritedStatus[l.id] || false;
+                    const priceDisplay = l.price_max && l.price_max > l.price ? `${l.price.toLocaleString()} – ${l.price_max.toLocaleString()} ₽` : `${l.price.toLocaleString()} ₽`;
+                    html += `
+                        <div class="listing-row" onclick="window.location.href='/listing.html?id=${l.id}'">
+                            <button class="favorite-btn ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite(${l.id}, this)">${isFav ? '❤️' : '🤍'}</button>
+                            ${imageHtml}
+                            <div class="listing-row-info">
+                                <div class="listing-row-title">${escapeHtml(l.title)}</div>
+                                <div class="listing-row-price">${priceDisplay}</div>
+                                <div class="listing-row-meta">👤 ${escapeHtml(l.username)} ${l.is_online ? '<span class="online-indicator"></span>' : ''} | 📁 ${escapeHtml(l.category_name || 'Без категории')}</div>
+                                <div class="listing-row-description">${escapeHtml(l.description || '')}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                for (let l of listings) {
+                    let imageHtml = '<div class="listing-image">📷</div>';
+                    if (l.first_media && l.first_media.file_path) {
+                        imageHtml = `<div class="listing-image"><img src="${l.first_media.file_path}" alt="${escapeHtml(l.title)}" width="400" height="300" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.parentElement.innerHTML='📷'"></div>`;
+                    }
+                    const isFav = favoritedStatus[l.id] || false;
+                    const priceDisplay = l.price_max && l.price_max > l.price ? `${l.price.toLocaleString()} – ${l.price_max.toLocaleString()} ₽` : `${l.price.toLocaleString()} ₽`;
+                    html += `
+                        <div class="listing-card" onclick="window.location.href='/listing.html?id=${l.id}'">
+                            <button class="favorite-btn ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite(${l.id}, this)">${isFav ? '❤️' : '🤍'}</button>
+                            ${imageHtml}
+                            <div class="listing-info">
+                                <div class="listing-title">${escapeHtml(l.title)}</div>
+                                <div class="listing-price">${priceDisplay}</div>
+                                <div class="listing-meta">👤 ${escapeHtml(l.username)} ${l.is_online ? '<span class="online-indicator"></span>' : ''} | 📁 ${escapeHtml(l.category_name || 'Без категории')}</div>
+                                <div class="listing-description">${escapeHtml(l.description || '')}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            container.innerHTML = html;
+            // Применяем правильные классы к контейнеру
+            if (typeof window.applyCurrentViewToContainers === 'function') {
+                window.applyCurrentViewToContainers();
+            }
+        }
+
+        function renderPagination() {
+            const container = document.getElementById('pagination');
+            if (totalPages <= 1) { container.innerHTML = ''; return; }
+            let html = `<button onclick="changePage(${currentPage-1})" ${currentPage===1 ? 'disabled' : ''}>◀ Назад</button>`;
+            let start = Math.max(1, currentPage-2);
+            let end = Math.min(totalPages, currentPage+2);
+            for (let i=start; i<=end; i++) {
+                html += `<button onclick="changePage(${i})" class="${i===currentPage ? 'active' : ''}">${i}</button>`;
+            }
+            html += `<button onclick="changePage(${currentPage+1})" ${currentPage===totalPages ? 'disabled' : ''}>Вперед ▶</button>`;
+            container.innerHTML = html;
+        }
+
+        function changePage(page) {
+            if (isLoading || page < 1 || page > totalPages) return;
+            currentPage = page;
+            applyFilters();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function toggleFavorite(listingId, element) {
+            if (!currentToken) { showNotification('Войдите, чтобы добавить в избранное', 'error'); return; }
+            try {
+                const resp = await fetch(`${API_URL}/listings/favorites/toggle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
+                    body: JSON.stringify({ listing_id: listingId })
+                });
+                const data = await resp.json();
+                if (resp.ok) {
+                    favoritedStatus[listingId] = data.favorited;
+                    if (element) {
+                        element.textContent = data.favorited ? '❤️' : '🤍';
+                        element.classList.toggle('active', data.favorited);
+                    }
+                    showNotification(data.favorited ? 'Добавлено в избранное' : 'Удалено из избранного', 'success');
+                }
+            } catch(e) { showNotification('Ошибка', 'error'); }
+        }
+
+        // Карта
+        function initMap() {
+            if (mapInitPromise) return mapInitPromise;
+            mapInitPromise = new Promise((resolve, reject) => {
+                if (typeof ymaps === 'undefined') {
+                    const check = setInterval(() => {
+                        if (typeof ymaps !== 'undefined') {
+                            clearInterval(check);
+                            ymaps.ready(() => createMap().then(resolve).catch(reject));
+                        }
+                    }, 100);
+                    setTimeout(() => { clearInterval(check); reject('Таймаут'); }, 10000);
+                    return;
+                }
+                ymaps.ready(() => createMap().then(resolve).catch(reject));
+            });
+            return mapInitPromise;
+        }
+
+        async function createMap() {
+            const container = document.getElementById('map');
+            if (!container) return;
+            if (map) return map;
+            const defaultCoords = [55.75, 37.62];
+            map = new ymaps.Map(container, {
+                center: defaultCoords,
+                zoom: 10,
+                controls: ['zoomControl', 'geolocationControl']
+            });
+            clusterer = new ymaps.Clusterer({
+                preset: 'islands#blueClusterIcons',
+                groupByCoordinates: false,
+                clusterDisableClickZoom: false,
+                clusterHideIconOnBalloonOpen: true,
+                geoObjectHideIconOnBalloonOpen: true
+            });
+            map.geoObjects.add(clusterer);
+            map.events.add('click', function(e) {
+                const coords = e.get('coords');
+                selectedLocation = { lat: coords[0], lng: coords[1] };
+                if (mapObjects) map.geoObjects.remove(mapObjects);
+                mapObjects = new ymaps.Placemark(coords, { hintContent: 'Выбранное местоположение' }, { preset: 'islands#redDotIconWithCaption', draggable: true });
+                map.geoObjects.add(mapObjects);
+                applyFilters();
+            });
+            try {
+                const geolocation = await ymaps.geolocation.get({ provider: 'browser', mapStateAutoApply: true });
+                const coords = geolocation.geoObjects.get(0).geometry.getCoordinates();
+                userLocation = { lat: coords[0], lng: coords[1] };
+                map.setCenter(coords, 12);
+            } catch(e) {
+                map.setCenter(defaultCoords, 10);
+            }
+            return map;
+        }
+
+        function renderMapListings(listings) {
+            if (!map || !clusterer) return;
+            clusterer.removeAll();
+            if (!listings || !listings.length) return;
+            const geoObjects = [];
+            for (const l of listings) {
+                if (!l.lat || !l.lng) continue;
+                const coords = [parseFloat(l.lat), parseFloat(l.lng)];
+                const balloonContent = `
+                    <div style="max-width:250px;">
+                        <strong>${escapeHtml(l.title)}</strong><br>
+                        Цена: ${l.price.toLocaleString()} ₽
+                        ${l.price_max ? ` – ${l.price_max.toLocaleString()} ₽` : ''}
+                        <br><a href="/listing.html?id=${l.id}" target="_blank">Подробнее</a>
+                    </div>
+                `;
+                const placemark = new ymaps.Placemark(coords, {
+                    balloonContent: balloonContent,
+                    hintContent: escapeHtml(l.title)
+                }, { preset: 'islands#blueDotIcon', balloonMaxWidth: 300 });
+                geoObjects.push(placemark);
+            }
+            clusterer.add(geoObjects);
+            if (selectedLocation) {
+                map.setCenter([selectedLocation.lat, selectedLocation.lng], 12);
+            } else if (geoObjects.length > 0) {
+                map.setBounds(clusterer.getBounds(), { checkZoomRange: true, zoomMargin: 30 });
+            }
+        }
+
+        document.getElementById('viewGrid')?.addEventListener('click', function() {
+            currentMapMode = false;
+            document.getElementById('viewGrid').classList.add('active');
+            document.getElementById('viewMap').classList.remove('active');
+            document.getElementById('listings').style.display = '';
+            document.getElementById('mapContainer').style.display = 'none';
+            document.getElementById('pagination').style.display = 'flex';
+            // Перерисовываем список (вид уже установлен через setListingView, но он вызывает refreshCurrentListings)
+            applyFilters();
+        });
+
+        document.getElementById('viewMap')?.addEventListener('click', function() {
+            currentMapMode = true;
+            document.getElementById('viewMap').classList.add('active');
+            document.getElementById('viewGrid').classList.remove('active');
+            document.getElementById('listings').style.display = 'none';
+            document.getElementById('mapContainer').style.display = 'block';
+            document.getElementById('pagination').style.display = 'none';
+            initMap().then(() => applyFilters());
+        });
+
+        document.getElementById('searchBtn')?.addEventListener('click', () => { currentPage = 1; applyFilters(); });
+        document.getElementById('filterCategory')?.addEventListener('change', () => { currentPage = 1; applyFilters(); });
+        document.getElementById('filterType')?.addEventListener('change', () => { currentPage = 1; applyFilters(); });
+        document.getElementById('filterSort')?.addEventListener('change', () => { currentPage = 1; applyFilters(); });
+
+        // Авторизация
+        async function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            if (!username || !password) { showNotification('Заполните поля', 'error'); return; }
+            try {
+                const resp = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await resp.json();
+                if (resp.ok) {
+                    localStorage.setItem('token', data.token);
+                    currentToken = data.token;
+                    showNotification('Вход выполнен!', 'success');
+                    closeModal('loginModal');
+                    location.reload();
+                } else {
+                    showNotification(data.error || 'Ошибка', 'error');
+                }
+            } catch(e) { showNotification('Ошибка соединения', 'error'); }
+        }
+
+        async function register() {
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            const phone = document.getElementById('regPhone').value;
+            if (!username || !password) { showNotification('Заполните поля', 'error'); return; }
+            try {
+                const resp = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, phone, acceptTerms: true })
+                });
+                const data = await resp.json();
+                if (resp.ok) {
+                    localStorage.setItem('token', data.token);
+                    currentToken = data.token;
+                    showNotification('Регистрация успешна!', 'success');
+                    closeModal('registerModal');
+                    location.reload();
+                } else {
+                    showNotification(data.error || 'Ошибка', 'error');
+                }
+            } catch(e) { showNotification('Ошибка соединения', 'error'); }
+        }
+
+        // Открытие модалок через common.js
+        window.showLoginModal = function() { showModal('loginModal'); };
+        window.showRegisterModal = function() { showModal('registerModal'); };
+
+        // Запуск
+        loadCityData();
+
+        // Перехват setListingView для единообразия
+        (function patchSetView() {
+            const original = window.setListingView;
+            if (typeof original === 'function') {
+                window.setListingView = function(view) {
+                    original(view);
+                    if (typeof window.applyCurrentViewToContainers === 'function') {
+                        window.applyCurrentViewToContainers();
+                    }
+                    if (window.location.pathname.includes('/city/')) {
+                        // После смены вида перерисовываем объявления
+                        if (typeof window.refreshCurrentListings === 'function') {
+                            window.refreshCurrentListings();
+                        }
+                    }
+                };
+            }
+        })();
+    </script>
+</body>
+</html>

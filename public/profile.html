@@ -1,0 +1,2445 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Профиль пользователя - IronAds</title>
+    <meta name="description" content="Профиль пользователя на IronAds. Объявления, рейтинг и контакты.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+        .filter-card { background: white; border-radius: 1.25rem; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+        .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+        .listings-list { display: flex; flex-direction: column; gap: 1rem; }
+        .listing-card { background: white; border-radius: 1.25rem; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); transition: all 0.3s; cursor: pointer; position: relative; display: flex; flex-direction: column; height: 100%; }
+        .listing-card:hover { transform: translateY(-8px); box-shadow: 0 12px 30px rgba(0,0,0,0.15); }
+        .favorite-btn { position: absolute; top: 0.75rem; right: 0.75rem; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 2.25rem; height: 2.25rem; font-size: 1.25rem; cursor: pointer; z-index: 2; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .favorite-btn:hover { transform: scale(1.1); }
+        .favorite-btn.active { color: #ef4444; }
+        .remove-fav-btn { background: #fee2e2; color: #dc2626; border: none; padding: 0.25rem 0.75rem; border-radius: 1.5rem; cursor: pointer; font-size: 0.75rem; margin-top: 0.5rem; transition: all 0.2s; }
+        .remove-fav-btn:hover { background: #fecaca; }
+        body.dark-theme .remove-fav-btn { background: #7f1d1d; color: #fca5a5; }
+        body.dark-theme .remove-fav-btn:hover { background: #991b1b; }
+        .listing-image { width: 100%; height: 200px; background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+        .listing-image img { width: 100%; height: 100%; object-fit: cover; }
+        .listing-info { padding: 1rem; flex: 1; display: flex; flex-direction: column; }
+        .listing-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; color: #1f2937; }
+        .listing-price { font-size: 1.2rem; font-weight: 800; color: #667eea; margin-bottom: 0.6rem; }
+        .listing-meta { font-size: 0.7rem; color: #9ca3af; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+        .listing-meta a { color: #667eea; text-decoration: none; }
+        .rating-stars { display: inline-flex; align-items: center; gap: 0.125rem; background: #fbbf24; padding: 0.125rem 0.375rem; border-radius: 1.25rem; font-size: 0.6875rem; font-weight: bold; color: #333; }
+        .listing-description { font-size: 0.8rem; color: #6b7280; line-height: 1.4; max-height: 4.2em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; flex-shrink: 0; }
+        .listing-row-description { font-size: 0.7rem; color: #6b7280; line-height: 1.3; max-height: 3.9em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+        .listing-type-badge { font-size: 0.65rem; background: #e5e7eb; padding: 0.1rem 0.6rem; border-radius: 1rem; display: inline-block; font-weight: 600; }
+        .listing-type-badge.sell { background: #dbeafe; color: #1e40af; }
+        .listing-type-badge.buy { background: #fef3c7; color: #92400e; }
+        .listing-type-badge.exchange { background: #d1fae5; color: #065f46; }
+        .listing-row { background: white; border-radius: 1rem; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s; cursor: pointer; display: flex; gap: 1rem; padding: 0.8rem; position: relative; }
+        .listing-row:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+        .listing-row .favorite-btn { position: absolute; top: 0.8rem; right: 0.8rem; }
+        .listing-row-image { width: 100px; height: 100px; background: #f0f0f0; border-radius: 0.75rem; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .listing-row-image img { width: 100%; height: 100%; object-fit: cover; }
+        .listing-row-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .listing-row-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; color: #1f2937; }
+        .listing-row-price { font-size: 1.1rem; font-weight: 800; color: #667eea; margin-bottom: 0.3rem; }
+        .listing-row-meta { font-size: 0.65rem; color: #9ca3af; display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 0.25rem; }
+        .listing-actions { display: flex; gap: 0.4rem; margin-top: 0.6rem; flex-wrap: wrap; }
+        .listing-actions button { flex: 1; padding: 0.3rem; border-radius: 0.5rem; border: none; cursor: pointer; font-size: 0.7rem; font-weight: 500; }
+        .btn-view-listing { background: #667eea; color: white; }
+        .btn-edit-listing { background: #f3f4f6; color: #374151; }
+        .btn-delete-listing { background: #fee2e2; color: #dc2626; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-secondary { background: #e5e7eb; color: #374151; }
+        .btn-bump-listing { background: #f59e0b; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.75rem; font-weight: 500; transition: 0.2s; }
+        .btn-bump-listing.disabled { background: #9ca3af; cursor: not-allowed; }
+        body.dark-theme .btn-bump-listing { background: #d97706; }
+        body.dark-theme .btn-bump-listing.disabled { background: #4b5563; }
+        #listingsList.grid-view-large { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important; gap: 1.5rem !important; }
+        #listingsList.grid-view-compact { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important; gap: 1rem !important; }
+        #listingsList.list-view { display: flex !important; flex-direction: column !important; gap: 1rem !important; }
+        @media (max-width: 768px) {
+            #listingsList.grid-view-compact { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important; gap: 0.75rem !important; }
+            #listingsList.grid-view-compact .listing-image { height: 120px; }
+        }
+        .back-link { display: inline-block; margin-bottom: 1.25rem; color: white; text-decoration: none; cursor: pointer; }
+        .online-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; margin-left: 6px; }
+        .hidden { display: none; }
+        .profile-header-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: center; }
+        .complaint-btn { background: #fee2e2; color: #dc2626; border: none; padding: 0.5rem 1rem; border-radius: 2.5rem; cursor: pointer; font-size: 0.875rem; margin-left: 0.75rem; }
+        .tabs { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .tab { padding: 0.6rem 1.2rem; background: rgba(255,255,255,0.2); border: none; border-radius: 2rem; cursor: pointer; font-size: 0.8rem; font-weight: 500; color: white; transition: all 0.2s; }
+        .tab.active { background: white; color: #667eea; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .subscription-section { margin-top: 0.5rem; }
+        .subscription-package {
+            background: white;
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: all 0.2s;
+        }
+        body.dark-theme .subscription-package {
+            background: #1e293b;
+            border-color: #3b82f6;
+        }
+        .subscription-package.expired {
+            border-left-color: #9ca3af;
+            opacity: 0.7;
+        }
+        .subscription-package .header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem 1rem;
+        }
+        .subscription-package .label {
+            font-weight: 600;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        body.dark-theme .subscription-package .label { color: #e2e8f0; }
+        .subscription-package .badge-status {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.7rem;
+            border-radius: 2rem;
+            background: #10b981;
+            color: white;
+        }
+        .subscription-package .badge-status.expired {
+            background: #9ca3af;
+        }
+        .subscription-package .badge-status.near {
+            background: #f59e0b;
+        }
+        .subscription-package .date-range {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        body.dark-theme .subscription-package .date-range { color: #94a3b8; }
+        .subscription-package .slot-info {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-left: auto;
+        }
+        body.dark-theme .subscription-package .slot-info { color: #94a3b8; }
+        .subscription-package .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            width: 100%;
+        }
+        .subscription-package .progress-track {
+            flex: 1;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        body.dark-theme .subscription-package .progress-track { background: #334155; }
+        .subscription-package .progress-bar {
+            height: 100%;
+            background: #667eea;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        body.dark-theme .subscription-package .progress-bar { background: #3b82f6; }
+        .subscription-package .progress-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #1f2937;
+            white-space: nowrap;
+        }
+        body.dark-theme .subscription-package .progress-label { color: #e2e8f0; }
+        .subscription-package .actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+        .subscription-package .actions .btn-sm { padding: 0.25rem 0.8rem; font-size: 0.75rem; }
+        .subscription-package .listing-tokens {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+        }
+        .subscription-package .listing-token {
+            background: #f3f4f6;
+            padding: 0.15rem 0.6rem 0.15rem 0.8rem;
+            border-radius: 2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.75rem;
+            color: #1f2937;
+        }
+        body.dark-theme .subscription-package .listing-token {
+            background: #2d3a4e;
+            color: #e2e8f0;
+        }
+        .subscription-package .listing-token .remove-token {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 0.8rem;
+            line-height: 1;
+            padding: 0 2px;
+        }
+        .subscription-package .listing-token .remove-token:hover { color: #dc2626; }
+        .subscription-package .empty-token {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            font-style: italic;
+        }
+        .subscription-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1001; justify-content: center; align-items: center; }
+        .modal-content { background: white; border-radius: 1.5rem; padding: 1.5rem; width: 95%; max-width: 750px; max-height: 85vh; overflow-y: auto; }
+        body.dark-theme .modal-content { background: #1e293b; border: 1px solid #334155; }
+        .modal-content h3 { color: #1f2937; margin-bottom: 0.5rem; }
+        body.dark-theme .modal-content h3 { color: #f1f5f9; }
+        .modal-grid {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .modal-grid .left-panel { overflow-y: auto; max-height: 400px; }
+        .modal-grid .right-panel {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            max-height: 400px;
+        }
+        body.dark-theme .modal-grid .right-panel { background: #0f172a; }
+        .modal-grid .right-panel .selected-count {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .modal-grid .right-panel .selected-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            margin-bottom: 0.5rem;
+        }
+        .modal-grid .right-panel .selected-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.3rem 0.5rem;
+            background: white;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+        }
+        body.dark-theme .modal-grid .right-panel .selected-item { background: #1e293b; }
+        .modal-grid .right-panel .selected-item .remove-selected {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .modal-grid .listing-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.3rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        body.dark-theme .modal-grid .listing-checkbox { border-bottom-color: #334155; }
+        .modal-grid .listing-checkbox label { flex: 1; font-size: 0.85rem; cursor: pointer; }
+        .modal-grid .listing-checkbox input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #667eea; }
+        .modal-grid .search-box { width: 100%; padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 0.75rem; font-size: 0.85rem; margin-bottom: 0.5rem; }
+        body.dark-theme .modal-grid .search-box { background: #0f172a; border-color: #334155; color: #f1f5f9; }
+        .modal-grid .quick-actions { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+        .modal-grid .quick-actions button { padding: 0.2rem 0.8rem; font-size: 0.7rem; border-radius: 2rem; border: none; cursor: pointer; background: #e5e7eb; color: #1f2937; }
+        body.dark-theme .modal-grid .quick-actions button { background: #334155; color: #e2e8f0; }
+        .modal-grid .quick-actions button:hover { background: #d1d5db; }
+        body.dark-theme .modal-grid .quick-actions button:hover { background: #475569; }
+        .modal-grid .pagination { display: flex; justify-content: center; gap: 0.3rem; margin-top: 0.5rem; }
+        .modal-grid .pagination button { padding: 0.2rem 0.6rem; border: none; border-radius: 0.5rem; background: #f1f5f9; cursor: pointer; font-size: 0.75rem; }
+        .modal-grid .pagination button.active { background: #667eea; color: white; }
+        .modal-grid .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.2rem; flex-wrap: wrap; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.6rem 1.2rem; border: none; border-radius: 0.75rem; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-secondary { background: #e5e7eb; color: #374151; padding: 0.5rem 1rem; border: none; border-radius: 0.75rem; cursor: pointer; }
+        body.dark-theme .btn-secondary { background: #334155; color: #e2e8f0; }
+        .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.8rem; }
+        .btn-outline { background: transparent; border: 1px solid #667eea; color: #667eea; }
+        body.dark-theme .btn-outline { border-color: #3b82f6; color: #3b82f6; }
+        .btn-danger-sm { background: #fee2e2; color: #dc2626; border: none; padding: 0.2rem 0.6rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.7rem; }
+        .notification { position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 0.625rem 1.25rem; border-radius: 2.5rem; font-size: 0.8125rem; z-index: 2000; display: none; }
+        .notification.success { background: #10b981; }
+        .notification.error { background: #ef4444; }
+        .badge { background-color: #ef4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.6875rem; margin-left: 6px; display: inline-block; min-width: 18px; text-align: center; }
+        .badge.hidden { display: none; }
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .modal-grid { grid-template-columns: 1fr; }
+            .modal-grid .right-panel { max-height: 200px; }
+            .subscription-package .header { flex-direction: column; align-items: stretch; }
+            .subscription-package .slot-info { margin-left: 0; }
+            .subscription-package .progress-container { flex-direction: column; align-items: stretch; gap: 0.3rem; }
+            .subscription-package .listing-tokens { justify-content: center; }
+            .tabs { justify-content: center; }
+            .profile-header-actions { justify-content: center; }
+        }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 500; color: #374151; font-size: 0.8rem; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.6rem 0.8rem; border: 1px solid #e5e7eb; border-radius: 0.75rem; font-size: 0.85rem; font-family: inherit; }
+        .row-select-group { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .row-select-group .form-group { flex: 1; margin-bottom: 0; }
+        .category-select-group { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+        .category-select-group .form-group { flex: 1; margin-bottom: 0; }
+        .map-small { width: 100%; height: 200px; border-radius: 0.75rem; margin-top: 0.5rem; border: 1px solid #e5e7eb; }
+        .map-search-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; position: relative; }
+        .map-search-row input { flex: 1; min-width: 120px; padding: 0.4rem 0.7rem; border: 1px solid #e5e7eb; border-radius: 0.75rem; font-size: 0.85rem; }
+        .suggest-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 0.75rem; max-height: 200px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .suggest-list .suggest-item { padding: 0.5rem 0.7rem; cursor: pointer; font-size: 0.85rem; }
+        .suggest-list .suggest-item:hover { background: #f1f5f9; }
+        .media-list { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; }
+        .media-item { position: relative; width: 80px; height: 80px; border: 2px solid #e5e7eb; border-radius: 0.75rem; overflow: hidden; background: #f8f9fa; }
+        .media-item img { width: 100%; height: 100%; object-fit: cover; }
+        .media-item .media-actions { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: space-around; padding: 4px; }
+        .media-item .media-actions button { background: none; border: none; color: white; cursor: pointer; font-size: 0.65rem; padding: 2px 4px; border-radius: 4px; }
+        .plan-card { border: 1px solid #e2e8f0; border-radius: 16px; padding: 1rem; margin-bottom: 0.8rem; background: #f8fafc; }
+        body.dark-theme .plan-card { background: #1e293b; border-color: #334155; }
+        .plan-card h4 { font-size: 1.1rem; margin-bottom: 0.3rem; }
+        .plan-card p { margin: 0.2rem 0; color: #475569; }
+        body.dark-theme .plan-card p { color: #94a3b8; }
+
+        .modal-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+        .modal-card-item {
+            background: #f8fafc;
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+        body.dark-theme .modal-card-item {
+            background: #1e293b;
+        }
+        .modal-card-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        .modal-card-item.selected {
+            border-color: #667eea;
+            background: #eef2ff;
+        }
+        body.dark-theme .modal-card-item.selected {
+            border-color: #3b82f6;
+            background: #1e3a5f;
+        }
+        .modal-card-item .card-image {
+            width: 100%;
+            height: 120px;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .modal-card-item .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .modal-card-item .card-info {
+            padding: 0.5rem 0.75rem;
+        }
+        .modal-card-item .card-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #1f2937;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        body.dark-theme .modal-card-item .card-title {
+            color: #e2e8f0;
+        }
+        .modal-card-item .card-price {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        body.dark-theme .modal-card-item .card-price {
+            color: #3b82f6;
+        }
+        .modal-card-item .card-check {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(255,255,255,0.9);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #9ca3af;
+            transition: all 0.2s;
+        }
+        .modal-card-item.selected .card-check {
+            background: #667eea;
+            color: white;
+        }
+        body.dark-theme .modal-card-item.selected .card-check {
+            background: #3b82f6;
+        }
+        .modal-card-item .card-check .check-icon {
+            display: none;
+        }
+        .modal-card-item.selected .card-check .check-icon {
+            display: block;
+        }
+        .modal-card-item .card-check .uncheck-icon {
+            display: block;
+        }
+        .modal-card-item.selected .card-check .uncheck-icon {
+            display: none;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .view-toggle button {
+            padding: 0.25rem 0.8rem;
+            border: 1px solid #cbd5e1;
+            background: white;
+            border-radius: 1.5rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        body.dark-theme .view-toggle button {
+            background: #1e293b;
+            border-color: #475569;
+            color: #e2e8f0;
+        }
+        .view-toggle button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        body.dark-theme .view-toggle button.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+        @media (max-width: 768px) {
+            .modal-card-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+            .modal-card-item .card-image {
+                height: 100px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="/dark-theme.css">
+</head>
+<body>
+    <header id="main-header"></header>
+
+    <div class="container">
+        <a class="back-link" id="backButton">← Назад</a>
+        <div class="filter-card" id="profileCard">
+            <h2 id="profileUsername">Загрузка...</h2>
+            <div>Телефон: <span id="profilePhone"></span></div>
+            <div>Рейтинг: <span id="profileRating"></span></div>
+            <div id="profileActions"></div>
+        </div>
+
+        <div id="ownProfileControls" class="profile-header-actions hidden">
+            <button class="btn-primary" id="showCreateFormBtn">➕ Создать объявление</button>
+            <a href="/settings.html" class="btn-primary">⚙️ Настройки</a>
+        </div>
+
+        <div class="filter-card" id="subscriptionCard">
+            <h2 style="margin:0 0 0.5rem 0; font-size:1.2rem;">📦 Мои подписки</h2>
+            <div id="subscriptionStatus"></div>
+            <div class="subscription-actions" id="subscriptionActions"></div>
+        </div>
+
+        <div class="tabs" id="profileTabs">
+            <button class="tab active" data-tab="my">📋 Мои объявления</button>
+            <button class="tab" data-tab="fav">❤️ Избранное</button>
+            <button class="tab" data-tab="archive">📦 Архив</button>
+        </div>
+
+        <div id="listingsContainer" class="filter-card">
+            <div id="listingsList"></div>
+        </div>
+    </div>
+
+    <!-- ===== МОДАЛЬНЫЕ ОКНА ===== -->
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <h3>➕ Новое объявление</h3>
+            <div class="form-group"><label>Название</label><input type="text" id="createTitle" placeholder="iPhone 14 Pro"></div>
+            <div class="form-group"><label>Цена от (₽) *</label><input type="number" id="createPrice" placeholder="Минимальная цена" required></div>
+            <div class="form-group"><label>Цена до (₽) (если диапазон)</label><input type="number" id="createPriceMax" placeholder="Максимальная цена"></div>
+            <div class="form-group"><label>Описание</label><textarea id="createDescription" rows="3"></textarea></div>
+            <div class="category-select-group">
+                <div class="form-group"><label>Группа</label><select id="createGroup"><option value="">-- Выберите группу --</option></select></div>
+                <div class="form-group" id="createSubgroupGroup" style="display: none;"><label>Подгруппа</label><select id="createSubgroup"><option value="">-- Сначала выберите группу --</option></select></div>
+                <div class="form-group" id="createCategoryGroup" style="display: none;"><label>Категория</label><select id="createCategorySelect"><option value="">-- Сначала выберите подгруппу --</option></select></div>
+            </div>
+            <div class="form-group"><label>Тип объявления</label><select id="createType"><option value="sell">Продам</option><option value="buy">Куплю</option><option value="exchange">Обмен</option></select></div>
+            <div class="row-select-group">
+                <div class="form-group"><label>Регион</label><select id="createRegion"><option value="">-- Выберите регион --</option></select></div>
+                <div class="form-group" id="createCityGroup" style="display: none;"><label>Город</label><select id="createCity"><option value="">-- Сначала выберите регион --</option></select></div>
+            </div>
+            <div class="form-group">
+                <label>Местоположение на карте</label>
+                <div id="createMap" class="map-small" style="height:200px;"></div>
+                <div class="map-search-row" style="position:relative;">
+                    <input type="text" id="createMapSearch" placeholder="Введите адрес или город..." autocomplete="off">
+                    <button class="btn-secondary" id="createMapSearchBtn">🔍 Найти</button>
+                    <button class="btn-secondary" id="createMapClearBtn">🗑️ Очистить</button>
+                    <button class="btn-secondary" id="createMapGeoBtn">📍 Моё местоположение</button>
+                    <div class="suggest-list" id="createSuggestList"></div>
+                </div>
+                <input type="hidden" id="createLat">
+                <input type="hidden" id="createLng">
+                <small style="color:#6b7280;">Начните вводить адрес — появятся подсказки</small>
+            </div>
+            <div class="form-group"><label>Фото (до 10 шт)</label><input type="file" id="createMedia" multiple accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/heic,image/heif"></div>
+            <div class="form-actions">
+                <button class="btn-secondary" onclick="closeModal('createModal')">Отмена</button>
+                <button class="btn-primary" id="submitCreateBtn">Опубликовать</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3>✏️ Редактировать объявление</h3>
+            <input type="hidden" id="editId">
+            <div class="form-group"><label>Название</label><input type="text" id="editTitle"></div>
+            <div class="form-group"><label>Цена от (₽) *</label><input type="number" id="editPriceMin" placeholder="Минимальная цена" required></div>
+            <div class="form-group"><label>Цена до (₽) (если диапазон)</label><input type="number" id="editPriceMax" placeholder="Максимальная цена"></div>
+            <div class="form-group"><label>Описание</label><textarea id="editDescription" rows="3"></textarea></div>
+            <div class="category-select-group">
+                <div class="form-group"><label>Группа</label><select id="editGroup"><option value="">-- Выберите группу --</option></select></div>
+                <div class="form-group" id="editSubgroupGroup" style="display: none;"><label>Подгруппа</label><select id="editSubgroup"><option value="">-- Сначала выберите группу --</option></select></div>
+                <div class="form-group" id="editCategoryGroup" style="display: none;"><label>Категория</label><select id="editCategorySelect"><option value="">-- Сначала выберите подгруппу --</option></select></div>
+            </div>
+            <div class="form-group"><label>Тип объявления</label><select id="editType"><option value="sell">Продам</option><option value="buy">Куплю</option><option value="exchange">Обмен</option></select></div>
+            <div class="row-select-group">
+                <div class="form-group"><label>Регион</label><select id="editRegion"><option value="">-- Выберите регион --</option></select></div>
+                <div class="form-group" id="editCityGroup" style="display: none;"><label>Город</label><select id="editCity"><option value="">-- Сначала выберите регион --</option></select></div>
+            </div>
+            <div class="form-group">
+                <label>Местоположение на карте</label>
+                <div id="editMap" class="map-small" style="height:200px;"></div>
+                <div class="map-search-row" style="position:relative;">
+                    <input type="text" id="editMapSearch" placeholder="Введите адрес или город..." autocomplete="off">
+                    <button class="btn-secondary" id="editMapSearchBtn">🔍 Найти</button>
+                    <button class="btn-secondary" id="editMapClearBtn">🗑️ Очистить</button>
+                    <button class="btn-secondary" id="editMapGeoBtn">📍 Моё местоположение</button>
+                    <div class="suggest-list" id="editSuggestList"></div>
+                </div>
+                <input type="hidden" id="editLat">
+                <input type="hidden" id="editLng">
+                <small style="color:#6b7280;">Начните вводить адрес — появятся подсказки</small>
+            </div>
+            <div class="form-group"><label>Фотографии</label><div id="editMediaList" class="media-list"></div><label>Добавить фото</label><input type="file" id="editMedia" multiple accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/heic,image/heif"></div>
+            <div class="form-actions">
+                <button class="btn-secondary" onclick="closeModal('editModal')">Отмена</button>
+                <button class="btn-primary" id="submitUpdateBtn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="complaintModal" class="modal">
+        <div class="modal-content">
+            <h3>🚩 Пожаловаться на пользователя</h3>
+            <div class="form-group"><label>Причина жалобы</label><textarea id="complaintReason" rows="4" placeholder="Опишите причину жалобы"></textarea></div>
+            <div class="form-actions">
+                <button class="btn-secondary" onclick="closeModal('complaintModal')">Отмена</button>
+                <button class="btn-primary" onclick="submitComplaint()">Отправить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ОБНОВЛЁННАЯ МОДАЛКА ВЫБОРА ===== -->
+    <div id="selectListingsModal" class="modal">
+        <div class="modal-content">
+            <h3 id="selectListingsTitle">Выберите объявления для пакета</h3>
+            <p class="hint-text" style="font-size:0.85rem; color:#6b7280; margin-bottom:0.5rem;">Выберите до 5 объявлений для нового пакета. Объявление может быть только в одном активном пакете каждого типа.</p>
+            <div class="modal-grid">
+                <div class="left-panel">
+                    <div class="view-toggle">
+                        <button data-view="list" class="active">📋 Список</button>
+                        <button data-view="cards">🖼️ Карточки</button>
+                    </div>
+                    <div class="quick-actions">
+                        <button id="selectAllActive">Выбрать все активные</button>
+                        <button id="clearAllSelected">Очистить все</button>
+                    </div>
+                    <input type="text" id="listingSearchInput" class="search-box" placeholder="Поиск по названию...">
+                    <div id="selectListingsContainer"></div>
+                    <div class="pagination" id="selectListingsPagination"></div>
+                </div>
+                <div class="right-panel">
+                    <div class="selected-count" id="selectedCount">Выбрано: 0</div>
+                    <div class="selected-list" id="selectedListContainer"></div>
+                    <div style="margin-top:auto;">
+                        <button class="btn-primary btn-sm" id="confirmSelectListings" style="width:100%;">✅ Подтвердить</button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn-secondary" onclick="closeModal('selectListingsModal')">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="buyPartnerPlanModal" class="modal">
+        <div class="modal-content">
+            <h3>🤝 Выберите тариф</h3>
+            <div id="partnerPlansList"></div>
+            <div class="form-actions">
+                <button class="btn-secondary" onclick="closeModal('buyPartnerPlanModal')">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=97d0fa92-e83f-48a4-b404-4a55881bc4a8&suggest_apikey=97d0fa92-e83f-48a4-b404-4a55881bc4a8&lang=ru_RU" type="text/javascript"></script>
+    <script src="https://js.hcaptcha.com/1/api.js?hl=ru" async defer></script>
+    <script src="/js/common.js"></script>
+    <script>
+        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+        function initMapForModal(containerId, latInputId, lngInputId, searchInputId, searchBtnId, clearBtnId, geoBtnId, suggestListId) {
+            if (typeof ymaps === 'undefined') {
+                setTimeout(() => initMapForModal(containerId, latInputId, lngInputId, searchInputId, searchBtnId, clearBtnId, geoBtnId, suggestListId), 500);
+                return;
+            }
+            ymaps.ready(() => {
+                const container = document.getElementById(containerId);
+                if (!container || container._map) return;
+                const lat = parseFloat(document.getElementById(latInputId).value) || 55.75;
+                const lng = parseFloat(document.getElementById(lngInputId).value) || 37.62;
+                const map = new ymaps.Map(container, { center: [lat, lng], zoom: 12, controls: ['zoomControl'] });
+                container._map = map;
+                let placemark = null;
+                if (document.getElementById(latInputId).value && document.getElementById(lngInputId).value) {
+                    placemark = new ymaps.Placemark([lat, lng], {}, { draggable: true });
+                    map.geoObjects.add(placemark);
+                }
+                map.events.add('click', function(e) {
+                    const coords = e.get('coords');
+                    document.getElementById(latInputId).value = coords[0];
+                    document.getElementById(lngInputId).value = coords[1];
+                    if (placemark) { placemark.geometry.setCoordinates(coords); } else {
+                        placemark = new ymaps.Placemark(coords, {}, { draggable: true });
+                        map.geoObjects.add(placemark);
+                    }
+                    ymaps.geocode(coords).then(res => {
+                        const first = res.geoObjects.get(0);
+                        if (first) document.getElementById(searchInputId).value = first.getAddressLine();
+                    }).catch(() => showNotification('Ошибка геокодирования', 'error'));
+                });
+                const suggestList = document.getElementById(suggestListId);
+                const searchInput = document.getElementById(searchInputId);
+                let suggestTimer = null;
+                searchInput.addEventListener('input', function() {
+                    const query = this.value.trim();
+                    if (query.length < 2) { suggestList.style.display = 'none'; return; }
+                    clearTimeout(suggestTimer);
+                    suggestTimer = setTimeout(() => {
+                        ymaps.suggest(query, { results: 5 }).then(res => {
+                            suggestList.innerHTML = '';
+                            if (res.length === 0) { suggestList.style.display = 'none'; return; }
+                            res.forEach(item => {
+                                const div = document.createElement('div');
+                                div.className = 'suggest-item';
+                                div.textContent = item;
+                                div.addEventListener('mousedown', function(e) {
+                                    e.preventDefault();
+                                    searchInput.value = item;
+                                    suggestList.style.display = 'none';
+                                    ymaps.geocode(item).then(geoRes => {
+                                        const first = geoRes.geoObjects.get(0);
+                                        if (!first) { showNotification('Адрес не найден', 'error'); return; }
+                                        const coords = first.geometry.getCoordinates();
+                                        map.setCenter(coords, 14);
+                                        document.getElementById(latInputId).value = coords[0];
+                                        document.getElementById(lngInputId).value = coords[1];
+                                        if (placemark) { placemark.geometry.setCoordinates(coords); } else {
+                                            placemark = new ymaps.Placemark(coords, {}, { draggable: true });
+                                            map.geoObjects.add(placemark);
+                                        }
+                                        searchInput.value = first.getAddressLine();
+                                    }).catch(() => showNotification('Ошибка при определении адреса', 'error'));
+                                });
+                                suggestList.appendChild(div);
+                            });
+                            suggestList.style.display = 'block';
+                        }).catch(() => { suggestList.style.display = 'none'; });
+                    }, 200);
+                });
+                searchInput.addEventListener('blur', function() { setTimeout(() => { suggestList.style.display = 'none'; }, 300); });
+                document.getElementById(searchBtnId).addEventListener('click', function() {
+                    const query = searchInput.value.trim();
+                    if (!query) return;
+                    ymaps.geocode(query).then(res => {
+                        const first = res.geoObjects.get(0);
+                        if (!first) { showNotification('Адрес не найден', 'error'); return; }
+                        const coords = first.geometry.getCoordinates();
+                        map.setCenter(coords, 14);
+                        document.getElementById(latInputId).value = coords[0];
+                        document.getElementById(lngInputId).value = coords[1];
+                        if (placemark) { placemark.geometry.setCoordinates(coords); } else {
+                            placemark = new ymaps.Placemark(coords, {}, { draggable: true });
+                            map.geoObjects.add(placemark);
+                        }
+                        searchInput.value = first.getAddressLine();
+                        suggestList.style.display = 'none';
+                    }).catch(() => showNotification('Ошибка поиска адреса', 'error'));
+                });
+                document.getElementById(clearBtnId).addEventListener('click', function() {
+                    document.getElementById(latInputId).value = '';
+                    document.getElementById(lngInputId).value = '';
+                    searchInput.value = '';
+                    if (placemark) { map.geoObjects.remove(placemark); placemark = null; }
+                    map.setCenter([55.75, 37.62], 10);
+                    suggestList.style.display = 'none';
+                });
+                document.getElementById(geoBtnId).addEventListener('click', function() {
+                    ymaps.geolocation.get({ provider: 'browser', mapStateAutoApply: true }).then(res => {
+                        const coords = res.geoObjects.get(0).geometry.getCoordinates();
+                        map.setCenter(coords, 14);
+                        document.getElementById(latInputId).value = coords[0];
+                        document.getElementById(lngInputId).value = coords[1];
+                        if (placemark) { placemark.geometry.setCoordinates(coords); } else {
+                            placemark = new ymaps.Placemark(coords, {}, { draggable: true });
+                            map.geoObjects.add(placemark);
+                        }
+                        ymaps.geocode(coords).then(res2 => {
+                            const first = res2.geoObjects.get(0);
+                            if (first) searchInput.value = first.getAddressLine();
+                        });
+                    }).catch(() => showNotification('Не удалось определить местоположение', 'error'));
+                });
+            });
+        }
+
+        // ========== ТОКЕН ИЗ URL ==========
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            if (token) { localStorage.setItem('token', token); window.location.href = window.location.pathname; return; }
+        })();
+
+        const API_URL = '/api';
+        let currentToken = localStorage.getItem('token');
+        if (!currentToken) window.location.href = '/';
+
+        let currentMediaList = [];
+        let currentMyListings = [];
+        let currentArchivedListings = [];
+        let currentFavoritesList = [];
+        let currentUserListings = [];
+
+        let currentUserId = null;
+        try { currentUserId = JSON.parse(atob(currentToken.split('.')[1])).userId; } catch(e) {}
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const profileUserId = urlParams.get('id');
+        let isOwnProfile = true;
+        if (profileUserId && currentUserId) {
+            isOwnProfile = (parseInt(profileUserId) === currentUserId);
+        } else if (profileUserId && !currentUserId) {
+            isOwnProfile = false;
+        }
+        const targetUserId = profileUserId ? parseInt(profileUserId) : currentUserId;
+
+        const STORAGE_KEY = 'profile_active_tab';
+        let currentTab = localStorage.getItem(STORAGE_KEY) || 'my';
+        let selectedPackageType = null;
+        let expandedPackages = {};
+
+        let selectListingsPage = 1;
+        let selectListingsPerPage = 10;
+        let selectListingsFiltered = [];
+        let selectedIds = [];
+
+        let isPartner = false;
+        let currentUserData = null;
+
+        async function loadUserData() {
+            try {
+                const resp = await fetch(`${API_URL}/users/${currentUserId}`, {
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+                if (resp.ok) {
+                    currentUserData = await resp.json();
+                    localStorage.setItem('user', JSON.stringify(currentUserData));
+                    isPartner = currentUserData.is_partner || false;
+                    console.log('🔹 loadUserData: isPartner =', isPartner);
+                }
+            } catch(e) { console.error('Ошибка загрузки данных пользователя:', e); }
+        }
+
+        function showNotification(msg, type) {
+            const n = document.getElementById('notification');
+            n.textContent = msg;
+            n.className = `notification ${type}`;
+            n.style.display = 'block';
+            setTimeout(() => n.style.display = 'none', 2500);
+        }
+        function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
+
+        // ========== ФУНКЦИИ ДЛЯ РЕГИОНОВ И КАТЕГОРИЙ ==========
+        async function loadRegionsForSelect(selectId) {
+            try {
+                const resp = await fetch('/api/cities/regions/all');
+                const regions = await resp.json();
+                regions.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+                const select = document.getElementById(selectId);
+                if (!select) return;
+                select.innerHTML = '<option value="">-- Выберите регион --</option>';
+                regions.forEach(region => { select.innerHTML += `<option value="${region.id}">${escapeHtml(region.name)}</option>`; });
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadCitiesByRegionForSelect(regionId, targetSelectId, cityGroupId) {
+            if (!regionId) {
+                const select = document.getElementById(targetSelectId);
+                if (select) select.innerHTML = '<option value="">-- Сначала выберите регион --</option>';
+                const group = document.getElementById(cityGroupId);
+                if (group) group.style.display = 'none';
+                return;
+            }
+            try {
+                const resp = await fetch(`/api/cities?region_id=${regionId}&limit=500`);
+                const cities = await resp.json();
+                cities.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+                const select = document.getElementById(targetSelectId);
+                select.innerHTML = '<option value="">-- Выберите город --</option>';
+                cities.forEach(city => { select.innerHTML += `<option value="${city.id}">${escapeHtml(city.name)}</option>`; });
+                const group = document.getElementById(cityGroupId);
+                if (group) group.style.display = 'block';
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadGroups(selectId, targetValue) {
+            try {
+                const resp = await fetch(API_URL + '/categories?parent_id=');
+                const groups = await resp.json();
+                const select = document.getElementById(selectId);
+                if (!select) return;
+                select.innerHTML = '<option value="">-- Выберите группу --</option>';
+                groups.forEach(g => {
+                    const opt = document.createElement('option');
+                    opt.value = g.id;
+                    opt.textContent = (g.icon || '📁') + ' ' + g.name;
+                    select.appendChild(opt);
+                });
+                if (targetValue) select.value = targetValue;
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadSubcategories(parentId, selectId, targetValue) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            if (!parentId) { select.innerHTML = '<option value="">-- Сначала выберите группу --</option>'; return; }
+            try {
+                const resp = await fetch(API_URL + '/categories?parent_id=' + parentId);
+                const categories = await resp.json();
+                select.innerHTML = '<option value="">-- Выберите подгруппу --</option>';
+                categories.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = (c.icon || '📂') + ' ' + c.name;
+                    select.appendChild(opt);
+                });
+                if (targetValue) select.value = targetValue;
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadCategoryChildren(parentId, selectId, targetValue) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            if (!parentId) { select.innerHTML = '<option value="">-- Сначала выберите подгруппу --</option>'; return; }
+            try {
+                const resp = await fetch(API_URL + '/categories?parent_id=' + parentId);
+                const categories = await resp.json();
+                select.innerHTML = '<option value="">-- Выберите категорию --</option>';
+                categories.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = (c.icon || '📂') + ' ' + c.name;
+                    select.appendChild(opt);
+                });
+                if (targetValue) select.value = targetValue;
+            } catch(e) { console.error(e); }
+        }
+
+        async function getAncestors(categoryId) {
+            try {
+                const resp = await fetch(API_URL + '/categories/ancestors/' + categoryId);
+                if (!resp.ok) return [];
+                const ancestors = await resp.json();
+                return ancestors;
+            } catch(e) { return []; }
+        }
+
+        // ========== ПРОФИЛЬ ==========
+        async function loadUserProfile() {
+            try {
+                const resp = await fetch(`${API_URL}/users/${targetUserId}`);
+                const user = await resp.json();
+                let profileHtml = `${escapeHtml(user.username)} ${user.is_online ? '<span class="online-indicator"></span>' : ''}`;
+                document.getElementById('profileUsername').innerHTML = profileHtml;
+                document.getElementById('profilePhone').textContent = user.phone || 'скрыто';
+                let ratingText = (user.rating_count && user.rating_count > 0) ? `${user.rating_avg.toFixed(1)} (${user.rating_count} оценок)` : 'нет оценок';
+                document.getElementById('profileRating').innerHTML = ratingText;
+                const actionsDiv = document.getElementById('profileActions');
+                if (!isOwnProfile && currentToken) {
+                    actionsDiv.innerHTML = `<button class="btn-primary" onclick="startChatWithUser()">💬 Написать</button><button class="complaint-btn" onclick="showComplaintModal()">🚩 Пожаловаться</button>`;
+                } else {
+                    actionsDiv.innerHTML = '';
+                }
+                if (typeof window.updatePageMeta === 'function') {
+                    const isOwn = (user.id === currentUserId);
+                    let title = isOwn ? 'Мой профиль' : 'Профиль пользователя ' + user.username;
+                    let description = isOwn ? 'Управление объявлениями и профилем на IronAds.' : 'Смотреть объявления пользователя ' + user.username + ' на IronAds.';
+                    window.updatePageMeta(title, description);
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function startChatWithUser() {
+            try {
+                const resp = await fetch(`${API_URL}/users/${targetUserId}/listings`);
+                const listings = await resp.json();
+                if (!listings.length) { showNotification('У этого пользователя нет активных объявлений', 'error'); return; }
+                const listingId = listings[0].id;
+                const chatResp = await fetch(`${API_URL}/chats/create`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ listing_id: listingId }) });
+                const chat = await chatResp.json();
+                if (chatResp.ok) window.location.href = `/chat.html?chatId=${chat.id}`;
+                else showNotification(chat.error || 'Ошибка создания чата', 'error');
+            } catch(e) { showNotification('Ошибка соединения', 'error'); }
+        }
+
+        function showComplaintModal() { document.getElementById('complaintReason').value = ''; showModal('complaintModal'); }
+        async function submitComplaint() {
+            const reason = document.getElementById('complaintReason').value.trim();
+            if (!reason) { showNotification('Укажите причину жалобы', 'error'); return; }
+            try {
+                const resp = await fetch(`${API_URL}/users/${targetUserId}/complaint`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ reason }) });
+                if (resp.ok) { showNotification('Жалоба отправлена, спасибо!', 'success'); closeModal('complaintModal'); }
+                else { const err = await resp.json(); showNotification(err.error || 'Ошибка', 'error'); }
+            } catch(e) { showNotification('Ошибка соединения', 'error'); }
+        }
+
+        // ========== ПОДПИСКИ (С РАЗДЕЛЕНИЕМ) ==========
+        async function loadSubscriptionStatus() {
+            try {
+                if (!currentUserData) {
+                    await loadUserData();
+                }
+
+                const resp = await fetch(`${API_URL}/payments/status`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
+                if (!resp.ok) throw new Error();
+                const data = await resp.json();
+
+                let partnerFromSubs = false;
+                if (data.listing && Array.isArray(data.listing)) {
+                    for (const pkg of data.listing) {
+                        if (pkg.plan_name || pkg.max_slots > 5) {
+                            partnerFromSubs = true;
+                            break;
+                        }
+                    }
+                }
+                if (!partnerFromSubs && data.autobump && Array.isArray(data.autobump)) {
+                    for (const pkg of data.autobump) {
+                        if (pkg.plan_name || pkg.max_slots > 5) {
+                            partnerFromSubs = true;
+                            break;
+                        }
+                    }
+                }
+
+                isPartner = currentUserData?.is_partner || partnerFromSubs || false;
+                console.log('🔹 loadSubscriptionStatus: isPartner =', isPartner);
+
+                renderSubscriptionButtons(isPartner);
+
+                const allLists = document.querySelectorAll('.package-list-container');
+                expandedPackages = {};
+                allLists.forEach(el => { const id = el.id; if (id) expandedPackages[id] = el.style.display === 'block'; });
+
+                let html = '';
+
+                if (data.trial) {
+                    html += `<div class="subscription-package">
+                        <div class="header">
+                            <span class="label">🔓 Пробный период</span>
+                            <span class="badge-status">Активен до ${new Date(data.trial.expires_at).toLocaleDateString()}</span>
+                        </div>
+                    </div>`;
+                }
+
+                const listingPackages = Array.isArray(data.listing) ? data.listing : (data.listing ? [data.listing] : []);
+                const autobumpPackages = Array.isArray(data.autobump) ? data.autobump : (data.autobump ? [data.autobump] : []);
+
+                // Фильтр для партнёров
+                let filteredListingPackages = listingPackages;
+                let filteredAutobumpPackages = autobumpPackages;
+                if (isPartner) {
+                    filteredListingPackages = listingPackages.filter(pkg => pkg.plan_id !== null);
+                    filteredAutobumpPackages = autobumpPackages.filter(pkg => pkg.plan_id !== null);
+                }
+
+                // ===== ИСПРАВЛЕННАЯ ФУНКЦИЯ renderPackage (разделение для партнёров) =====
+                const renderPackage = (pkg, type) => {
+                    const used = pkg.listing_ids ? pkg.listing_ids.length : 0;
+                    const max = pkg.max_slots || 0;
+                    const percent = max > 0 ? Math.round((used / max) * 100) : 0;
+
+                    let startDate = 'сейчас';
+                    if (pkg.start_date) {
+                        try {
+                            startDate = new Date(pkg.start_date).toLocaleDateString();
+                        } catch (e) {
+                            startDate = 'неизвестно';
+                        }
+                    }
+                    let endDate = 'неизвестно';
+                    if (pkg.end_date) {
+                        try {
+                            endDate = new Date(pkg.end_date).toLocaleDateString();
+                        } catch (e) {
+                            endDate = 'неизвестно';
+                        }
+                    }
+
+                    const listId = `${type}-package-${pkg.id}`;
+                    const isActive = new Date(pkg.end_date) > new Date();
+                    const isNear = isActive && (new Date(pkg.end_date) - new Date()) < 3 * 24 * 60 * 60 * 1000;
+                    const badgeStatus = isActive ? (isNear ? 'near' : 'active') : 'expired';
+
+                    let label = type === 'listing' ? '📦 Продление' : '🤖 Автопилот';
+                    let icon = type === 'listing' ? '📦' : '🤖';
+
+                    if (isPartner) {
+                        if (type === 'autobump') {
+                            if (pkg.plan_name) {
+                                label = `🤖 Автопилот (${pkg.plan_name})`;
+                            } else {
+                                label = `🤖 Автопилот (включён)`;
+                            }
+                            icon = '🤖';
+                        } else {
+                            if (pkg.plan_name) {
+                                label = `⭐ ${pkg.plan_name}`;
+                                icon = '🏷️';
+                            } else {
+                                label = `📋 Тариф на ${max} объявлений`;
+                                icon = '📋';
+                            }
+                        }
+                    }
+
+                    const tokenHtml = pkg.listing_ids && pkg.listing_ids.length
+                        ? pkg.listing_ids.filter(id => id !== null).map(id =>
+                            `<span class="listing-token" data-id="${id}">#${id} <button class="remove-token" data-pkg="${pkg.id}" data-type="${type}" data-id="${id}" title="Удалить из пакета">✕</button></span>`
+                          ).join('')
+                        : '<span class="empty-token">Нет объявлений</span>';
+
+                    return `
+                        <div class="subscription-package ${!isActive ? 'expired' : ''}" id="package-${pkg.id}">
+                            <div class="header">
+                                <span class="label">${icon} ${label}</span>
+                                <span class="badge-status ${badgeStatus}">${isActive ? (isNear ? '🟡 Скоро истекает' : '🟢 Активна') : '🔴 Истекла'}</span>
+                                <span class="date-range">${startDate} – ${endDate}</span>
+                                <span class="slot-info">${used} из ${max} слотов</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-track"><div class="progress-bar" style="width:${percent}%;"></div></div>
+                                <span class="progress-label">${percent}%</span>
+                            </div>
+                            <div class="listing-tokens" id="${listId}">
+                                ${tokenHtml}
+                            </div>
+                            <div class="actions">
+                                <button class="btn-secondary btn-sm toggle-package" data-type="${type}" data-id="${pkg.id}" data-max="${max}" data-mode="${isPartner ? 'manage' : 'view'}">📋 Управлять</button>
+                                ${!isPartner ? `<button class="btn-primary btn-sm renew-package" data-id="${pkg.id}" data-type="${type}">🔄 Продлить</button>` : ''}
+                                ${pkg.listing_ids && pkg.listing_ids.length ? `<button class="btn-danger-sm clear-package" data-id="${pkg.id}" data-type="${type}">Очистить все</button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                };
+
+                if (filteredListingPackages.length) {
+                    filteredListingPackages.forEach(pkg => { html += renderPackage(pkg, 'listing'); });
+                } else {
+                    html += `<div class="subscription-package"><span class="label">📦 ${isPartner ? 'Тарифы' : 'Пакеты продления'}</span><span class="empty-token">нет активных</span></div>`;
+                }
+
+                if (filteredAutobumpPackages.length) {
+                    filteredAutobumpPackages.forEach(pkg => { html += renderPackage(pkg, 'autobump'); });
+                } else {
+                    html += `<div class="subscription-package"><span class="label">🤖 ${isPartner ? 'Автопилот (включён в тариф)' : 'Автопилот'}</span><span class="empty-token">нет активных</span></div>`;
+                }
+
+                document.getElementById('subscriptionStatus').innerHTML = html;
+
+                // ===== ОБРАБОТЧИКИ =====
+                document.querySelectorAll('.toggle-package').forEach(btn => {
+                    btn.onclick = async function() {
+                        const type = this.dataset.type;
+                        const id = this.dataset.id;
+                        const maxSlots = parseInt(this.dataset.max) || 0;
+                        const mode = this.dataset.mode || 'view';
+
+                        if (!id || isNaN(id)) {
+                            console.error('❌ Неверный ID подписки:', id);
+                            showNotification('Ошибка: неверный ID подписки', 'error');
+                            return;
+                        }
+
+                        if (mode === 'manage') {
+                            await openManageSubscription(id, type);
+                        } else {
+                            const listContainer = document.getElementById(`${type}-package-${id}`);
+                            if (!listContainer) return;
+                            if (listContainer.style.display === 'none') {
+                                listContainer.style.display = 'flex';
+                                this.textContent = 'Скрыть';
+                                expandedPackages[`${type}-package-${id}`] = true;
+                                await loadPackageList(type, id, maxSlots, listContainer);
+                            } else {
+                                listContainer.style.display = 'none';
+                                this.textContent = 'Управлять';
+                                expandedPackages[`${type}-package-${id}`] = false;
+                            }
+                        }
+                    };
+                });
+
+                document.querySelectorAll('.remove-token').forEach(btn => {
+                    btn.onclick = async function(e) {
+                        e.stopPropagation();
+                        const packageId = this.dataset.pkg;
+                        const listingId = this.dataset.id;
+                        const type = this.dataset.type;
+                        if (!confirm(`Удалить объявление #${listingId} из пакета?`)) return;
+                        try {
+                            const resp = await fetch(`${API_URL}/payments/subscriptions/${packageId}/listings/${listingId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${currentToken}` } });
+                            if (resp.ok) {
+                                showNotification('Объявление удалено из пакета', 'success');
+                                await loadSubscriptionStatus();
+                            } else {
+                                const err = await resp.json();
+                                showNotification(err.error || 'Ошибка', 'error');
+                            }
+                        } catch(e) { showNotification('Ошибка соединения', 'error'); }
+                    };
+                });
+
+                document.querySelectorAll('.renew-package').forEach(btn => {
+                    btn.onclick = function() {
+                        const packageId = this.dataset.id;
+                        const type = this.dataset.type;
+                        showRenewModal(packageId, type);
+                    };
+                });
+
+                document.querySelectorAll('.clear-package').forEach(btn => {
+                    btn.onclick = async function() {
+                        const packageId = this.dataset.id;
+                        const type = this.dataset.type;
+                        if (!packageId) {
+                            showNotification('Ошибка: ID пакета не найден', 'error');
+                            return;
+                        }
+                        if (!confirm(`Удалить все объявления из пакета #${packageId}?`)) return;
+                        try {
+                            const resp = await fetch(`${API_URL}/payments/subscriptions/${packageId}/listings/clear`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${currentToken}` } });
+                            if (resp.ok) {
+                                showNotification('Все объявления удалены из пакета', 'success');
+                                await loadSubscriptionStatus();
+                            } else {
+                                const err = await resp.json();
+                                showNotification(err.error || 'Ошибка', 'error');
+                            }
+                        } catch(e) { showNotification('Ошибка соединения', 'error'); }
+                    };
+                });
+
+                for (const pkg of filteredListingPackages) {
+                    const listId = `listing-package-${pkg.id}`;
+                    if (expandedPackages[listId]) {
+                        const container = document.getElementById(listId);
+                        if (container && !container.innerHTML.trim()) {
+                            await loadPackageList('listing', pkg.id, pkg.max_slots || 0, container);
+                        }
+                    }
+                }
+                for (const pkg of filteredAutobumpPackages) {
+                    const listId = `autobump-package-${pkg.id}`;
+                    if (expandedPackages[listId]) {
+                        const container = document.getElementById(listId);
+                        if (container && !container.innerHTML.trim()) {
+                            await loadPackageList('autobump', pkg.id, pkg.max_slots || 0, container);
+                        }
+                    }
+                }
+
+            } catch(e) {
+                console.error(e);
+                document.getElementById('subscriptionStatus').innerHTML = '<div class="subscription-package"><span class="label">❌ Ошибка загрузки</span></div>';
+            }
+        }
+
+        function renderSubscriptionButtons(isPartnerUser) {
+            const container = document.getElementById('subscriptionActions');
+            if (!container) return;
+            console.log('🔹 renderSubscriptionButtons called with isPartnerUser =', isPartnerUser);
+            if (isPartnerUser) {
+                container.innerHTML = `
+                    <button class="btn-primary" id="buyPartnerPlanBtn">➕ Купить тариф</button>
+                `;
+                document.getElementById('buyPartnerPlanBtn')?.addEventListener('click', function() {
+                    showPartnerPlansModal();
+                });
+            } else {
+                container.innerHTML = `
+                    <button class="btn-primary" id="buyExtraRenewBtn">➕ Купить ещё пакет продления</button>
+                    <button class="btn-primary" id="buyExtraAutobumpBtn">➕ Купить ещё пакет автопилота</button>
+                `;
+                document.getElementById('buyExtraRenewBtn')?.addEventListener('click', function() {
+                    showListingSelector('renewal', 'purchase', null);
+                });
+                document.getElementById('buyExtraAutobumpBtn')?.addEventListener('click', function() {
+                    showListingSelector('autobump', 'purchase', null);
+                });
+            }
+        }
+
+        // ===== ПОКУПКА ТАРИФА ДЛЯ ПАРТНЁРА =====
+        async function showPartnerPlansModal() {
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch('/api/partner/plans', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error('Не удалось загрузить тарифы');
+                const plans = await res.json();
+
+                const container = document.getElementById('partnerPlansList');
+                if (plans.length === 0) {
+                    container.innerHTML = '<p>Нет доступных тарифов</p>';
+                } else {
+                    let html = '';
+                    for (const plan of plans) {
+                        html += `
+                            <div class="plan-card">
+                                <h4>${escapeHtml(plan.name)}</h4>
+                                <p>Лимит: ${plan.max_listings} объявлений</p>
+                                <p>Продление: ${plan.price_renewal} ₽ / ${plan.period_days} дней</p>
+                                <p>Автопилот: ${plan.price_autobump} ₽</p>
+                                <button class="btn-primary buy-plan-btn" data-planid="${plan.id}">Купить</button>
+                            </div>
+                        `;
+                    }
+                    container.innerHTML = html;
+                    document.querySelectorAll('.buy-plan-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const planId = this.dataset.planid;
+                            buyPartnerPlan(planId);
+                        });
+                    });
+                }
+                showModal('buyPartnerPlanModal');
+            } catch (err) {
+                alert('Ошибка: ' + err.message);
+            }
+        }
+
+        function buyPartnerPlan(planId) {
+            const token = localStorage.getItem('token');
+            fetch('/api/payments/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    subscriptionType: 'renewal',
+                    listingIds: [],
+                    planId: planId
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.free) {
+                    alert('Подписка активирована бесплатно!');
+                    closeModal('buyPartnerPlanModal');
+                    loadSubscriptionStatus();
+                } else if (data.confirmationUrl) {
+                    window.location.href = data.confirmationUrl;
+                } else {
+                    alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+                }
+            })
+            .catch(err => alert('Ошибка: ' + err.message));
+        }
+
+        // ===== УПРАВЛЕНИЕ СОСТАВОМ =====
+        let currentManageSubId = null;
+        let currentManageType = null;
+
+        async function openManageSubscription(subId, type) {
+            if (!subId || isNaN(subId) || subId === 'null' || subId === 'undefined') {
+                console.error('❌ openManageSubscription: неверный ID подписки:', subId);
+                showNotification('Ошибка: неверный ID подписки', 'error');
+                return;
+            }
+            currentManageSubId = parseInt(subId);
+            currentManageType = type;
+            console.log(`🔹 Открываем управление составом для подписки ${currentManageSubId}, тип ${type}`);
+            showListingSelector(type, 'manage', currentManageSubId);
+            document.getElementById('selectListingsTitle').textContent = '✏️ Управление составом пакета';
+            const confirmBtn = document.getElementById('confirmSelectListings');
+            confirmBtn.textContent = '💾 Сохранить состав';
+        }
+
+        async function loadPackageList(type, subscriptionId, maxSlots, container) {
+            try {
+                const listingsResp = await fetch(`${API_URL}/listings/my`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
+                const allListings = await listingsResp.json();
+                const packageResp = await fetch(`${API_URL}/payments/subscriptions/${subscriptionId}/listings`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
+                const packageData = await packageResp.json();
+                const currentIds = packageData.map(l => l.id);
+
+                let html = `<div class="slot-info" style="width:100%; margin-bottom:0.5rem;">Занято слотов: ${currentIds.length} из ${maxSlots}</div>`;
+                if (allListings.length === 0) {
+                    html += '<p class="empty-token">У вас пока нет объявлений.</p>';
+                } else {
+                    for (const listing of allListings) {
+                        const checked = currentIds.includes(listing.id);
+                        html += `
+                            <div class="listing-checkbox">
+                                <input type="checkbox" id="pkg_${type}_${subscriptionId}_${listing.id}" ${checked ? 'checked' : ''}
+                                       onchange="toggleListingInPackage(${subscriptionId}, ${listing.id}, this.checked, '${type}')">
+                                <label for="pkg_${type}_${subscriptionId}_${listing.id}">${escapeHtml(listing.title)} (${listing.price} ₽)</label>
+                                ${checked ? `<button class="remove-from-package" onclick="toggleListingInPackage(${subscriptionId}, ${listing.id}, false, '${type}')">🗑️</button>` : ''}
+                            </div>
+                        `;
+                    }
+                }
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Ошибка загрузки списка пакета:', error);
+                container.innerHTML = '<div class="error">Ошибка загрузки данных</div>';
+            }
+        }
+
+        async function toggleListingInPackage(subscriptionId, listingId, add, type) {
+            try {
+                if (add) {
+                    const resp = await fetch(`${API_URL}/payments/subscriptions/${subscriptionId}/listings`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ listingId }) });
+                    if (!resp.ok) {
+                        const err = await resp.json();
+                        showNotification(err.error || 'Ошибка добавления', 'error');
+                        const cb = document.getElementById(`pkg_${type}_${subscriptionId}_${listingId}`);
+                        if (cb) cb.checked = false;
+                        return;
+                    }
+                } else {
+                    const resp = await fetch(`${API_URL}/payments/subscriptions/${subscriptionId}/listings/${listingId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${currentToken}` } });
+                    if (!resp.ok) {
+                        const err = await resp.json();
+                        showNotification(err.error || 'Ошибка удаления', 'error');
+                        const cb = document.getElementById(`pkg_${type}_${subscriptionId}_${listingId}`);
+                        if (cb) cb.checked = true;
+                        return;
+                    }
+                }
+                showNotification('Состав пакета обновлён', 'success');
+                await loadSubscriptionStatus();
+                const listContainer = document.getElementById(`${type}-package-${subscriptionId}`);
+                if (listContainer) {
+                    const btn = document.querySelector(`.toggle-package[data-id="${subscriptionId}"]`);
+                    if (btn && btn.textContent === 'Скрыть') {
+                        listContainer.style.display = 'block';
+                        const maxSlots = parseInt(btn.dataset.max) || 0;
+                        await loadPackageList(type, subscriptionId, maxSlots, listContainer);
+                    }
+                }
+            } catch(e) { showNotification('Ошибка соединения', 'error'); }
+        }
+
+        // ===== МОДАЛЬНОЕ ОКНО ВЫБОРА (с проверкой ID) =====
+        let currentSelectListings = [];
+        let currentViewMode = 'list';
+
+        function renderSelectListings() {
+            const container = document.getElementById('selectListingsContainer');
+            const pagination = document.getElementById('selectListingsPagination');
+            const searchQuery = document.getElementById('listingSearchInput').value.toLowerCase();
+            let filtered = currentSelectListings;
+            if (searchQuery) filtered = filtered.filter(l => l.title.toLowerCase().includes(searchQuery));
+
+            const totalPages = Math.ceil(filtered.length / selectListingsPerPage);
+            const start = (selectListingsPage - 1) * selectListingsPerPage;
+            const pageItems = filtered.slice(start, start + selectListingsPerPage);
+
+            if (pageItems.length === 0) {
+                container.innerHTML = '<p class="empty-token">Нет объявлений, соответствующих поиску.</p>';
+                pagination.innerHTML = '';
+                return;
+            }
+
+            const useCards = (currentViewMode === 'cards');
+
+            if (useCards) {
+                let html = '<div class="modal-card-grid">';
+                for (const l of pageItems) {
+                    const selected = selectedIds.includes(l.id);
+                    const imageHtml = l.first_media && l.first_media.file_path
+                        ? `<img src="${l.first_media.file_path}" alt="${escapeHtml(l.title)}" onerror="this.onerror=null;this.parentElement.innerHTML='📷'">`
+                        : '📷';
+                    html += `
+                        <div class="modal-card-item ${selected ? 'selected' : ''}" data-id="${l.id}">
+                            <div class="card-image">${imageHtml}</div>
+                            <div class="card-info">
+                                <div class="card-title">${escapeHtml(l.title)}</div>
+                                <div class="card-price">${l.price.toLocaleString()} ₽</div>
+                            </div>
+                            <div class="card-check">
+                                <span class="check-icon">✓</span>
+                                <span class="uncheck-icon">+</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+                container.innerHTML = html;
+
+                container.querySelectorAll('.modal-card-item').forEach(el => {
+                    el.addEventListener('click', function() {
+                        const id = parseInt(this.dataset.id);
+                        const idx = selectedIds.indexOf(id);
+                        if (idx === -1) {
+                            if (selectedIds.length >= 5) {
+                                showNotification('Можно выбрать не более 5 объявлений', 'error');
+                                return;
+                            }
+                            selectedIds.push(id);
+                        } else {
+                            selectedIds.splice(idx, 1);
+                        }
+                        renderSelectListings();
+                        updateSelectedList();
+                        document.getElementById('selectedCount').textContent = `Выбрано: ${selectedIds.length}`;
+                    });
+                });
+
+            } else {
+                let html = '';
+                for (const l of pageItems) {
+                    const checked = selectedIds.includes(l.id);
+                    html += `
+                        <div class="listing-checkbox">
+                            <input type="checkbox" class="select-listing-cb" value="${l.id}" ${checked ? 'checked' : ''}>
+                            <label for="sel_${l.id}">${escapeHtml(l.title)} (${l.price} ₽)</label>
+                        </div>
+                    `;
+                }
+                container.innerHTML = html;
+
+                document.querySelectorAll('.select-listing-cb').forEach(cb => {
+                    cb.onchange = function() {
+                        const val = parseInt(this.value);
+                        if (this.checked) {
+                            if (selectedIds.length >= 5) { showNotification('Можно выбрать не более 5 объявлений', 'error'); this.checked = false; return; }
+                            if (!selectedIds.includes(val)) selectedIds.push(val);
+                        } else {
+                            selectedIds = selectedIds.filter(id => id !== val);
+                        }
+                        updateSelectedList();
+                        document.getElementById('selectedCount').textContent = `Выбрано: ${selectedIds.length}`;
+                    };
+                });
+            }
+
+            if (totalPages > 1) {
+                let pagHtml = '';
+                pagHtml += `<button onclick="changeSelectPage(${selectListingsPage - 1})" ${selectListingsPage === 1 ? 'disabled' : ''}>◀</button>`;
+                for (let i = 1; i <= totalPages; i++) {
+                    pagHtml += `<button onclick="changeSelectPage(${i})" class="${i === selectListingsPage ? 'active' : ''}">${i}</button>`;
+                }
+                pagHtml += `<button onclick="changeSelectPage(${selectListingsPage + 1})" ${selectListingsPage === totalPages ? 'disabled' : ''}>▶</button>`;
+                pagination.innerHTML = pagHtml;
+            } else {
+                pagination.innerHTML = '';
+            }
+        }
+
+        function updateSelectedList() {
+            const container = document.getElementById('selectedListContainer');
+            if (selectedIds.length === 0) { container.innerHTML = '<span class="empty-token">Ничего не выбрано</span>'; return; }
+            const selectedItems = currentSelectListings.filter(l => selectedIds.includes(l.id));
+            let html = '';
+            selectedItems.forEach(l => {
+                html += `<div class="selected-item"><span>${escapeHtml(l.title)}</span><button class="remove-selected" data-id="${l.id}">✕</button></div>`;
+            });
+            container.innerHTML = html;
+            document.getElementById('selectedCount').textContent = `Выбрано: ${selectedIds.length}`;
+
+            document.querySelectorAll('.remove-selected').forEach(btn => {
+                btn.onclick = function() {
+                    const id = parseInt(this.dataset.id);
+                    selectedIds = selectedIds.filter(sid => sid !== id);
+                    updateSelectedList();
+                    document.querySelectorAll('.select-listing-cb').forEach(cb => {
+                        if (parseInt(cb.value) === id) cb.checked = false;
+                    });
+                    document.getElementById('selectedCount').textContent = `Выбрано: ${selectedIds.length}`;
+                };
+            });
+        }
+
+        function changeSelectPage(page) {
+            const totalPages = Math.ceil(selectListingsFiltered.length / selectListingsPerPage);
+            if (page < 1 || page > totalPages) return;
+            selectListingsPage = page;
+            renderSelectListings();
+        }
+
+        document.getElementById('listingSearchInput').addEventListener('input', function() {
+            selectListingsPage = 1;
+            renderSelectListings();
+        });
+
+        document.getElementById('selectAllActive').addEventListener('click', function() {
+            const available = currentSelectListings.filter(l => !selectedIds.includes(l.id));
+            const toAdd = available.slice(0, 5 - selectedIds.length);
+            toAdd.forEach(l => { if (!selectedIds.includes(l.id)) selectedIds.push(l.id); });
+            renderSelectListings();
+        });
+
+        document.getElementById('clearAllSelected').addEventListener('click', function() {
+            selectedIds = [];
+            renderSelectListings();
+        });
+
+        // ===== ИСПРАВЛЕННАЯ ФУНКЦИЯ showListingSelector (с правильным путём) =====
+        async function showListingSelector(type, mode = 'purchase', subscriptionId = null) {
+            selectedPackageType = type;
+            const modal = document.getElementById('selectListingsModal');
+            const container = document.getElementById('selectListingsContainer');
+            if (!modal || !container) return;
+
+            if (mode === 'manage') {
+                if (!subscriptionId || isNaN(subscriptionId) || subscriptionId === 'null' || subscriptionId === 'undefined') {
+                    console.error('❌ showListingSelector: неверный subscriptionId:', subscriptionId);
+                    showNotification('Ошибка: неверный ID подписки', 'error');
+                    return;
+                }
+                subscriptionId = parseInt(subscriptionId);
+            }
+
+            modal.dataset.mode = mode;
+            modal.dataset.packageId = subscriptionId || '';
+            modal.dataset.packageType = type;
+
+            if (isPartner && mode === 'manage') {
+                currentViewMode = 'cards';
+            } else {
+                currentViewMode = 'list';
+            }
+
+            const viewToggle = document.querySelector('.view-toggle');
+            if (viewToggle) {
+                viewToggle.style.display = 'flex';
+                viewToggle.querySelectorAll('button').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.view === currentViewMode);
+                });
+            }
+
+            try {
+                let url = `${API_URL}/listings/my`;
+                const resp = await fetch(url, { headers: { 'Authorization': `Bearer ${currentToken}` } });
+                if (!resp.ok) throw new Error('Ошибка загрузки объявлений');
+                let listings = await resp.json();
+
+                if (mode === 'manage' && subscriptionId) {
+                    const subResp = await fetch(`${API_URL}/payments/subscriptions/${subscriptionId}/listings?limit=1000`, {
+                        headers: { 'Authorization': `Bearer ${currentToken}` }
+                    });
+                    if (!subResp.ok) {
+                        const errText = await subResp.text();
+                        console.error('Ошибка загрузки подписки:', subResp.status, errText);
+                        currentSelectListings = listings.map(l => ({ ...l, in_package: false }));
+                        selectedIds = [];
+                    } else {
+                        const subData = await subResp.json();
+                        if (subData.listings && Array.isArray(subData.listings)) {
+                            currentSelectListings = subData.listings;
+                            selectedIds = currentSelectListings.filter(l => l.in_package).map(l => l.id);
+                        } else {
+                            console.error('Ответ не содержит listings:', subData);
+                            currentSelectListings = listings.map(l => ({ ...l, in_package: false }));
+                            selectedIds = [];
+                        }
+                    }
+                } else {
+                    currentSelectListings = listings.map(l => ({ ...l, in_package: false }));
+                    selectedIds = [];
+                }
+
+                selectListingsFiltered = currentSelectListings;
+
+                selectListingsPage = 1;
+                document.getElementById('selectedCount').textContent = `Выбрано: ${selectedIds.length}`;
+                if (mode === 'manage') {
+                    document.getElementById('selectListingsTitle').textContent = '✏️ Управление составом пакета';
+                    document.getElementById('confirmSelectListings').textContent = '💾 Сохранить состав';
+                } else {
+                    document.getElementById('selectListingsTitle').textContent = 'Выберите объявления для пакета';
+                    document.getElementById('confirmSelectListings').textContent = '✅ Подтвердить';
+                }
+                renderSelectListings();
+                showModal('selectListingsModal');
+            } catch(e) {
+                console.error('Ошибка в showListingSelector:', e);
+                showNotification('Ошибка загрузки объявлений: ' + e.message, 'error');
+            }
+        }
+
+        document.getElementById('confirmSelectListings').addEventListener('click', async function() {
+            const modal = document.getElementById('selectListingsModal');
+            const mode = modal.dataset.mode || 'purchase';
+            const packageId = modal.dataset.packageId;
+            const type = modal.dataset.packageType;
+
+            if (selectedIds.length === 0) {
+                alert('Выберите хотя бы одно объявление');
+                return;
+            }
+
+            if (mode === 'manage' && packageId) {
+                const token = localStorage.getItem('token');
+                try {
+                    const resp = await fetch(`${API_URL}/payments/subscriptions/${packageId}/listings`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ listingIds: selectedIds })
+                    });
+                    const data = await resp.json();
+                    if (resp.ok) {
+                        showNotification(data.message || 'Состав обновлён', 'success');
+                        closeModal('selectListingsModal');
+                        await loadSubscriptionStatus();
+                    } else {
+                        alert('Ошибка: ' + data.error);
+                    }
+                } catch(e) {
+                    alert('Ошибка соединения');
+                }
+                return;
+            }
+
+            if (!type) { alert('Ошибка: не указан тип пакета'); return; }
+            if (selectedIds.length > 5) { alert('Можно выбрать не более 5 объявлений'); return; }
+            closeModal('selectListingsModal');
+            await initiatePayment(type, selectedIds);
+        });
+
+        async function renewPackage(packageId, listingIds) {
+            try {
+                const resp = await fetch(`${API_URL}/payments/subscriptions/${packageId}/renew`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ listingIds }) });
+                const data = await resp.json();
+                if (resp.ok) { showNotification(data.message || 'Пакет продлён!', 'success'); loadSubscriptionStatus(); }
+                else { showNotification(data.error || 'Ошибка', 'error'); }
+            } catch(e) { showNotification('Ошибка соединения', 'error'); }
+        }
+
+        async function initiatePayment(type, listingIds) {
+            try {
+                const resp = await fetch(`${API_URL}/payments/create`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ subscriptionType: type, listingIds }) });
+                const data = await resp.json();
+                if (data.free) { showNotification(`✅ Пакет активирован бесплатно! Добавлено ${listingIds.length} объявлений.`, 'success'); loadSubscriptionStatus(); }
+                else if (data.confirmationUrl) { window.location.href = data.confirmationUrl; }
+                else { showNotification(data.error || 'Ошибка', 'error'); }
+            } catch(e) { console.error('Ошибка в initiatePayment:', e); showNotification('Ошибка соединения', 'error'); }
+        }
+
+        async function showRenewModal(packageId, type) {
+            try {
+                const resp = await fetch(`${API_URL}/payments/subscriptions/${packageId}/listings`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
+                if (!resp.ok) { alert('Ошибка загрузки состава пакета'); return; }
+                const currentListings = await resp.json();
+                const currentIds = currentListings.map(l => l.id);
+                const allListingsResp = await fetch(`${API_URL}/listings/my`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
+                if (!allListingsResp.ok) { alert('Ошибка загрузки объявлений'); return; }
+                const allListings = await allListingsResp.json();
+                currentSelectListings = allListings;
+                selectListingsFiltered = allListings;
+                selectedIds = currentIds;
+                selectListingsPage = 1;
+                document.getElementById('selectedCount').textContent = `Выбрано: ${selectedIds.length}`;
+                renderSelectListings();
+                const modal = document.getElementById('selectListingsModal');
+                modal.dataset.packageId = packageId;
+                modal.dataset.packageType = type;
+                document.getElementById('selectListingsTitle').textContent = '✏️ Изменить состав пакета';
+                showModal('selectListingsModal');
+            } catch(e) { showNotification('Ошибка загрузки данных', 'error'); }
+        }
+
+        // ========== ОБЪЯВЛЕНИЯ (без изменений) ==========
+        function renderMyListingsByMode() {
+            const viewMode = window.listingViewMode || 'grid-large';
+            const isGrid = viewMode !== 'list';
+            const container = document.getElementById('listingsList');
+            if (!currentMyListings.length) { container.innerHTML = '<div style="text-align:center;padding:40px;">У вас пока нет объявлений. Нажмите «Создать объявление».</div>'; return; }
+            let html = '';
+            const typeLabels = { sell: 'Продам', buy: 'Куплю', exchange: 'Обмен' };
+            if (isGrid) {
+                for (let l of currentMyListings) {
+                    let imageHtml = '<div class="listing-image">📷 Фото</div>';
+                    if (l.first_media && l.first_media.file_path) {
+                        imageHtml = `<div class="listing-image"><img src="${l.first_media.file_path}" alt="${escapeHtml(l.title)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.parentElement.innerHTML='📷 Фото'"></div>`;
+                    }
+                    const typeLabel = typeLabels[l.type] || 'Продам';
+                    const typeClass = l.type || 'sell';
+                    let priceDisplay = l.price.toLocaleString() + ' ₽';
+                    if (l.price_max && l.price_max > l.price) { priceDisplay = l.price.toLocaleString() + ' – ' + l.price_max.toLocaleString() + ' ₽'; }
+                    html += `
+                        <div class="listing-card" onclick="window.location.href='/listing.html?id=${l.id}'">
+                            ${imageHtml}
+                            <div class="listing-info">
+                                <div class="listing-price">${priceDisplay}</div>
+                                <div class="listing-title">${escapeHtml(l.title)}</div>
+                                <div class="listing-meta">
+                                    📁 ${escapeHtml(l.category_name || 'Без категории')}
+                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''}
+                                    | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
+                                </div>
+                                <div class="listing-description">${escapeHtml(l.description || '')}</div>
+                                <div class="listing-actions">
+                                    <button class="btn-view-listing" onclick="event.stopPropagation(); window.location.href='/listing.html?id=${l.id}'">🔍 Открыть</button>
+                                    <button class="btn-edit-listing" onclick="event.stopPropagation(); openEditModal(${l.id})">✏️ Редактировать</button>
+                                    <button class="btn-delete-listing" onclick="event.stopPropagation(); archiveListing(${l.id})">🗑️ В архив</button>
+                                    ${getBumpButtonHtml(l)}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                for (let l of currentMyListings) {
+                    let imageHtml = '<div class="listing-row-image">📷 Фото</div>';
+                    if (l.first_media && l.first_media.file_path) {
+                        imageHtml = `<div class="listing-row-image"><img src="${l.first_media.file_path}" alt="${escapeHtml(l.title)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.parentElement.innerHTML='📷 Фото'"></div>`;
+                    }
+                    const typeLabel = typeLabels[l.type] || 'Продам';
+                    const typeClass = l.type || 'sell';
+                    let priceDisplay = l.price.toLocaleString() + ' ₽';
+                    if (l.price_max && l.price_max > l.price) { priceDisplay = l.price.toLocaleString() + ' – ' + l.price_max.toLocaleString() + ' ₽'; }
+                    html += `
+                        <div class="listing-row" onclick="window.location.href='/listing.html?id=${l.id}'">
+                            ${imageHtml}
+                            <div class="listing-row-info">
+                                <div class="listing-row-price">${priceDisplay}</div>
+                                <div class="listing-row-title">${escapeHtml(l.title)}</div>
+                                <div class="listing-row-meta">
+                                    📁 ${escapeHtml(l.category_name || 'Без категории')}
+                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''}
+                                    | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
+                                </div>
+                                <div class="listing-row-description">${escapeHtml((l.description || '').substring(0, 100))}</div>
+                                <div class="listing-actions" style="margin-top: 0.5rem;">
+                                    <button class="btn-view-listing" onclick="event.stopPropagation(); window.location.href='/listing.html?id=${l.id}'">🔍 Открыть</button>
+                                    <button class="btn-edit-listing" onclick="event.stopPropagation(); openEditModal(${l.id})">✏️ Редактировать</button>
+                                    <button class="btn-delete-listing" onclick="event.stopPropagation(); archiveListing(${l.id})">🗑️ В архив</button>
+                                    ${getBumpButtonHtml(l)}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            container.innerHTML = html;
+            if (typeof window.applyCurrentViewToContainers === 'function') window.applyCurrentViewToContainers();
+            attachBumpButtons();
+        }
+
+        async function loadMyListings() {
+            try {
+                const resp = await fetch(`${API_URL}/listings/my`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
+                const listings = await resp.json();
+                currentMyListings = listings;
+                renderMyListingsByMode();
+            } catch(e) { console.error(e); showNotification('Ошибка загрузки объявлений', 'error'); }
+        }
+
+        function renderArchivedByMode() {
+            const viewMode = window.listingViewMode || 'grid-large';
+            const isGrid = viewMode !== 'list';
+            const container = document.getElementById('listingsList');
+            if (!currentArchivedListings.length) { container.innerHTML = '<div style="text-align:center;padding:40px;">В архиве нет объявлений</div>'; return; }
+            let html = '';
+            const typeLabels = { sell: 'Продам', buy: 'Куплю', exchange: 'Обмен' };
+            if (isGrid) {
+                for (let l of currentArchivedListings) {
+                    let imageHtml = '<div class="listing-image">📷 Фото</div>';
+                    if (l.first_media && l.first_media.file_path) {
+                        imageHtml = `<div class="listing-image"><img src="${l.first_media.file_path}" alt="${escapeHtml(l.title)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.parentElement.innerHTML='📷 Фото'"></div>`;
+                    }
+                    const typeLabel = typeLabels[l.type] || 'Продам';
+                    const typeClass = l.type || 'sell';
+                    let priceDisplay = l.price.toLocaleString() + ' ₽';
+                    if (l.price_max && l.price_max > l.price) { priceDisplay = l.price.toLocaleString() + ' – ' + l.price_max.toLocaleString() + ' ₽'; }
+                    html += `
+                        <div class="listing-card">
+                            ${imageHtml}
+                            <div class="listing-info">
+                                <div class="listing-price">${priceDisplay}</div>
+                                <div class="listing-title">${escapeHtml(l.title)}</div>
+                                <div class="listing-meta">
+                                    📁 ${escapeHtml(l.category_name || 'Без категории')}
+                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''}
+                                    | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
+                                </div>
+                                <div class="listing-description">${escapeHtml(l.description || '')}</div>
+                                <div class="listing-actions">
+                                    <button class="btn-secondary" onclick="restoreListing(${l.id})">🔄 Восстановить</button>
+                                    <button class="btn-danger" onclick="deleteListingForever(${l.id})">🗑️ Удалить навсегда</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                for (let l of currentArchivedListings) {
+                    let imageHtml = '<div class="listing-row-image">📷 Фото</div>';
+                    if (l.first_media && l.first_media.file_path) {
+                        imageHtml = `<div class="listing-row-image"><img src="${l.first_media.file_path}" alt="${escapeHtml(l.title)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.parentElement.innerHTML='📷 Фото'"></div>`;
+                    }
+                    const typeLabel = typeLabels[l.type] || 'Продам';
+                    const typeClass = l.type || 'sell';
+                    let priceDisplay = l.price.toLocaleString() + ' ₽';
+                    if (l.price_max && l.price_max > l.price) { priceDisplay = l.price.toLocaleString() + ' – ' + l.price_max.toLocaleString() + ' ₽'; }
+                    html += `
+                        <div class="listing-row">
+                            ${imageHtml}
+                            <div class="listing-row-info">
+                                <div class="listing-row-price">${priceDisplay}</div>
+                                <div class="listing-row-title">${escapeHtml(l.title)}</div>
+                                <div class="listing-meta">
+                                    📁 ${escapeHtml(l.category_name || 'Без категории')}
+                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''}
+                                    | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
+                                </div>
+                                <div class="listing-row-description">${escapeHtml(l.description || '')}</div>
+                                <div class="listing-actions">
+                                    <button class="btn-secondary" onclick="restoreListing(${l.id})">🔄 Восстановить</button>
+                                    <button class="btn-danger" onclick="deleteListingForever(${l.id})">🗑️ Удалить</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            container.innerHTML = html;
+            if (typeof window.applyCurrentViewToContainers === 'function') window.applyCurrentViewToContainers();
+            attachBumpButtons();
+        }
+
+        async function loadArchivedListings() {
+            try {
+                const resp = await fetch(`${API_URL}/listings/my/archived`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
+                const listings = await resp.json();
+                currentArchivedListings = listings;
+                renderArchivedByMode();
+            } catch(e) { console.error(e); showNotification('Ошибка загрузки архива', 'error'); }
+        }
+
+        function renderFavoritesInProfileByMode() {
+            const viewMode = window.listingViewMode || 'grid-large';
+            const isGrid = viewMode !== 'list';
+            const container = document.getElementById('listingsList');
+            if (!currentFavoritesList.length) { container.innerHTML = '<div style="text-align:center;padding:40px;">У вас пока нет избранных объявлений</div>'; return; }
+            let html = '';
+            const typeLabels = { sell: 'Продам', buy: 'Куплю', exchange: 'Обмен' };
+            if (isGrid) {
+                for (let l of currentFavoritesList) {
+                    let imageHtml = '<div class="listing-image">📷 Фото</div>';
+                    if (l.first_media && l.first_media.file_path) {
+                        imageHtml = `<div class="listing-image"><img src="${l.first_media.file_path}" alt="${escapeHtml(l.title)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.parentElement.innerHTML='📷 Фото'"></div>`;
+                    }
+                    const typeLabel = typeLabels[l.type] || 'Продам';
+                    const typeClass = l.type || 'sell';
+                    let priceDisplay = l.price.toLocaleString() + ' ₽';
+                    if (l.price_max && l.price_max > l.price) { priceDisplay = l.price.toLocaleString() + ' – ' + l.price_max.toLocaleString() + ' ₽'; }
+                    html += `
+                        <div class="listing-card" onclick="window.location.href='/listing.html?id=${l.id}'">
+                            ${imageHtml}
+                            <div class="listing-info">
+                                <div class="listing-price">${priceDisplay}</div>
+                                <div class="listing-title">${escapeHtml(l.title)}</div>
+                                <div class="listing-meta">
+                                    👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/profile.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a> ${l.is_online ? '<span class="online-indicator"></span>' : ''}
+                                    | 📁 ${escapeHtml(l.category_name || 'Без категории')}
+                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''}
+                                    | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
+                                </div>
+                                <div class="listing-description">${escapeHtml(l.description || '')}</div>
+                                <button class="remove-fav-btn" onclick="event.stopPropagation(); removeFromFavoritesInProfile(${l.id}, this)">🗑️ Удалить</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                for (let l of currentFavoritesList) {
+                    let imageHtml = '<div class="listing-row-image">📷 Фото</div>';
+                    if (l.first_media && l.first_media.file_path) {
+                        imageHtml = `<div class="listing-row-image"><img src="${l.first_media.file_path}" alt="${escapeHtml(l.title)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.parentElement.innerHTML='📷 Фото'"></div>`;
+                    }
+                    const typeLabel = typeLabels[l.type] || 'Продам';
+                    const typeClass = l.type || 'sell';
+                    let priceDisplay = l.price.toLocaleString() + ' ₽';
+                    if (l.price_max && l.price_max > l.price) { priceDisplay = l.price.toLocaleString() + ' – ' + l.price_max.toLocaleString() + ' ₽'; }
+                    html += `
+                        <div class="listing-row" onclick="window.location.href='/listing.html?id=${l.id}'">
+                            ${imageHtml}
+                            <div class="listing-row-info">
+                                <div class="listing-row-price">${priceDisplay}</div>
+                                <div class="listing-row-title">${escapeHtml(l.title)}</div>
+                                <div class="listing-row-meta">
+                                    👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/profile.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a> ${l.is_online ? '<span class="online-indicator"></span>' : ''}
+                                    | 📁 ${escapeHtml(l.category_name || 'Без категории')}
+                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''}
+                                    | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
+                                </div>
+                                <div class="listing-row-description">${escapeHtml(l.description || '')}</div>
+                                <button class="remove-fav-btn" onclick="event.stopPropagation(); removeFromFavoritesInProfile(${l.id}, this)">🗑️ Удалить</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            container.innerHTML = html;
+            if (typeof window.applyCurrentViewToContainers === 'function') window.applyCurrentViewToContainers();
+        }
+
+        async function loadFavoritesInProfile() {
+            try {
+                const resp = await fetch(`${API_URL}/listings/favorites/my`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
+                const listings = await resp.json();
+                currentFavoritesList = listings;
+                renderFavoritesInProfileByMode();
+            } catch(e) { console.error(e); showNotification('Ошибка загрузки избранного', 'error'); }
+        }
+
+        function renderUserListingsByMode() {
+            const viewMode = window.listingViewMode || 'grid-large';
+            const isGrid = viewMode !== 'list';
+            const container = document.getElementById('listingsList');
+            if (!currentUserListings.length) { container.innerHTML = '<div style="text-align:center;padding:40px;">У пользователя нет активных объявлений</div>'; return; }
+            let html = '';
+            const typeLabels = { sell: 'Продам', buy: 'Куплю', exchange: 'Обмен' };
+            if (isGrid) {
+                for (let l of currentUserListings) {
+                    let imageHtml = '<div class="listing-image">📷 Фото</div>';
+                    if (l.first_media && l.first_media.file_path) {
+                        imageHtml = `<div class="listing-image"><img src="${l.first_media.file_path}" alt="${escapeHtml(l.title)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.parentElement.innerHTML='📷 Фото'"></div>`;
+                    }
+                    const typeLabel = typeLabels[l.type] || 'Продам';
+                    const typeClass = l.type || 'sell';
+                    let priceDisplay = l.price.toLocaleString() + ' ₽';
+                    if (l.price_max && l.price_max > l.price) { priceDisplay = l.price.toLocaleString() + ' – ' + l.price_max.toLocaleString() + ' ₽'; }
+                    html += `
+                        <div class="listing-card" onclick="window.location.href='/listing.html?id=${l.id}'">
+                            ${imageHtml}
+                            <div class="listing-info">
+                                <div class="listing-price">${priceDisplay}</div>
+                                <div class="listing-title">${escapeHtml(l.title)}</div>
+                                <div class="listing-meta">
+                                    👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/profile.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a> ${l.is_online ? '<span class="online-indicator"></span>' : ''}
+                                    | 📁 ${escapeHtml(l.category_name || 'Без категории')}
+                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''}
+                                    | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
+                                </div>
+                                <div class="listing-description">${escapeHtml(l.description || '')}</div>
+                                <div class="listing-actions" style="margin-top: 0.6rem;">
+                                    <button class="btn-view-listing" onclick="event.stopPropagation(); window.location.href='/listing.html?id=${l.id}'">🔍 Открыть</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                for (let l of currentUserListings) {
+                    let imageHtml = '<div class="listing-row-image">📷 Фото</div>';
+                    if (l.first_media && l.first_media.file_path) {
+                        imageHtml = `<div class="listing-row-image"><img src="${l.first_media.file_path}" alt="${escapeHtml(l.title)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.parentElement.innerHTML='📷 Фото'"></div>`;
+                    }
+                    const typeLabel = typeLabels[l.type] || 'Продам';
+                    const typeClass = l.type || 'sell';
+                    let priceDisplay = l.price.toLocaleString() + ' ₽';
+                    if (l.price_max && l.price_max > l.price) { priceDisplay = l.price.toLocaleString() + ' – ' + l.price_max.toLocaleString() + ' ₽'; }
+                    html += `
+                        <div class="listing-row" onclick="window.location.href='/listing.html?id=${l.id}'">
+                            ${imageHtml}
+                            <div class="listing-row-info">
+                                <div class="listing-row-price">${priceDisplay}</div>
+                                <div class="listing-row-title">${escapeHtml(l.title)}</div>
+                                <div class="listing-row-meta">
+                                    👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/profile.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a> ${l.is_online ? '<span class="online-indicator"></span>' : ''}
+                                    | 📁 ${escapeHtml(l.category_name || 'Без категории')}
+                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''}
+                                    | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
+                                </div>
+                                <div class="listing-row-description">${escapeHtml(l.description || '')}</div>
+                                <div class="listing-actions" style="margin-top: 0.6rem;">
+                                    <button class="btn-view-listing" onclick="event.stopPropagation(); window.location.href='/listing.html?id=${l.id}'">🔍 Открыть</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            container.innerHTML = html;
+            if (typeof window.applyCurrentViewToContainers === 'function') window.applyCurrentViewToContainers();
+        }
+
+        async function loadUserListings() {
+            try {
+                const resp = await fetch(`${API_URL}/users/${targetUserId}/listings`);
+                const listings = await resp.json();
+                currentUserListings = listings;
+                renderUserListingsByMode();
+            } catch(e) { console.error(e); showNotification('Ошибка загрузки объявлений', 'error'); }
+        }
+
+        // ========== ОСТАЛЬНЫЕ ФУНКЦИИ ==========
+        function switchTab(tab) {
+            if (!isOwnProfile) { loadUserListings(); return; }
+            currentTab = tab;
+            localStorage.setItem(STORAGE_KEY, tab);
+            document.querySelectorAll('#profileTabs .tab').forEach(t => t.classList.remove('active'));
+            const activeTab = document.querySelector(`#profileTabs .tab[data-tab="${tab}"]`);
+            if (activeTab) activeTab.classList.add('active');
+            if (tab === 'my') loadMyListings();
+            else if (tab === 'fav') loadFavoritesInProfile();
+            else if (tab === 'archive') loadArchivedListings();
+        }
+
+        async function archiveListing(id) {
+            await fetch(API_URL + '/listings/' + id + '/archive', { method: 'POST', headers: { 'Authorization': 'Bearer ' + currentToken } });
+            showNotification('Объявление перемещено в архив', 'success');
+            switchTab(currentTab);
+        }
+        async function restoreListing(id) {
+            await fetch(API_URL + '/listings/' + id + '/restore', { method: 'POST', headers: { 'Authorization': 'Bearer ' + currentToken } });
+            showNotification('Восстановлено', 'success');
+            switchTab(currentTab);
+        }
+        async function deleteListingForever(id) {
+            if (!confirm('Удалить навсегда? Это действие необратимо.')) return;
+            try {
+                const resp = await fetch(`${API_URL}/listings/my/${id}/permanent`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${currentToken}` } });
+                if (resp.ok) { showNotification('Объявление удалено навсегда', 'success'); switchTab(currentTab); }
+                else { const err = await resp.json(); showNotification(err.error || 'Ошибка удаления', 'error'); }
+            } catch(e) { showNotification('Ошибка соединения', 'error'); }
+        }
+        async function removeFromFavoritesInProfile(listingId, btn) {
+            try {
+                const resp = await fetch(`${API_URL}/listings/favorites/toggle`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ listing_id: listingId }) });
+                if (resp.ok) { showNotification('Удалено из избранного', 'success'); switchTab(currentTab); }
+                else { showNotification('Ошибка', 'error'); }
+            } catch(e) { showNotification('Ошибка соединения', 'error'); }
+        }
+
+        // ========== РЕДАКТИРОВАНИЕ ==========
+        async function openEditModal(listingId) {
+            try {
+                const resp = await fetch(`${API_URL}/listings/${listingId}`);
+                const listing = await resp.json();
+                document.getElementById('editId').value = listing.id;
+                document.getElementById('editTitle').value = listing.title;
+                document.getElementById('editPriceMin').value = listing.price;
+                document.getElementById('editPriceMax').value = listing.price_max || '';
+                document.getElementById('editDescription').value = listing.description || '';
+                document.getElementById('editType').value = listing.type || 'sell';
+                if (listing.lat && listing.lng) { document.getElementById('editLat').value = listing.lat; document.getElementById('editLng').value = listing.lng; }
+                currentMediaList = listing.media || [];
+                renderEditMediaList();
+
+                const ancestors = await getAncestors(listing.category_id);
+                let groupId = null, subgroupId = null, categoryId = null;
+                for (const a of ancestors) {
+                    if (a.level === 1) groupId = a.id;
+                    else if (a.level === 2) subgroupId = a.id;
+                    else if (a.level === 3) categoryId = a.id;
+                }
+                await loadGroups('editGroup', groupId);
+                if (groupId) {
+                    document.getElementById('editSubgroupGroup').style.display = 'block';
+                    await loadSubcategories(groupId, 'editSubgroup', subgroupId);
+                    if (subgroupId) {
+                        document.getElementById('editCategoryGroup').style.display = 'block';
+                        await loadCategoryChildren(subgroupId, 'editCategorySelect', categoryId);
+                    }
+                }
+                await loadRegionsForSelect('editRegion');
+                if (listing.city_id) {
+                    const cityResp = await fetch(`/api/cities/${listing.city_id}`);
+                    const cityData = await cityResp.json();
+                    if (cityData.region_id) {
+                        document.getElementById('editRegion').value = cityData.region_id;
+                        document.getElementById('editRegion').dispatchEvent(new Event('change'));
+                        await loadCitiesByRegionForSelect(cityData.region_id, 'editCity', 'editCityGroup');
+                        document.getElementById('editCity').value = listing.city_id;
+                    }
+                }
+                showModal('editModal');
+                setTimeout(() => {
+                    initMapForModal('editMap', 'editLat', 'editLng', 'editMapSearch', 'editMapSearchBtn', 'editMapClearBtn', 'editMapGeoBtn', 'editSuggestList');
+                }, 300);
+            } catch(e) {
+                console.error('Ошибка загрузки редактирования:', e);
+                showNotification('Ошибка загрузки: ' + e.message, 'error');
+            }
+        }
+
+        function renderEditMediaList() {
+            let container = document.getElementById('editMediaList');
+            if (!currentMediaList.length) { container.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">Нет фото</div>'; return; }
+            let html = '';
+            for (let m of currentMediaList) {
+                html += `<div class="media-item" data-id="${m.id}"><img src="${m.file_path}"><div class="media-actions"><button onclick="setMainPhoto(${m.id})">⭐ Главное</button><button onclick="deletePhoto(${m.id})">🗑️</button></div></div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        async function setMainPhoto(mediaId) {
+            try {
+                await fetch(API_URL + '/listings/media/' + mediaId + '/main', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + currentToken } });
+                showNotification('Главное фото обновлено', 'success');
+                let editId = document.getElementById('editId').value;
+                await openEditModal(editId);
+                switchTab(currentTab);
+            } catch(e) { showNotification('Ошибка', 'error'); }
+        }
+
+        async function deletePhoto(mediaId) {
+            if (!confirm('Удалить фото?')) return;
+            try {
+                await fetch(API_URL + '/listings/media/' + mediaId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + currentToken } });
+                showNotification('Фото удалено', 'success');
+                let editId = document.getElementById('editId').value;
+                await openEditModal(editId);
+                switchTab(currentTab);
+            } catch(e) { showNotification('Ошибка', 'error'); }
+        }
+
+        async function submitUpdateListing() {
+            let categoryId = document.getElementById('editCategorySelect').value;
+            if (!categoryId) categoryId = document.getElementById('editSubgroup').value;
+            if (!categoryId) categoryId = document.getElementById('editGroup').value;
+            if (!categoryId) { showNotification('Выберите категорию (хотя бы группу)', 'error'); return; }
+            const cityId = document.getElementById('editCity').value;
+            const type = document.getElementById('editType').value;
+            const lat = document.getElementById('editLat').value;
+            const lng = document.getElementById('editLng').value;
+            const priceMin = document.getElementById('editPriceMin').value;
+            const priceMax = document.getElementById('editPriceMax').value || null;
+            if (!priceMin) { showNotification('Укажите цену от', 'error'); return; }
+            if (priceMax && parseFloat(priceMax) < parseFloat(priceMin)) { showNotification('Максимальная цена не может быть меньше минимальной', 'error'); return; }
+            const updateBtn = document.getElementById('submitUpdateBtn');
+            if (!updateBtn) return;
+            if (updateBtn.disabled) return;
+            updateBtn.disabled = true;
+            updateBtn.classList.add('btn-loading');
+            const originalText = updateBtn.textContent;
+            updateBtn.textContent = 'Сохранение...';
+            let id = document.getElementById('editId').value;
+            let fd = new FormData();
+            fd.append('title', document.getElementById('editTitle').value);
+            fd.append('price', priceMin);
+            if (priceMax) fd.append('price_max', priceMax);
+            fd.append('description', document.getElementById('editDescription').value);
+            fd.append('category_id', categoryId);
+            fd.append('type', type);
+            if (cityId) fd.append('city_id', cityId);
+            if (lat && lng) { fd.append('lat', lat); fd.append('lng', lng); }
+            let files = document.getElementById('editMedia').files;
+            for (let i=0; i<files.length; i++) fd.append('media', files[i]);
+            try {
+                let r = await fetch(API_URL + '/listings/' + id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + currentToken }, body: fd });
+                if (r.ok) { showNotification('Объявление обновлено', 'success'); closeModal('editModal'); switchTab(currentTab); }
+                else { let text = await r.text(); let d; try { d = JSON.parse(text); } catch(e) { d = { error: text }; } showNotification(d.error || 'Ошибка сервера', 'error'); console.error('Ошибка обновления объявления:', d); }
+            } catch(e) { showNotification('Ошибка соединения: ' + e.message, 'error'); console.error(e); }
+            finally { updateBtn.disabled = false; updateBtn.classList.remove('btn-loading'); updateBtn.textContent = originalText; }
+        }
+
+        async function submitCreateListing() {
+            let categoryId = document.getElementById('createCategorySelect').value;
+            if (!categoryId) categoryId = document.getElementById('createSubgroup').value;
+            if (!categoryId) categoryId = document.getElementById('createGroup').value;
+            if (!categoryId) { showNotification('Выберите категорию (хотя бы группу)', 'error'); return; }
+            const cityId = document.getElementById('createCity').value;
+            const type = document.getElementById('createType').value;
+            const lat = document.getElementById('createLat').value;
+            const lng = document.getElementById('createLng').value;
+            const priceMin = document.getElementById('createPrice').value;
+            const priceMax = document.getElementById('createPriceMax').value || null;
+            if (!priceMin) { showNotification('Укажите цену от', 'error'); return; }
+            if (priceMax && parseFloat(priceMax) < parseFloat(priceMin)) { showNotification('Максимальная цена не может быть меньше минимальной', 'error'); return; }
+            const submitBtn = document.getElementById('submitCreateBtn');
+            if (!submitBtn) return;
+            if (submitBtn.disabled) return;
+            submitBtn.disabled = true;
+            submitBtn.classList.add('btn-loading');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Отправка...';
+            let fd = new FormData();
+            fd.append('title', document.getElementById('createTitle').value);
+            fd.append('price', priceMin);
+            if (priceMax) fd.append('price_max', priceMax);
+            fd.append('description', document.getElementById('createDescription').value);
+            fd.append('category_id', categoryId);
+            fd.append('type', type);
+            if (cityId) fd.append('city_id', cityId);
+            if (lat && lng) { fd.append('lat', lat); fd.append('lng', lng); }
+            let files = document.getElementById('createMedia').files;
+            for (let i=0; i<files.length; i++) fd.append('media', files[i]);
+            try {
+                let r = await fetch(API_URL + '/listings', { method: 'POST', headers: { 'Authorization': 'Bearer ' + currentToken }, body: fd });
+                if (r.ok) { showNotification('Объявление создано!', 'success'); closeModal('createModal'); switchTab(currentTab); }
+                else { let text = await r.text(); let d; try { d = JSON.parse(text); } catch(e) { d = { error: text }; } showNotification(d.error || 'Ошибка сервера', 'error'); console.error('Ошибка создания объявления:', d); }
+            } catch(e) { showNotification('Ошибка соединения: ' + e.message, 'error'); console.error(e); }
+            finally { submitBtn.disabled = false; submitBtn.classList.remove('btn-loading'); submitBtn.textContent = originalText; }
+        }
+
+        // ========== ПОДНЯТИЕ ==========
+        function getBumpButtonHtml(listing) {
+            if (!listing.last_bump_at) return `<button class="btn-bump-listing" data-id="${listing.id}">🚀 Поднять</button>`;
+            const lastBump = new Date(listing.last_bump_at);
+            const now = new Date();
+            const hoursDiff = (now - lastBump) / (1000 * 60 * 60);
+            if (hoursDiff >= 3) return `<button class="btn-bump-listing" data-id="${listing.id}">🚀 Поднять</button>`;
+            else {
+                const nextBump = new Date(lastBump.getTime() + 3 * 60 * 60 * 1000);
+                const minutesLeft = Math.ceil((nextBump - now) / (1000 * 60));
+                return `<button class="btn-bump-listing disabled" disabled data-id="${listing.id}" style="background:#9ca3af; cursor:not-allowed;">⏳ Через ${minutesLeft} мин</button>`;
+            }
+        }
+
+        function attachBumpButtons() {
+            document.querySelectorAll('.btn-bump-listing:not(.disabled)').forEach(btn => {
+                btn.onclick = async (e) => {
+                    e.stopPropagation();
+                    const listingId = btn.dataset.id;
+                    if (!listingId) return;
+                    const originalText = btn.textContent;
+                    btn.textContent = '...';
+                    btn.disabled = true;
+                    try {
+                        const resp = await fetch(`${API_URL}/listings/${listingId}/bump`, { method: 'POST', headers: { 'Authorization': `Bearer ${currentToken}` } });
+                        const data = await resp.json();
+                        if (resp.ok) { showNotification('Объявление поднято!', 'success'); switchTab(currentTab); }
+                        else { showNotification(data.error || 'Ошибка', 'error'); btn.textContent = originalText; btn.disabled = false; }
+                    } catch(e) { showNotification('Ошибка соединения', 'error'); btn.textContent = originalText; btn.disabled = false; }
+                };
+            });
+        }
+
+        function goBackInProfile() {
+            if (document.referrer && document.referrer !== window.location.href) window.history.back();
+            else window.location.href = '/';
+        }
+
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        (async function init() {
+            if (isOwnProfile) {
+                document.getElementById('ownProfileControls').classList.remove('hidden');
+
+                document.getElementById('createGroup').addEventListener('change', async function() {
+                    const groupId = this.value;
+                    const subgroupGroup = document.getElementById('createSubgroupGroup');
+                    const categoryGroup = document.getElementById('createCategoryGroup');
+                    if (!groupId) {
+                        subgroupGroup.style.display = 'none';
+                        categoryGroup.style.display = 'none';
+                        document.getElementById('createSubgroup').innerHTML = '<option value="">-- Сначала выберите группу --</option>';
+                        document.getElementById('createCategorySelect').innerHTML = '<option value="">-- Сначала выберите подгруппу --</option>';
+                        return;
+                    }
+                    subgroupGroup.style.display = 'block';
+                    await loadSubcategories(groupId, 'createSubgroup');
+                    categoryGroup.style.display = 'none';
+                    document.getElementById('createCategorySelect').innerHTML = '<option value="">-- Сначала выберите подгруппу --</option>';
+                });
+
+                document.getElementById('createSubgroup').addEventListener('change', async function() {
+                    const subgroupId = this.value;
+                    const categoryGroup = document.getElementById('createCategoryGroup');
+                    if (!subgroupId) {
+                        categoryGroup.style.display = 'none';
+                        document.getElementById('createCategorySelect').innerHTML = '<option value="">-- Сначала выберите подгруппу --</option>';
+                        return;
+                    }
+                    categoryGroup.style.display = 'block';
+                    await loadCategoryChildren(subgroupId, 'createCategorySelect');
+                });
+
+                document.getElementById('editGroup').addEventListener('change', async function() {
+                    const groupId = this.value;
+                    const subgroupGroup = document.getElementById('editSubgroupGroup');
+                    const categoryGroup = document.getElementById('editCategoryGroup');
+                    if (!groupId) {
+                        subgroupGroup.style.display = 'none';
+                        categoryGroup.style.display = 'none';
+                        document.getElementById('editSubgroup').innerHTML = '<option value="">-- Сначала выберите группу --</option>';
+                        document.getElementById('editCategorySelect').innerHTML = '<option value="">-- Сначала выберите подгруппу --</option>';
+                        return;
+                    }
+                    subgroupGroup.style.display = 'block';
+                    await loadSubcategories(groupId, 'editSubgroup');
+                    categoryGroup.style.display = 'none';
+                    document.getElementById('editCategorySelect').innerHTML = '<option value="">-- Сначала выберите подгруппу --</option>';
+                });
+
+                document.getElementById('editSubgroup').addEventListener('change', async function() {
+                    const subgroupId = this.value;
+                    const categoryGroup = document.getElementById('editCategoryGroup');
+                    if (!subgroupId) {
+                        categoryGroup.style.display = 'none';
+                        document.getElementById('editCategorySelect').innerHTML = '<option value="">-- Сначала выберите подгруппу --</option>';
+                        return;
+                    }
+                    categoryGroup.style.display = 'block';
+                    await loadCategoryChildren(subgroupId, 'editCategorySelect');
+                });
+
+                document.getElementById('createRegion').addEventListener('change', async function() {
+                    const regionId = this.value;
+                    await loadCitiesByRegionForSelect(regionId, 'createCity', 'createCityGroup');
+                });
+
+                document.getElementById('editRegion').addEventListener('change', async function() {
+                    const regionId = this.value;
+                    await loadCitiesByRegionForSelect(regionId, 'editCity', 'editCityGroup');
+                });
+
+                document.getElementById('showCreateFormBtn').addEventListener('click', () => {
+                    document.getElementById('createRegion').value = '';
+                    document.getElementById('createCityGroup').style.display = 'none';
+                    document.getElementById('createCity').innerHTML = '<option value="">-- Сначала выберите регион --</option>';
+                    loadRegionsForSelect('createRegion');
+                    showModal('createModal');
+                    loadGroups('createGroup');
+                    setTimeout(() => { initMapForModal('createMap', 'createLat', 'createLng', 'createMapSearch', 'createMapSearchBtn', 'createMapClearBtn', 'createMapGeoBtn', 'createSuggestList'); }, 300);
+                });
+
+                document.getElementById('backButton').addEventListener('click', goBackInProfile);
+
+                document.querySelectorAll('#profileTabs .tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        const tabName = e.currentTarget.getAttribute('data-tab');
+                        switchTab(tabName);
+                    });
+                });
+
+                loadUserProfile();
+                loadRegionsForSelect('createRegion');
+                loadRegionsForSelect('editRegion');
+
+                await loadUserData();
+                await loadSubscriptionStatus();
+
+                const savedTab = localStorage.getItem(STORAGE_KEY) || 'my';
+                switchTab(savedTab);
+            } else {
+                document.getElementById('ownProfileControls').style.setProperty('display', 'none', 'important');
+                document.getElementById('profileTabs').style.setProperty('display', 'none', 'important');
+                document.getElementById('subscriptionCard').style.setProperty('display', 'none', 'important');
+                document.getElementById('backButton').addEventListener('click', goBackInProfile);
+
+                loadUserProfile();
+
+                (async function loadForeignListings() {
+                    try {
+                        const resp = await fetch(`${API_URL}/users/${targetUserId}/listings`);
+                        const listings = await resp.json();
+                        currentUserListings = listings;
+                        renderUserListingsByMode();
+                    } catch(e) {
+                        console.error('Ошибка загрузки объявлений пользователя:', e);
+                        document.getElementById('listingsList').innerHTML = '<div style="text-align:center;padding:40px;">Ошибка загрузки объявлений</div>';
+                    }
+                })();
+
+                window.refreshCurrentListings = function() {
+                    fetch(`${API_URL}/users/${targetUserId}/listings`)
+                        .then(res => res.json())
+                        .then(listings => {
+                            currentUserListings = listings;
+                            renderUserListingsByMode();
+                        })
+                        .catch(console.error);
+                };
+            }
+
+            document.getElementById('submitCreateBtn')?.addEventListener('click', submitCreateListing);
+            document.getElementById('submitUpdateBtn')?.addEventListener('click', submitUpdateListing);
+        })();
+
+        window.refreshCurrentTab = function() {
+            if (currentTab === 'my') loadMyListings();
+            else if (currentTab === 'fav') loadFavoritesInProfile();
+            else if (currentTab === 'archive') loadArchivedListings();
+        };
+    </script>
+</body>
+</html>

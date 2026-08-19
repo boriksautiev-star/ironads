@@ -1,0 +1,1002 @@
+/* ===== БАЗОВЫЕ СТИЛИ ДЛЯ КНОПОК (СВЕТЛАЯ ТЕМА) ===== */
+.login-btn, .register-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    color: white !important;
+    border: none !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 40px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+}
+.login-btn:hover, .register-btn:hover {
+    opacity: 0.9 !important;
+    transform: translateY(-1px) !important;
+}
+
+/* ===== ТЁМНАЯ ТЕМА ===== */
+body.dark-theme {
+    background: #0f172a !important;
+    color: #e2e8f0;
+}
+body.dark-theme .main-header,
+body.dark-theme .header {
+    background: #1e293b !important;
+    border-bottom-color: #334155 !important;
+}
+body.dark-theme .nav-links a,
+body.dark-theme .nav-links button,
+body.dark-theme .nav button,
+body.dark-theme .logo a {
+    color: #f1f5f9 !important;
+}
+body.dark-theme .nav-links a:hover,
+body.dark-theme .nav-links button:hover {
+    background: #334155 !important;
+}
+body.dark-theme .filter-card,
+body.dark-theme .listing-card,
+body.dark-theme .listing-row,
+body.dark-theme .modal-content,
+body.dark-theme .card,
+body.dark-theme .listings-grid .listing-card,
+body.dark-theme .listings-list .listing-row,
+body.dark-theme .ticket-item,
+body.dark-theme .complaint-card,
+body.dark-theme .new-ticket-form,
+body.dark-theme .ticket-list,
+body.dark-theme .ticket-view {
+    background: #1e293b !important;
+    border: 1px solid #334155;
+    color: #e2e8f0;
+}
+body.dark-theme .listing-card:hover,
+body.dark-theme .listing-row:hover {
+    background: #2d3a4e !important;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+body.dark-theme .listing-title,
+body.dark-theme .listing-row-title {
+    color: #f1f5f9 !important;
+}
+body.dark-theme .listing-price,
+body.dark-theme .listing-row-price {
+    color: #60a5fa !important;
+}
+body.dark-theme .listing-meta,
+body.dark-theme .listing-row-meta,
+body.dark-theme .listing-description,
+body.dark-theme .listing-row-description {
+    color: #cbd5e1 !important;
+}
+body.dark-theme .filter-group label {
+    color: #94a3b8 !important;
+}
+body.dark-theme .filter-group input,
+body.dark-theme .filter-group select,
+body.dark-theme .form-group input,
+body.dark-theme .form-group textarea,
+body.dark-theme .form-group select {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    color: #f1f5f9 !important;
+}
+body.dark-theme .filter-group input::placeholder,
+body.dark-theme .form-group input::placeholder {
+    color: #64748b;
+}
+body.dark-theme .btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    color: white !important;
+}
+body.dark-theme .btn-secondary {
+    background: #334155 !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #475569;
+}
+body.dark-theme .btn-secondary:hover {
+    background: #475569 !important;
+}
+body.dark-theme .btn-login,
+body.dark-theme .login-btn {
+    background: #1e3a5f !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #3b82f6 !important;
+}
+body.dark-theme .btn-login:hover,
+body.dark-theme .login-btn:hover {
+    background: #2d4a6e !important;
+}
+body.dark-theme .btn-logout,
+body.dark-theme .logout-btn {
+    background: #dc2626 !important;
+    color: white !important;
+}
+body.dark-theme .tabs .tab {
+    background: rgba(255,255,255,0.1);
+    color: #cbd5e1;
+}
+body.dark-theme .tabs .tab.active {
+    background: #1e293b !important;
+    color: #60a5fa !important;
+}
+body.dark-theme .modal-content {
+    background: #1e293b !important;
+    border: 1px solid #334155;
+}
+body.dark-theme .notification {
+    background: #1e293b !important;
+    color: #f1f5f9;
+}
+body.dark-theme .notification.success {
+    background: #059669 !important;
+}
+body.dark-theme .notification.error {
+    background: #dc2626 !important;
+}
+body.dark-theme .pagination button {
+    background: #1e293b !important;
+    color: #cbd5e1;
+    border: 1px solid #334155;
+}
+body.dark-theme .pagination button.active {
+    background: #3b82f6 !important;
+    color: white;
+}
+body.dark-theme .pagination button:hover:not(.active) {
+    background: #334155 !important;
+}
+body.dark-theme .badge {
+    background: #dc2626;
+    color: white;
+}
+body.dark-theme .rating-stars {
+    background: #fbbf24;
+    color: #0f172a;
+}
+body.dark-theme .online-indicator {
+    background-color: #10b981;
+}
+body.dark-theme a:not(.btn-primary):not(.btn-secondary) {
+    color: #60a5fa;
+}
+body.dark-theme a:hover {
+    color: #93c5fd;
+}
+body.dark-theme .font-control {
+    background: #1e293b !important;
+}
+body.dark-theme .font-btn {
+    background: #334155 !important;
+    color: #f1f5f9 !important;
+    border: none;
+}
+body.dark-theme .font-btn:hover {
+    background: #475569 !important;
+}
+body.dark-theme .font-btn.reset {
+    background: #475569 !important;
+    color: #e2e8f0 !important;
+}
+body.dark-theme .nav .font-control,
+body.dark-theme .header .font-control,
+body.dark-theme .font-control button {
+    background: transparent !important;
+}
+body.dark-theme .font-control button {
+    background: #334155 !important;
+    margin: 0 2px;
+}
+
+/* ===== ТЁМНАЯ ТЕМА ДЛЯ СПИСКА ЧАТОВ ===== */
+body.dark-theme .chat-list {
+    background: transparent !important;
+}
+body.dark-theme .chat-item {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+    border-radius: 12px;
+    margin-bottom: 8px;
+}
+body.dark-theme .chat-item:hover {
+    background: #2d3a4e !important;
+}
+body.dark-theme .chat-title a {
+    color: #f1f5f9 !important;
+}
+body.dark-theme .chat-preview {
+    color: #94a3b8 !important;
+}
+body.dark-theme .unread-badge {
+    background: #3b82f6 !important;
+}
+body.dark-theme .chat-actions button {
+    color: #94a3b8;
+}
+body.dark-theme .chat-actions button:hover {
+    background: #334155 !important;
+    color: #f1f5f9;
+}
+body.dark-theme .empty {
+    background: #1e293b;
+    color: #94a3b8;
+}
+
+/* ===== ТЁМНАЯ ТЕМА ДЛЯ ОКНА ЧАТА (МОДАЛЬНОГО) ===== */
+body.dark-theme .chat-container {
+    background: #1e293b !important;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5) !important;
+}
+body.dark-theme .chat-header {
+    background: #0f172a !important;
+    border-bottom: 1px solid #334155 !important;
+}
+body.dark-theme .chat-with {
+    color: #f1f5f9 !important;
+}
+body.dark-theme .chat-listing {
+    color: #94a3b8 !important;
+}
+body.dark-theme .messages-container {
+    background: #0f172a !important;
+}
+body.dark-theme .message.received {
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2) !important;
+}
+body.dark-theme .message.sent {
+    background: #1e3a5f !important;
+    color: #e2e8f0 !important;
+}
+body.dark-theme .reply-quote {
+    background: rgba(255,255,255,0.05) !important;
+    border-left-color: #3b82f6 !important;
+    color: #94a3b8 !important;
+}
+body.dark-theme .reply-quote span {
+    color: #cbd5e1 !important;
+}
+body.dark-theme .reply-btn {
+    color: #94a3b8 !important;
+}
+body.dark-theme .reply-btn:hover {
+    background: #334155 !important;
+    color: #f1f5f9 !important;
+}
+body.dark-theme .input-container {
+    background: #1e293b !important;
+    border-top: 1px solid #334155 !important;
+}
+body.dark-theme .reply-preview {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    color: #cbd5e1 !important;
+}
+body.dark-theme .reply-preview span {
+    color: #60a5fa !important;
+}
+body.dark-theme .cancel-reply {
+    color: #f87171 !important;
+}
+body.dark-theme .action-btn {
+    color: #94a3b8 !important;
+}
+body.dark-theme .action-btn:hover {
+    background: #334155 !important;
+    color: #f1f5f9 !important;
+}
+body.dark-theme .message-input {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    color: #f1f5f9 !important;
+}
+body.dark-theme .message-input:focus {
+    border-color: #3b82f6 !important;
+}
+body.dark-theme .send-btn {
+    background: #3b82f6 !important;
+    color: white !important;
+}
+body.dark-theme .send-btn:hover {
+    background: #2563eb !important;
+}
+body.dark-theme .emoji-panel {
+    background: #1e293b !important;
+    border: 1px solid #334155 !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+}
+body.dark-theme .emoji-item:hover {
+    background: #334155 !important;
+}
+body.dark-theme .back-btn {
+    background: rgba(255,255,255,0.1) !important;
+    color: #e2e8f0 !important;
+}
+body.dark-theme .back-btn:hover {
+    background: rgba(255,255,255,0.2) !important;
+}
+body.dark-theme .win-btn {
+    background: rgba(255,255,255,0.1) !important;
+    color: #e2e8f0 !important;
+}
+body.dark-theme .win-btn:hover {
+    background: rgba(255,255,255,0.2) !important;
+}
+body.dark-theme .win-btn-close:hover {
+    background: #dc2626 !important;
+}
+body.dark-theme .install-pwa-btn,
+body.dark-theme .install-btn {
+    background: #059669 !important;
+    color: white !important;
+}
+body.dark-theme .image-viewer {
+    background: rgba(0,0,0,0.9) !important;
+}
+
+/* ===== УНИФИКАЦИЯ КНОПОК В ЛИЧНОМ КАБИНЕТЕ ===== */
+#profilePage .btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    color: white !important;
+    border: none !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 0.75rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+#profilePage .btn-primary:hover {
+    opacity: 0.9 !important;
+    transform: translateY(-1px) !important;
+}
+body.dark-theme #profilePage .btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+}
+body.dark-theme #profilePage .btn-primary:hover {
+    background: linear-gradient(135deg, #2563eb, #1e40af) !important;
+}
+
+/* ===== ЕДИНЫЙ СТИЛЬ ДЛЯ ВСЕХ КНОПОК .btn-primary ===== */
+.btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    color: white !important;
+    border: none !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 0.75rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+}
+.btn-primary:hover {
+    opacity: 0.9 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+}
+body.dark-theme .btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+}
+body.dark-theme .btn-primary:hover {
+    background: linear-gradient(135deg, #2563eb, #1e40af) !important;
+}
+
+/* ===== ДОПОЛНИТЕЛЬНЫЕ ПРАВКИ ДЛЯ ТЁМНОЙ ТЕМЫ (МОДАЛЬНЫЕ ОКНА, ФОРМЫ) ===== */
+body.dark-theme .modal {
+    background: rgba(0,0,0,0.8) !important;
+}
+body.dark-theme .modal .form-group label {
+    color: #cbd5e1 !important;
+}
+body.dark-theme .media-item {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+}
+body.dark-theme .media-item .media-actions button {
+    color: white !important;
+}
+body.dark-theme .listing-actions button {
+    background: #334155 !important;
+    color: #e2e8f0 !important;
+}
+body.dark-theme .listing-actions button.btn-view-listing {
+    background: #3b82f6 !important;
+}
+body.dark-theme .listing-actions button.btn-edit-listing {
+    background: #475569 !important;
+}
+body.dark-theme .listing-actions button.btn-delete-listing {
+    background: #7f1d1d !important;
+    color: #fca5a5 !important;
+}
+
+/* ===== АДМИН-ПАНЕЛЬ В ТЁМНОЙ ТЕМЕ ===== */
+body.dark-theme .admin-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+}
+body.dark-theme .admin-header .logo {
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+body.dark-theme .tab-btn {
+    background: #334155 !important;
+    color: #cbd5e1 !important;
+}
+body.dark-theme .tab-btn.active {
+    background: #3b82f6 !important;
+    color: white !important;
+}
+body.dark-theme .card {
+    background: #1e293b !important;
+    border: 1px solid #334155 !important;
+}
+body.dark-theme .card h2,
+body.dark-theme .card h3 {
+    color: #f1f5f9 !important;
+}
+body.dark-theme .stat-card {
+    background: #0f172a !important;
+    color: #e2e8f0 !important;
+}
+body.dark-theme .stat-number {
+    color: #60a5fa !important;
+}
+body.dark-theme table th {
+    background: #0f172a !important;
+    color: #f1f5f9 !important;
+    border-bottom: 1px solid #334155 !important;
+}
+body.dark-theme table td {
+    border-bottom: 1px solid #334155 !important;
+    color: #cbd5e1 !important;
+}
+body.dark-theme .btn-sm {
+    background: #334155 !important;
+    color: #e2e8f0 !important;
+}
+body.dark-theme .btn-sm.btn-primary {
+    background: #3b82f6 !important;
+}
+body.dark-theme .btn-sm.btn-danger {
+    background: #dc2626 !important;
+}
+body.dark-theme .btn-sm.btn-warning {
+    background: #d97706 !important;
+}
+body.dark-theme .btn-sm.btn-success {
+    background: #059669 !important;
+}
+body.dark-theme .filter-group input,
+body.dark-theme .filter-group select {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+body.dark-theme .back-home,
+body.dark-theme .support-link {
+    background: #334155 !important;
+    color: #f1f5f9 !important;
+}
+body.dark-theme .back-home:hover,
+body.dark-theme .support-link:hover {
+    background: #475569 !important;
+}
+
+/* ===== КНОПКА БУРГЕР-МЕНЮ В ТЁМНОЙ ТЕМЕ (АДМИНКА, МОБИЛЬНАЯ ВЕРСИЯ) ===== */
+body.dark-theme .burger {
+    color: #f1f5f9 !important;
+    background: transparent !important;
+}
+body.dark-theme .burger:hover {
+    color: #ffffff !important;
+}
+
+/* ===== СТРАНИЦА ПОДДЕРЖКИ (support.html) ===== */
+body.dark-theme .support-container h1 {
+    color: white !important;
+}
+body.dark-theme .support-container .new-ticket-form,
+body.dark-theme .support-container .ticket-list,
+body.dark-theme .support-container .ticket-view {
+    background: #1e293b !important;
+    border: 1px solid #334155;
+}
+body.dark-theme .support-container .new-ticket-form h3,
+body.dark-theme .support-container .ticket-list h3 {
+    color: #f1f5f9 !important;
+}
+body.dark-theme .support-container input,
+body.dark-theme .support-container textarea,
+body.dark-theme .support-container select {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    color: #f1f5f9 !important;
+}
+body.dark-theme .support-container .ticket-item {
+    background: #0f172a !important;
+    border: 1px solid #334155;
+    margin-bottom: 1rem;
+}
+body.dark-theme .support-container .ticket-item strong {
+    color: #f1f5f9 !important;
+}
+body.dark-theme .support-container .ticket-status {
+    background: #334155;
+    color: #e2e8f0;
+}
+body.dark-theme .support-container .status-open {
+    background: #f59e0b;
+    color: #1e293b;
+}
+body.dark-theme .support-container .status-in_progress {
+    background: #3b82f6;
+    color: white;
+}
+body.dark-theme .support-container .status-closed {
+    background: #6c757d;
+    color: white;
+}
+body.dark-theme .support-container .priority-badge {
+    background: #334155;
+    color: #e2e8f0;
+}
+body.dark-theme .support-container .priority-low {
+    background: #10b981;
+    color: white;
+}
+body.dark-theme .support-container .priority-medium {
+    background: #f59e0b;
+    color: #1e293b;
+}
+body.dark-theme .support-container .priority-high {
+    background: #ef4444;
+    color: white;
+}
+body.dark-theme .support-container .open-chat-btn,
+body.dark-theme .support-container .details-btn {
+    background: #334155 !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #475569;
+}
+body.dark-theme .support-container .open-chat-btn:hover,
+body.dark-theme .support-container .details-btn:hover {
+    background: #475569 !important;
+}
+body.dark-theme .support-container .back-btn {
+    background: #334155 !important;
+    color: #e2e8f0 !important;
+}
+body.dark-theme .support-container .message-list .message {
+    background: #0f172a !important;
+    border: 1px solid #334155;
+}
+body.dark-theme .support-container .message-list .message-user {
+    background: #1e293b !important;
+}
+body.dark-theme .support-container .message-list .message-staff {
+    background: #1e3a5f !important;
+}
+body.dark-theme .support-container .reply-form textarea {
+    background: #0f172a !important;
+    border: 1px solid #334155;
+    color: #f1f5f9;
+}
+
+/* ===== ИСПРАВЛЕНИЕ ЧИТАЕМОСТИ ОПИСАНИЯ НА КАРТОЧКАХ В ТЁМНОЙ ТЕМЕ ===== */
+body.dark-theme .listing-description,
+body.dark-theme .listing-row-description,
+body.dark-theme .listing-card .listing-description,
+body.dark-theme .listing-row .listing-row-description {
+    color: #cbd5e1 !important;
+}
+
+/* ===== СТРАНИЦА ОБЪЯВЛЕНИЯ (listing.html) В ТЁМНОЙ ТЕМЕ ===== */
+body.dark-theme .listing-container {
+    background: #1e293b !important;
+    border: 1px solid #334155 !important;
+}
+body.dark-theme .listing-container .gallery {
+    background: #0f172a !important;
+}
+body.dark-theme .listing-container .info {
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+body.dark-theme .listing-container .listing-title {
+    color: #f1f5f9 !important;
+}
+body.dark-theme .listing-container .listing-price {
+    color: #60a5fa !important;
+}
+body.dark-theme .listing-container .listing-description {
+    color: #cbd5e1 !important;
+}
+body.dark-theme .listing-container .listing-meta {
+    color: #94a3b8 !important;
+}
+body.dark-theme .listing-container .listing-meta a {
+    color: #60a5fa !important;
+}
+body.dark-theme .listing-container .contacts {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+}
+body.dark-theme .listing-container .contacts h3 {
+    color: #f1f5f9 !important;
+}
+body.dark-theme .listing-container .seller-name {
+    color: #e2e8f0 !important;
+}
+body.dark-theme .listing-container .seller-name a {
+    color: #60a5fa !important;
+}
+body.dark-theme .listing-container .blocked-warning {
+    background: #7f1d1d !important;
+    color: #fca5a5 !important;
+    border-left-color: #ef4444 !important;
+}
+body.dark-theme .listing-container .complaint-btn {
+    background: #7f1d1d !important;
+    color: #fca5a5 !important;
+}
+body.dark-theme .listing-container .complaint-btn:hover {
+    background: #991b1b !important;
+}
+body.dark-theme .listing-container .favorite-btn {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+body.dark-theme .listing-container .favorite-btn.active {
+    background: #ef4444 !important;
+    color: white !important;
+}
+body.dark-theme .listing-container .favorite-btn:hover {
+    background: #334155 !important;
+}
+body.dark-theme .listing-container .thumbnail {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+}
+body.dark-theme .listing-container .thumbnail.active {
+    border-color: #3b82f6 !important;
+}
+body.dark-theme .listing-container .main-image {
+    background: #0f172a !important;
+}
+body.dark-theme .listing-container .category-breadcrumbs {
+    color: #94a3b8 !important;
+}
+body.dark-theme .listing-container .category-breadcrumbs a {
+    color: #60a5fa !important;
+}
+body.dark-theme .listing-container .category-breadcrumbs .separator {
+    color: #475569 !important;
+}
+
+/* ===== ДОБАВЛЕНО: СТИЛИ ДЛЯ МОДАЛКИ ОПИСАНИЯ КАТЕГОРИИ В ТЁМНОЙ ТЕМЕ ===== */
+body.dark-theme #categoryDescriptionModal .modal-content {
+    background: #1e293b !important;
+    border: 1px solid #334155 !important;
+    color: #e2e8f0 !important;
+}
+body.dark-theme #categoryDescriptionModal #descModalTitle {
+    color: #f1f5f9 !important;
+}
+body.dark-theme #categoryDescriptionModal button {
+    color: #e2e8f0 !important;
+}
+body.dark-theme #categoryDescriptionModal button:hover {
+    background: #334155 !important;
+}
+body.dark-theme .category-description-content {
+    color: #e2e8f0 !important;
+}
+body.dark-theme .category-description-content h3,
+body.dark-theme .category-description-content h4 {
+    color: #f1f5f9 !important;
+}
+body.dark-theme .category-description-content p,
+body.dark-theme .category-description-content li {
+    color: #cbd5e1 !important;
+}
+body.dark-theme .category-description-content ul {
+    color: #cbd5e1 !important;
+}
+body.dark-theme .category-description-content strong {
+    color: #f1f5f9 !important;
+}
+
+/* ===== АДАПТАЦИЯ БЛОКА "ПОПУЛЯРНЫЕ ГОРОДА" ДЛЯ ТЁМНОЙ ТЕМЫ ===== */
+body.dark-theme #popularCities {
+    background: #1e293b !important;
+    border: 1px solid #334155;
+}
+body.dark-theme #citiesToggleLabel {
+    color: #f1f5f9 !important;
+}
+body.dark-theme #citiesList a {
+    color: #93c5fd !important;
+}
+body.dark-theme #citiesList a:hover {
+    color: #60a5fa !important;
+    text-decoration: underline !important;
+}
+body.dark-theme #toggleCitiesBtn {
+    color: #93c5fd !important;
+}
+body.dark-theme #toggleCitiesBtn:hover {
+    color: #60a5fa !important;
+}
+
+/* ===== МОБИЛЬНАЯ АДАПТАЦИЯ ===== */
+@media (max-width: 768px) {
+    #popularCities {
+        padding: 0.6rem 0.8rem !important;
+        margin: 0.75rem 0 !important;
+    }
+    #citiesToggleLabel {
+        font-size: 0.85rem !important;
+        cursor: pointer !important;
+        user-select: none;
+    }
+    #citiesToggleIcon {
+        display: inline-block !important;
+    }
+    #toggleCitiesBtn {
+        display: inline-block !important;
+    }
+    #citiesList {
+        display: none !important;
+        margin-top: 0.5rem !important;
+        gap: 0.4rem !important;
+        justify-content: flex-start !important;
+        flex-wrap: wrap !important;
+    }
+    #citiesList.open {
+        display: flex !important;
+    }
+    #citiesList a {
+        font-size: 0.75rem !important;
+        padding: 0.2rem 0.4rem;
+        background: rgba(255,255,255,0.1);
+        border-radius: 0.5rem;
+    }
+    body.dark-theme #citiesList a {
+        background: rgba(255,255,255,0.05);
+    }
+    body.dark-theme #citiesList a:hover {
+        background: rgba(255,255,255,0.1);
+    }
+}
+
+/* ===== СТИЛИ ДЛЯ БЛОКА КОНТАКТОВ (ТЁМНАЯ ТЕМА) ===== */
+body.dark-theme .contacts-block {
+    background: #1e293b !important;
+    border: 1px solid #334155 !important;
+}
+body.dark-theme .contacts-block h3 {
+    color: #f1f5f9 !important;
+}
+body.dark-theme .contacts-block .contact-owner-settings label {
+    color: #cbd5e1 !important;
+}
+body.dark-theme .contacts-block .edit-contacts-btn {
+    background: #334155 !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #475569;
+}
+body.dark-theme .contacts-block .edit-contacts-btn:hover {
+    background: #475569 !important;
+}
+body.dark-theme .contact-btn {
+    color: white !important;
+}
+body.dark-theme .contact-btn.btn-phone {
+    background: #059669 !important;
+}
+body.dark-theme .contact-btn.btn-whatsapp {
+    background: #1d9b4e !important;
+}
+body.dark-theme .contact-btn.btn-telegram {
+    background: #0077b3 !important;
+}
+body.dark-theme .contact-btn:hover {
+    opacity: 0.9 !important;
+}
+
+/* ===== ДОБАВЛЕННЫЕ СТИЛИ ДЛЯ IOS ===== */
+
+/* Безопасные зоны (статус-бар, нижний индикатор) */
+body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+}
+
+/* Минимальная высота для кликабельных элементов (44px) */
+button,
+.btn,
+.tab,
+.nav a,
+.listing-card,
+.listing-row,
+.favorite-btn,
+.complaint-btn,
+.remove-fav-btn,
+.back-link,
+.filter-group select,
+.filter-group input,
+.pagination button,
+.modal .form-actions button,
+input[type="file"],
+.chat-button,
+.send-btn,
+.action-btn,
+.contact-btn,
+.contact-btn-sm,
+.remove-fav-btn {
+    min-height: 44px;
+    touch-action: manipulation;
+}
+
+/* Убираем синюю подсветку при касании (iOS) */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Анимация при нажатии для отзывчивости */
+.btn:active,
+.listing-card:active,
+.listing-row:active,
+.tab:active,
+button:active,
+.favorite-btn:active,
+.complaint-btn:active,
+.remove-fav-btn:active,
+.back-link:active,
+.pagination button:active,
+.chat-button:active,
+.send-btn:active {
+    opacity: 0.7;
+    transform: scale(0.97);
+    transition: transform 0.08s ease, opacity 0.08s ease;
+}
+
+/* Улучшение скролла (плавность) */
+.messages-container,
+.listings-grid,
+.listings-list,
+.modal-content,
+.complaint-list,
+.ticket-list,
+.chat-list,
+.filter-card,
+.listing-info {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+}
+
+/* Поля ввода – увеличенный размер для удобства */
+input,
+textarea,
+select {
+    font-size: 16px !important; /* предотвращает зум на iOS */
+    min-height: 44px;
+}
+
+/* Исправление для модалок на iOS (чтобы не вылезали за экран) */
+.modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Улучшение для иконок и шрифтов */
+.fa,
+.fas,
+.far,
+.fab {
+    font-size: 1.1em;
+}
+
+/* Убираем стандартные стили для ссылок (сохраняем цвет) */
+a {
+    -webkit-touch-callout: none;
+}
+
+/* Для списков чатов, чтобы не было задержки при прокрутке */
+.chat-item,
+.ticket-item,
+.complaint-card {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Адаптация для безопасной зоны (кнопка "Назад" в чате) */
+.chat-header {
+    padding-top: env(safe-area-inset-top);
+}
+/* ===== ШАРИНГ В ТЁМНОЙ ТЕМЕ ===== */
+body.dark-theme .share-block {
+    border-top-color: #334155;
+}
+body.dark-theme .share-label {
+    color: #cbd5e1;
+}
+body.dark-theme .share-btn {
+    background: #1e293b;
+    color: #94a3b8;
+}
+body.dark-theme .share-btn:hover {
+    background: #334155;
+}
+body.dark-theme #copyLinkBtn {
+    background: #1e293b;
+}
+body.dark-theme #copyLinkBtn:hover {
+    background: #334155;
+}
+body.dark-theme #copyLinkBtn.copied {
+    background: #059669;
+    color: white;
+}
+/* ===== ЦЕНА В КАРТОЧКАХ — КРУПНЕЕ И ПЕРВАЯ ===== */
+.listing-card .listing-price,
+.listing-row .listing-row-price,
+.listing-card .listing-price {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: #1a1a1a !important;
+    margin-bottom: 0.25rem !important;
+}
+
+.listing-card .listing-title,
+.listing-row .listing-row-title {
+    font-size: 1rem !important;
+    font-weight: 400 !important;
+    color: #2c3e50 !important;
+}
+
+/* Для тёмной темы */
+body.dark-theme .listing-card .listing-price,
+body.dark-theme .listing-row .listing-row-price {
+    color: #60a5fa !important;
+}
+body.dark-theme .listing-card .listing-title,
+body.dark-theme .listing-row .listing-row-title {
+    color: #f1f5f9 !important;
+}
+/* ===== ЦЕНА В КАРТОЧКАХ — КРУПНЕЕ И ПЕРВАЯ ===== */
+.listing-card .listing-price,
+.listing-row .listing-row-price {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: #1a1a1a !important;
+    margin-bottom: 0.25rem !important;
+}
+
+.listing-card .listing-title,
+.listing-row .listing-row-title {
+    font-size: 1rem !important;
+    font-weight: 400 !important;
+    color: #2c3e50 !important;
+}
+
+body.dark-theme .listing-card .listing-price,
+body.dark-theme .listing-row .listing-row-price {
+    color: #60a5fa !important;
+}
+body.dark-theme .listing-card .listing-title,
+body.dark-theme .listing-row .listing-row-title {
+    color: #f1f5f9 !important;
+}

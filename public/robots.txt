@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /moderation/
+Disallow: /profile.html?*
+Disallow: /chat.html?*
+Disallow: /chats.html?*
+Sitemap: https://ironads.ru/sitemap.xml

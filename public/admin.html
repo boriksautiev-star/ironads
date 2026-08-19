@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Админ-панель IronAds</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding-top: 130px; }
+        .admin-header { position: fixed; top: 0; left: 0; width: 100%; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.1); z-index: 1000; padding: 0.8rem 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .logo { font-size: 1.6rem; font-weight: 800; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .burger { display: none; background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #1e293b; padding: 0 0.5rem; }
+        .nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; transition: all 0.3s ease; }
+        .tab-btn { padding: 0.5rem 1.2rem; border: none; background: #f1f5f9; border-radius: 40px; cursor: pointer; font-weight: 500; transition: 0.2s; white-space: nowrap; }
+        .tab-btn.active { background: #667eea; color: white; box-shadow: 0 2px 8px rgba(102,126,234,0.3); }
+        .back-home, .support-link, .guide-link { background: #f1f5f9; padding: 0.5rem 1rem; border-radius: 30px; text-decoration: none; color: #1e293b; margin-left: 0.5rem; display: inline-block; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+        .card { background: white; border-radius: 24px; padding: 1.8rem; margin-bottom: 1.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+        h2 { font-size: 1.5rem; margin-bottom: 1.2rem; color: #0f172a; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.2rem; margin-bottom: 2rem; }
+        .stat-card { background: #f8fafc; padding: 1.2rem; border-radius: 20px; text-align: center; }
+        .stat-number { font-size: 2rem; font-weight: 800; color: #667eea; }
+        .filter-group { display: flex; gap: 0.8rem; margin-bottom: 1.2rem; flex-wrap: wrap; align-items: center; }
+        .filter-group input, .filter-group select { padding: 0.5rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 16px; }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 0.9rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f8fafc; font-weight: 600; }
+        .btn { padding: 0.4rem 0.9rem; border-radius: 12px; border: none; cursor: pointer; font-size: 0.8rem; font-weight: 500; transition: 0.2s; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-secondary { background: #cbd5e1; color: #1e293b; }
+        .btn-sm { padding: 0.25rem 0.6rem; margin: 0 0.2rem; }
+        .pagination { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; flex-wrap: wrap; }
+        .pagination button { background: #f1f5f9; border: none; padding: 0.4rem 0.8rem; border-radius: 20px; cursor: pointer; }
+        .pagination button.active { background: #667eea; color: white; }
+        .complaint-card { background: #f8fafc; border-radius: 16px; padding: 1rem; margin-bottom: 1rem; }
+        .hidden { display: none; }
+        canvas { max-width: 100%; height: auto; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .modal.hidden { display: none; }
+        .modal-content { background: white; padding: 2rem; border-radius: 28px; width: 90%; max-width: 550px; max-height: 85vh; overflow-y: auto; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.3rem; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 16px; }
+        .form-actions { display: flex; gap: 0.8rem; justify-content: flex-end; margin-top: 1rem; flex-wrap: wrap; }
+        .install-pwa-btn { background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 40px; cursor: pointer; font-size: 0.75rem; font-weight: 500; margin-left: 8px; display: inline-block; }
+        .ticket-item { background: #f8fafc; border-radius: 16px; padding: 1rem; margin-bottom: 1rem; }
+        .ticket-status { display: inline-block; padding: 0.2rem 0.7rem; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
+        .status-open { background: #ffc107; color: #333; }
+        .status-in_progress { background: #17a2b8; color: white; }
+        .status-closed { background: #6c757d; color: white; }
+        .reply-area { margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .reply-area textarea { flex: 1; padding: 0.5rem; border-radius: 12px; border: 1px solid #cbd5e1; }
+        .category-tree { list-style: none; padding-left: 0; }
+        .category-tree ul { list-style: none; padding-left: 1.5rem; margin-top: 0.25rem; }
+        .category-tree li { margin: 0.5rem 0; padding: 0.25rem 0; border-left: 2px solid #e2e8f0; }
+        .category-tree .category-node { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; background: #f8fafc; padding: 0.5rem 0.75rem; border-radius: 12px; margin-left: -0.5rem; transition: background 0.2s; }
+        .city-tree { list-style: none; padding-left: 0; }
+        .city-tree ul { list-style: none; padding-left: 1.5rem; margin-top: 0.25rem; }
+        .city-tree li { margin: 0.5rem 0; padding: 0.25rem 0; border-left: 2px solid #e2e8f0; }
+        .city-tree .region-node { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; background: #e2e8f0; padding: 0.5rem 0.75rem; border-radius: 12px; font-weight: bold; }
+        .city-tree .city-node { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; background: #f8fafc; padding: 0.5rem 0.75rem; border-radius: 12px; margin-top: 0.25rem; }
+        .messages-table .message-preview { max-width: 250px; white-space: normal; word-break: break-word; }
+        .hint-text { font-size: 0.9rem; color: #475569; margin-bottom: 0.75rem; }
+        .subscription-status-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
+        .badge-active { background: #10b981; color: white; }
+        .badge-expired { background: #ef4444; color: white; }
+        .badge-near { background: #f59e0b; color: white; }
+        .days-left { font-weight: 600; }
+        .days-left.green { color: #10b981; }
+        .days-left.yellow { color: #f59e0b; }
+        .days-left.red { color: #ef4444; }
+
+        /* ========== МОБИЛЬНАЯ ВЕРСИЯ ========== */
+        @media (max-width: 768px) {
+            body { padding-top: 70px; }
+            .admin-header { padding: 0.5rem 1rem; flex-direction: row; justify-content: space-between; }
+            .burger { display: block; }
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.4rem;
+                padding: 1rem;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                border-radius: 0 0 20px 20px;
+                z-index: 999;
+                max-height: 80vh;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            body.dark-theme .nav-links { background: #1e293b; }
+            .nav-links.open { display: flex; }
+            .nav-links .tab-btn,
+            .nav-links .back-home,
+            .nav-links .support-link,
+            .nav-links .guide-link,
+            .nav-links .install-pwa-btn,
+            .nav-links .theme-toggle-btn {
+                width: 100% !important;
+                text-align: left !important;
+                padding: 0.7rem 1rem !important;
+                border-radius: 12px !important;
+                background: #f1f5f9 !important;
+                color: #1f2937 !important;
+                font-size: 0.95rem;
+                font-weight: 500;
+                border: none !important;
+                margin: 0 !important;
+            }
+            body.dark-theme .nav-links .tab-btn,
+            body.dark-theme .nav-links .back-home,
+            body.dark-theme .nav-links .support-link,
+            body.dark-theme .nav-links .guide-link,
+            body.dark-theme .nav-links .install-pwa-btn,
+            body.dark-theme .nav-links .theme-toggle-btn {
+                background: #334155 !important;
+                color: #f1f5f9 !important;
+            }
+            .nav-links .tab-btn.active {
+                background: #667eea !important;
+                color: white !important;
+            }
+            body.dark-theme .nav-links .tab-btn.active {
+                background: #3b82f6 !important;
+            }
+            .container { padding: 1rem; }
+            .card { padding: 1rem; }
+            .stats-grid { gap: 0.8rem; }
+            .filter-group { flex-direction: column; align-items: stretch; }
+        }
+        @media (min-width: 769px) {
+            .container .card:first-of-type {
+                margin-top: 10px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="/dark-theme.css">
+    <link rel="stylesheet" href="/css/header.css">
+</head>
+<body>
+<div class="admin-header">
+    <div class="logo">🛡️ IronAds Admin</div>
+    <button class="burger" id="burgerBtn">☰</button>
+    <div class="nav-links" id="navLinks">
+        <button id="themeToggleBtn" class="theme-toggle-btn" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0.5rem;">🌙</button>
+        <button class="tab-btn active" data-tab="stats">📊 Статистика</button>
+        <button class="tab-btn" data-tab="listings">📦 Объявления</button>
+        <button class="tab-btn" data-tab="categoriesTree">📂 Категории (дерево)</button>
+        <button class="tab-btn" data-tab="users">👥 Пользователи</button>
+        <button class="tab-btn" data-tab="cities">🏙️ Города</button>
+        <button class="tab-btn" data-tab="complaints">🚨 Жалобы</button>
+        <button class="tab-btn" data-tab="logs">📜 Аудит администраторов</button>
+        <button class="tab-btn" data-tab="userActions">👥 Журнал пользователей</button>
+        <button class="tab-btn" data-tab="settings">⚙️ Настройки</button>
+        <button class="tab-btn" data-tab="newsletter">📧 Рассылка</button>
+        <button class="tab-btn" data-tab="grantSubscription">🎁 Выдать подписку</button>
+        <button class="tab-btn" data-tab="subscriptionsList">📋 Список подписок</button>
+        <button class="tab-btn" data-tab="supportTickets">🛎️ Обращения в поддержку</button>
+        <button class="tab-btn" data-tab="contactMessages">📨 Обращения с сайта</button>
+        <!-- Новая вкладка партнёрских тарифов -->
+        <button class="tab-btn" data-tab="partnerPlans">🤝 Тарифы партнёров</button>
+        <a href="/admin-guide.html" class="guide-link">📘 Руководство админа</a>
+        <button id="installPwaBtn" class="install-pwa-btn">📲 Установить</button>
+        <a href="/" class="back-home">🏠 На главную</a>
+    </div>
+</div>
+
+<div class="container">
+    <!-- ===== СТАТИСТИКА ===== -->
+    <div id="statsSection" class="tab-content active">
+        <div class="card">
+            <h2>Общая статистика</h2>
+            <div class="filter-group">
+                <input type="date" id="statsStartDate"><span>—</span><input type="date" id="statsEndDate">
+                <button class="btn btn-primary" id="updateStatsPeriod">Обновить график</button>
+                <button class="btn btn-primary" id="exportBackupBtn">📀 Скачать бэкап</button>
+            </div>
+            <div class="stats-grid" id="statsNumbers"></div>
+            <h3>Активность за период</h3>
+            <canvas id="activityChart" width="800" height="300"></canvas>
+        </div>
+    </div>
+
+    <!-- ===== ОБЪЯВЛЕНИЯ ===== -->
+    <div id="listingsSection" class="tab-content hidden">
+        <div class="card">
+            <h2>Управление объявлениями</h2>
+            <div class="filter-group">
+                <input type="text" id="listingSearch" placeholder="Поиск по названию">
+                <select id="listingStatusFilter"><option value="">Все статусы</option><option value="active">Активные</option><option value="archived">Архивные</option><option value="blocked">Заблокированные</option></select>
+                <input type="text" id="listingUserId" placeholder="ID пользователя">
+                <select id="listingShowDeleted"><option value="false">Активные</option><option value="true">Включая удалённые</option></select>
+                <button class="btn btn-primary" id="applyListingFilters">Применить</button>
+            </div>
+            <div class="table-responsive">
+                <table id="listingsTable">
+                    <thead><tr><th>ID</th><th>Название</th><th>Автор</th><th>Цена</th><th>Статус</th><th>Действия</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="pagination" id="listingsPagination"></div>
+        </div>
+    </div>
+
+    <!-- ===== КАТЕГОРИИ ===== -->
+    <div id="categoriesTreeSection" class="tab-content hidden">
+        <div class="card">
+            <h2>📂 Управление категориями (дерево)</h2>
+            <div class="add-root-btn"><button id="addRootCategoryBtn" class="btn btn-primary">➕ Добавить корневую группу</button></div>
+            <div id="categoriesTreeContainer" class="category-tree"><div class="loading">Загрузка...</div></div>
+        </div>
+    </div>
+
+    <!-- ===== ПОЛЬЗОВАТЕЛИ ===== -->
+    <div id="usersSection" class="tab-content hidden">
+        <div class="card">
+            <h2>Управление пользователями</h2>
+            <div class="filter-group">
+                <input type="text" id="searchUser" placeholder="Поиск по имени, email, телефону">
+                <select id="roleFilter"><option value="">Все роли</option><option value="user">Пользователь</option><option value="moderator">Модератор</option><option value="admin">Администратор</option></select>
+                <select id="blockedFilter"><option value="">Все</option><option value="true">Заблокированные</option><option value="false">Активные</option></select>
+                <select id="showDeletedFilter"><option value="false">Активные</option><option value="true">Включая удалённых</option></select>
+                <button class="btn btn-primary" id="applyUserFilters">Применить</button>
+                <button class="btn btn-primary" id="exportUsersBtn">📎 Экспорт CSV</button>
+                <label class="btn btn-primary" style="cursor:pointer;">📂 Импорт CSV<input type="file" id="importUsersFile" accept=".csv" style="display:none;"></label>
+                <button class="btn btn-primary" id="showCreateUserBtn">➕ Создать пользователя</button>
+            </div>
+            <div class="table-responsive">
+                <table id="usersTable">
+                    <thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Телефон</th><th>Роль</th><th>Статус</th><th>Действия</th></tr></thead>
+                    <tbody id="usersTableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination" id="usersPagination"></div>
+        </div>
+    </div>
+
+    <!-- ===== ГОРОДА ===== -->
+    <div id="citiesSection" class="tab-content hidden">
+        <div class="card">
+            <h2>🏙️ Управление городами (по регионам)</h2>
+            <div class="filter-group">
+                <input type="text" id="citySearch" placeholder="Поиск города...">
+                <button class="btn btn-primary" id="searchCityBtn">Найти</button>
+                <button class="btn btn-primary" id="addRegionBtn">➕ Добавить регион</button>
+            </div>
+            <div id="citiesTreeContainer" class="city-tree"><div class="loading">Загрузка...</div></div>
+        </div>
+    </div>
+
+    <!-- ===== ЖАЛОБЫ ===== -->
+    <div id="complaintsSection" class="tab-content hidden">
+        <div class="card">
+            <h2>Все жалобы</h2>
+            <div class="filter-group">
+                <select id="complaintStatusFilter"><option value="">Все статусы</option><option value="pending">Ожидают</option><option value="reviewed">Рассмотрены</option><option value="rejected">Отклонены</option></select>
+                <button class="btn btn-primary" id="applyComplaintFilters">Применить</button>
+            </div>
+            <div id="complaintsList"></div>
+            <div class="pagination" id="complaintsPagination"></div>
+        </div>
+    </div>
+
+    <!-- ===== ЛОГИ АДМИНОВ ===== -->
+    <div id="logsSection" class="tab-content hidden">
+        <div class="card">
+            <h2>📜 Журнал действий администраторов</h2>
+            <div class="filter-group">
+                <select id="logActionFilter"><option value="">Все действия</option></select>
+                <input type="date" id="logStartDate"><input type="date" id="logEndDate">
+                <button class="btn btn-primary" id="applyLogFilters">Применить</button>
+            </div>
+            <div class="table-responsive">
+                <table id="logsTable"><thead><tr><th>Дата</th><th>Админ</th><th>Действие</th><th>Объект</th><th>Детали</th></tr></thead><tbody id="logsTableBody"></tbody></table>
+            </div>
+            <div class="pagination" id="logsPagination"></div>
+        </div>
+    </div>
+
+    <!-- ===== ЖУРНАЛ ПОЛЬЗОВАТЕЛЕЙ ===== -->
+    <div id="userActionsSection" class="tab-content hidden">
+        <div class="card">
+            <h2>👥 Журнал действий пользователей</h2>
+            <div class="filter-group">
+                <input type="text" id="userActionSearch" placeholder="ID пользователя или имя..." style="flex:1;">
+                <select id="userActionFilter">
+                    <option value="">Все действия</option>
+                    <option value="login">Вход</option>
+                    <option value="logout">Выход</option>
+                    <option value="register">Регистрация</option>
+                    <option value="change_username">Смена имени</option>
+                    <option value="change_password">Смена пароля</option>
+                    <option value="reset_password">Восстановление пароля</option>
+                    <option value="update_profile">Обновление профиля</option>
+                    <option value="create_listing">Создание объявления</option>
+                    <option value="edit_listing">Редактирование объявления</option>
+                    <option value="archive_listing">Архивация объявления</option>
+                    <option value="restore_listing">Восстановление из архива</option>
+                    <option value="delete_listing_permanent">Удаление объявления</option>
+                    <option value="bump_listing">Поднятие объявления</option>
+                    <option value="delete_media">Удаление медиа</option>
+                    <option value="set_main_photo">Установка главного фото</option>
+                    <option value="complaint_listing">Жалоба</option>
+                    <option value="delete_account">Удаление аккаунта</option>
+                </select>
+                <input type="date" id="userActionStartDate">
+                <input type="date" id="userActionEndDate">
+                <button class="btn btn-primary" id="applyUserActionFilters">Применить</button>
+            </div>
+            <div class="table-responsive">
+                <table id="userActionsTable">
+                    <thead><tr><th>Дата</th><th>Пользователь</th><th>Действие</th><th>Детали</th><th>IP</th><th>User-Agent</th></tr></thead>
+                    <tbody id="userActionsTableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination" id="userActionsPagination"></div>
+        </div>
+    </div>
+
+    <!-- ===== НАСТРОЙКИ ===== -->
+    <div id="settingsSection" class="tab-content hidden">
+        <div class="card">
+            <h2>Системные настройки</h2>
+            <div id="settingsForm"></div>
+            <button class="btn btn-primary" id="saveAllSettings">Сохранить всё</button>
+        </div>
+    </div>
+
+    <!-- ===== РАССЫЛКА ===== -->
+    <div id="newsletterSection" class="tab-content hidden">
+        <div class="card">
+            <h2>📧 Массовая рассылка</h2>
+            <p class="hint-text">Отправьте сообщение всем активным пользователям. Письма будут доставлены на email, указанный при регистрации.</p>
+            <div class="form-group">
+                <label>Тема письма</label>
+                <input type="text" id="newsletterSubject" placeholder="Например: Важные изменения на IronAds" style="width:100%;">
+            </div>
+            <div class="form-group">
+                <label>Текст сообщения</label>
+                <textarea id="newsletterMessage" rows="6" placeholder="Введите текст рассылки..." style="width:100%;"></textarea>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" id="sendNewsletterBtn">📨 Отправить рассылку</button>
+                <span id="newsletterStatus" style="margin-left:1rem; font-weight:500;"></span>
+            </div>
+            <div id="newsletterResult" style="margin-top:1rem;"></div>
+        </div>
+    </div>
+
+    <!-- ===== ВЫДАЧА ПОДПИСОК ===== -->
+    <div id="grantSubscriptionSection" class="tab-content hidden">
+        <div class="card">
+            <h2>🎁 Выдача бесплатных подписок</h2>
+            <p class="hint-text">Найдите пользователя по имени, телефону или email, затем выдайте ему пакет продления или автопилота на указанный срок. Подписка активируется мгновенно.</p>
+            <div class="filter-group">
+                <input type="text" id="grantSearchInput" placeholder="Поиск по имени, телефону или email..." style="flex:2;">
+                <button class="btn btn-primary" id="grantSearchBtn">🔍 Найти</button>
+                <button class="btn btn-secondary" id="grantClearSearchBtn">✕ Очистить</button>
+            </div>
+            <div class="filter-group" style="margin-top: 0.5rem;">
+                <select id="grantUserSelect" style="flex:1;">
+                    <option value="">-- Сначала выполните поиск --</option>
+                </select>
+                <select id="grantPackageType">
+                    <option value="listing">📦 Пакет продления</option>
+                    <option value="autobump">🤖 Автопилот</option>
+                </select>
+                <input type="number" id="grantDurationDays" value="365" min="1" style="width:100px;" placeholder="Дней">
+                <button class="btn btn-primary" id="grantSubscriptionBtn">✅ Выдать подписку</button>
+            </div>
+            <div id="grantResultMessage" style="margin-top:1rem; font-weight:500;"></div>
+        </div>
+    </div>
+
+    <!-- ===== СПИСОК ПОДПИСОК ===== -->
+    <div id="subscriptionsListSection" class="tab-content hidden">
+        <div class="card">
+            <h2>📋 Список подписок</h2>
+            <div class="filter-group">
+                <input type="text" id="subscriptionSearch" placeholder="Поиск по имени пользователя..." style="flex:2;">
+                <select id="subscriptionTypeFilter">
+                    <option value="">Все типы</option>
+                    <option value="listing">📦 Продление</option>
+                    <option value="autobump">🤖 Автопилот</option>
+                </select>
+                <select id="subscriptionStatusFilter">
+                    <option value="all">Все статусы</option>
+                    <option value="active">🟢 Активные</option>
+                    <option value="expired">🔴 Истекшие</option>
+                </select>
+                <label style="display:flex; align-items:center; gap:6px; white-space:nowrap; background:#f1f5f9; padding:0 10px; border-radius:16px; height:38px;">
+                    <input type="checkbox" id="subscriptionAdminOnly"> Только выданные администратором
+                </label>
+                <button class="btn btn-primary" id="applySubscriptionFilters">Применить</button>
+                <button class="btn btn-secondary" id="resetSubscriptionFilters">Сбросить</button>
+            </div>
+            <div class="table-responsive">
+                <table id="subscriptionsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Пользователь</th>
+                            <th>Тип</th>
+                            <th>Начало</th>
+                            <th>Окончание</th>
+                            <th>Осталось дней</th>
+                            <th>Слотов</th>
+                            <th>Объявления</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subscriptionsTableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination" id="subscriptionsPagination"></div>
+        </div>
+    </div>
+
+    <!-- ===== ОБРАЩЕНИЯ В ПОДДЕРЖКУ ===== -->
+    <div id="supportTicketsSection" class="tab-content hidden">
+        <div class="card">
+            <h2>Обращения в поддержку</h2>
+            <div id="adminTicketsList"></div>
+        </div>
+    </div>
+
+    <!-- ===== ОБРАЩЕНИЯ С САЙТА ===== -->
+    <div id="contactMessagesSection" class="tab-content hidden">
+        <div class="card">
+            <h2>📨 Обращения с сайта</h2>
+            <div class="filter-group">
+                <select id="contactStatusFilter"><option value="all">Все</option><option value="new">Новые</option><option value="read">Прочитанные</option></select>
+                <button class="btn btn-primary" id="applyContactFilters">Применить</button>
+            </div>
+            <div id="contactMessagesList"></div>
+            <div class="pagination" id="contactPagination"></div>
+        </div>
+    </div>
+
+    <!-- ===== НОВАЯ ВКЛАДКА: ПАРТНЁРСКИЕ ТАРИФЫ ===== -->
+    <div id="partnerPlansSection" class="tab-content hidden">
+        <div class="card">
+            <h2>🤝 Партнёрские тарифы</h2>
+            <p class="hint-text">Управляйте тарифами для партнёров. Партнёры могут иметь увеличенный лимит объявлений и специальные цены.</p>
+            <button class="btn btn-primary" id="addPlanBtn">➕ Добавить тариф</button>
+            <div class="table-responsive" style="margin-top:1rem;">
+                <table id="plansTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название</th>
+                            <th>Макс. объявлений</th>
+                            <th>Цена продления (₽)</th>
+                            <th>Цена автопилота (₽)</th>
+                            <th>Период (дней)</th>
+                            <th>Активен</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="plansTableBody">
+                        <tr><td colspan="8" style="text-align:center;padding:2rem;">Загрузка...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== МОДАЛЬНЫЕ ОКНА ===== -->
+
+<!-- Категории -->
+<div id="categoryModal" class="modal hidden"><div class="modal-content"><h3 id="categoryModalTitle">➕ Создать категорию</h3><input type="hidden" id="categoryId"><div class="form-group"><label>Название</label><input type="text" id="categoryName"></div><div class="form-group"><label>Slug</label><input type="text" id="categorySlug"></div><div class="form-group"><label>Иконка</label><input type="text" id="categoryIcon" maxlength="5"></div><div class="form-group"><label>Родительская категория</label><select id="categoryParentId"><option value="">-- Нет (корневая) --</option></select></div><div class="form-group"><label>Порядок</label><input type="number" id="categorySortOrder" value="0"></div><div class="form-group"><label><input type="checkbox" id="categoryIsActive" checked> Активна</label></div><div class="form-actions"><button class="btn btn-secondary" id="closeCategoryModal">Отмена</button><button class="btn btn-primary" id="saveCategoryBtn">Сохранить</button></div></div></div>
+
+<!-- Города -->
+<div id="cityModal" class="modal hidden"><div class="modal-content"><h3 id="cityModalTitle">➕ Добавить город</h3><input type="hidden" id="cityId"><div class="form-group"><label>Название</label><input type="text" id="cityName"></div><div class="form-group"><label>Регион</label><select id="cityRegionId"></select></div><div class="form-group"><label><input type="checkbox" id="cityIsPopular"> Популярный</label></div><div class="form-group"><label>Порядок</label><input type="number" id="citySortOrder" value="0"></div><div class="form-actions"><button class="btn btn-secondary" id="closeCityModal">Отмена</button><button class="btn btn-primary" id="saveCityBtn">Сохранить</button></div></div></div>
+
+<!-- Регионы -->
+<div id="regionModal" class="modal hidden"><div class="modal-content"><h3 id="regionModalTitle">➕ Добавить регион</h3><input type="hidden" id="regionId"><div class="form-group"><label>Название</label><input type="text" id="regionName"></div><div class="form-group"><label>Порядок</label><input type="number" id="regionSortOrder" value="0"></div><div class="form-actions"><button class="btn btn-secondary" id="closeRegionModal">Отмена</button><button class="btn btn-primary" id="saveRegionBtn">Сохранить</button></div></div></div>
+
+<!-- Создание пользователя -->
+<div id="createUserModal" class="modal hidden"><div class="modal-content"><h3>➕ Создать пользователя</h3><div class="form-group"><label>Имя *</label><input type="text" id="newUsername"></div><div class="form-group"><label>Пароль *</label><input type="password" id="newPassword"></div><div class="form-group"><label>Телефон *</label><input type="text" id="newPhone"></div><div class="form-group"><label>Email</label><input type="email" id="newEmail"></div><div class="form-group"><label>Роль</label><select id="newRole"><option value="user">Пользователь</option><option value="moderator">Модератор</option><option value="admin">Администратор</option></select></div><div class="form-actions"><button class="btn btn-secondary" id="cancelCreateUser">Отмена</button><button class="btn btn-primary" id="submitCreateUser">Создать</button></div></div></div>
+
+<!-- Редактирование пользователя -->
+<div id="editUserModal" class="modal hidden"><div class="modal-content"><h3>✏️ Редактировать пользователя</h3><input type="hidden" id="editUserId"><div class="form-group"><label>Имя</label><input type="text" id="editUsername" required></div><div class="form-group"><label>Email</label><input type="email" id="editEmail"></div><div class="form-group"><label>Телефон</label><input type="text" id="editPhone"></div><div class="form-group"><label>Роль</label><select id="editRole"><option value="user">Пользователь</option><option value="moderator">Модератор</option><option value="admin">Администратор</option></select></div><div class="form-group"><label>Контрольный вопрос</label><input type="text" id="editSecurityQuestion" placeholder="Вопрос (оставьте пустым, если не менять)"></div><div class="form-group"><label>Новый ответ на вопрос</label><input type="text" id="editSecurityAnswer" placeholder="Заполните, только если хотите изменить ответ"></div><div class="form-actions" style="justify-content: space-between;"><button class="btn btn-warning" id="resetPasswordBtn">🔄 Сбросить пароль</button><div><button class="btn btn-secondary" onclick="closeEditModal()">Отмена</button><button class="btn btn-primary" id="saveUserBtn">Сохранить</button></div></div></div></div>
+
+<!-- Редактирование подписки -->
+<div id="editSubscriptionModal" class="modal hidden">
+    <div class="modal-content">
+        <h3>✏️ Редактировать подписку</h3>
+        <input type="hidden" id="editSubscriptionId">
+        <div class="form-group">
+            <label>Новая дата окончания</label>
+            <input type="date" id="editSubscriptionEndDate">
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-secondary" onclick="closeEditSubscriptionModal()">Отмена</button>
+            <button class="btn btn-primary" id="saveSubscriptionEditBtn">Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка для партнёрского тарифа (новая) -->
+<div id="planModal" class="modal hidden">
+    <div class="modal-content">
+        <h3 id="planModalTitle">➕ Добавить тариф</h3>
+        <input type="hidden" id="planId">
+        <div class="form-group"><label>Название *</label><input type="text" id="planName" placeholder="Например: Бизнес"></div>
+        <div class="form-group"><label>Максимум объявлений *</label><input type="number" id="planMaxListings" placeholder="25" min="1"></div>
+        <div class="form-group"><label>Цена продления (₽)</label><input type="number" id="planPriceRenewal" placeholder="1000" min="0"></div>
+        <div class="form-group"><label>Цена автопилота (₽)</label><input type="number" id="planPriceAutobump" placeholder="600" min="0"></div>
+        <div class="form-group"><label>Период (дней)</label><input type="number" id="planPeriodDays" placeholder="30" min="1"></div>
+        <div class="form-group"><label><input type="checkbox" id="planIsActive" checked> Активен</label></div>
+        <div class="form-actions">
+            <button class="btn btn-secondary" id="closePlanModal">Отмена</button>
+            <button class="btn btn-primary" id="savePlanBtn">Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/admin-frontend.js"></script>
+<script>
+    // ========== БУРГЕР-МЕНЮ ==========
+    const burger = document.getElementById('burgerBtn');
+    const navLinks = document.getElementById('navLinks');
+    if (burger && navLinks) burger.addEventListener('click', () => navLinks.classList.toggle('open'));
+
+    // ========== ТЁМНАЯ ТЕМА ==========
+    (function() {
+        const STORAGE_KEY = 'ironads_theme';
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+                const btn = document.getElementById('themeToggleBtn');
+                if (btn) btn.textContent = '☀️';
+            } else {
+                document.body.classList.remove('dark-theme');
+                const btn = document.getElementById('themeToggleBtn');
+                if (btn) btn.textContent = '🌙';
+            }
+            localStorage.setItem(STORAGE_KEY, theme);
+        };
+        const savedTheme = localStorage.getItem(STORAGE_KEY);
+        if (savedTheme === 'dark') applyTheme('dark');
+        else if (savedTheme === 'light') applyTheme('light');
+        else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) applyTheme('dark');
+        else applyTheme('light');
+        const toggleBtn = document.getElementById('themeToggleBtn');
+        if (toggleBtn) toggleBtn.addEventListener('click', () => {
+            const isDark = document.body.classList.contains('dark-theme');
+            applyTheme(isDark ? 'light' : 'dark');
+        });
+    })();
+</script>
+</body>
+</html>

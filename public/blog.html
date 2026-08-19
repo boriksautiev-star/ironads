@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Блог IronAds — полезные статьи</title>
+    <link rel="stylesheet" href="/dark-theme.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding-top: 150px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        h1 { color: white; text-align: center; margin-bottom: 2rem; }
+        .articles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        .article-card { background: rgba(255,255,255,0.1); backdrop-filter: blur(8px); border-radius: 1.5rem; padding: 1.5rem; transition: all 0.3s; color: white; }
+        .article-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.2); }
+        .article-card h2 { margin: 0 0 0.5rem 0; font-size: 1.2rem; }
+        .article-card p { opacity: 0.8; font-size: 0.95rem; margin-bottom: 1rem; }
+        .article-card a { color: #fbbf24; text-decoration: none; font-weight: 600; }
+        .article-card a:hover { text-decoration: underline; }
+        .article-date { font-size: 0.8rem; opacity: 0.6; display: block; margin-top: 0.5rem; }
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .articles-grid { grid-template-columns: 1fr; }
+            body { padding-top: 100px; }
+        }
+    </style>
+</head>
+<body>
+    <header id="main-header"></header>
+    <div class="container">
+        <h1>📚 Полезные статьи от IronAds</h1>
+        <div class="articles-grid">
+            <!-- Статья 1 -->
+            <div class="article-card">
+                <h2>📸 Как сделать качественные фото для объявления</h2>
+                <p>7 простых правил, которые увеличат продажи в 2–3 раза.</p>
+                <a href="/blog/kak-sdelat-foto-dlya-obyavleniya.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 2 -->
+            <div class="article-card">
+                <h2>✍️ Как написать заголовок, который кликают</h2>
+                <p>5 эффективных формул для привлечения внимания.</p>
+                <a href="/blog/kak-napisat-zagolovok.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 3 -->
+            <div class="article-card">
+                <h2>❌ Почему ваше объявление не продаётся</h2>
+                <p>10 типичных ошибок и способы их исправить.</p>
+                <a href="/blog/pochemu-obyavlenie-ne-prodaetsya.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 4 -->
+            <div class="article-card">
+                <h2>⏰ Когда лучше публиковать объявление</h2>
+                <p>Как время и день недели влияют на количество просмотров.</p>
+                <a href="/blog/kogda-luchshe-publikovat.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 5 -->
+            <div class="article-card">
+                <h2>📞 Как правильно общаться с покупателями</h2>
+                <p>Скрипты и советы для успешной сделки.</p>
+                <a href="/blog/kak-obshhatsya-s-pokupatelyami.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 6 -->
+            <div class="article-card">
+                <h2>🚗 Как продать автомобиль с рук</h2>
+                <p>Полное руководство: от подготовки до сделки.</p>
+                <a href="/blog/kak-prodat-avtomobil.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 7 -->
+            <div class="article-card">
+                <h2>🧹 Как продать ненужные вещи и заработать</h2>
+                <p>Идеи для монетизации хлама и хобби.</p>
+                <a href="/blog/kak-prodat-veshhi.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 8 -->
+            <div class="article-card">
+                <h2>🛡️ Как проверить продавца на доске объявлений</h2>
+                <p>Чек-лист для безопасной покупки.</p>
+                <a href="/blog/kak-proverit-prodavtsa.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 9 -->
+            <div class="article-card">
+                <h2>🤔 Что спрашивать у продавца перед покупкой</h2>
+                <p>Ключевые вопросы для разных категорий товаров.</p>
+                <a href="/blog/chto-sprashivat-u-prodavtsa.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 10 -->
+            <div class="article-card">
+                <h2>💰 Как торговаться на доске объявлений</h2>
+                <p>Стратегии и приёмы для выгодной покупки.</p>
+                <a href="/blog/kak-torgovatsya.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 11 -->
+            <div class="article-card">
+                <h2>⚠️ Какие товары опасно покупать с рук</h2>
+                <p>Обзор категорий и рисков.</p>
+                <a href="/blog/kakie-tovary-opasno-pokupat.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 12 -->
+            <div class="article-card">
+                <h2>🏠 Как сдать или снять квартиру без риэлтора</h2>
+                <p>Юридические аспекты и безопасность сделки.</p>
+                <a href="/blog/kak-snyat-kvartiru-bez-riteltora.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 13 -->
+            <div class="article-card">
+                <h2>📊 Сравнение досок объявлений: IronAds vs Avito vs Юла</h2>
+                <p>Комиссии, скорость, удобство – что лучше?</p>
+                <a href="/blog/sravnenie-dosok-obyavleniy.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 14 -->
+            <div class="article-card">
+                <h2>📈 Тренды рынка б/у товаров в 2026 году</h2>
+                <p>Какие категории растут, а какие падают.</p>
+                <a href="/blog/trendy-rynka-bu-2026.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 15 -->
+            <div class="article-card">
+                <h2>💼 Как использовать доску объявлений для бизнеса</h2>
+                <p>Кейсы и советы для малого бизнеса и фрилансеров.</p>
+                <a href="/blog/kak-ispolzovat-dosku-dlya-biznesa.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 16 -->
+            <div class="article-card">
+                <h2>🌍 Экологичная экономия: почему покупать б/у выгодно</h2>
+                <p>Осознанное потребление и забота о планете.</p>
+                <a href="/blog/ekologichnaya-ekonomiya.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 17 -->
+            <div class="article-card">
+                <h2>🚀 Как правильно подать объявление, чтобы его быстро купили</h2>
+                <p>Секреты быстрой продажи.</p>
+                <a href="/blog/kak-podat-obyavlenie-bystro.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 18 -->
+            <div class="article-card">
+                <h2>🔥 Топ-5 ошибок продавцов на досках объявлений</h2>
+                <p>Чего стоит избегать, чтобы не отпугнуть покупателей.</p>
+                <a href="/blog/top-5-oshibok-prodavtsov.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 19 -->
+            <div class="article-card">
+                <h2>📱 Как пользоваться мобильным приложением IronAds</h2>
+                <p>Гайд для новичков по установке и основным функциям.</p>
+                <a href="/blog/kak-polzovatsya-mobilnym-prilozheniem.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 20 -->
+            <div class="article-card">
+                <h2>🔔 Пуш-уведомления: как не пропустить выгодное предложение</h2>
+                <p>Настройка и использование в мобильном приложении.</p>
+                <a href="/blog/push-uvedomleniya.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 21 -->
+            <div class="article-card">
+                <h2>🏢 Как выбрать квартиру в новостройке</h2>
+                <p>Гид по выбору жилья от застройщика.</p>
+                <a href="/blog/kak-vybrat-kvartiru-novostroyka.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 22 -->
+            <div class="article-card">
+                <h2>💻 Как оценить стоимость б/у техники</h2>
+                <p>Практические советы для продавцов и покупателей.</p>
+                <a href="/blog/kak-ocenit-stoimost-tehniki.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 23 -->
+            <div class="article-card">
+                <h2>🤝 Безопасные сделки: как встречаться с покупателем</h2>
+                <p>Правила личной встречи без риска.</p>
+                <a href="/blog/bezopasnye-sdelki-vstrecha.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 24 -->
+            <div class="article-card">
+                <h2>📦 Что выгоднее: продать самому или сдать в комиссионку?</h2>
+                <p>Сравнение доходов и усилий.</p>
+                <a href="/blog/chto-vygodnee-prodat-ili-sdat.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+            <!-- Статья 25 -->
+            <div class="article-card">
+                <h2>💼 Как использовать доску объявлений для поиска работы</h2>
+                <p>Советы для соискателей и работодателей.</p>
+                <a href="/blog/kak-ispolzovat-dosku-dlya-poiska-raboty.html">Читать →</a>
+                <span class="article-date">20 июля 2026</span>
+            </div>
+        </div>
+    </div>
+    <script src="/js/common.js"></script>
+</body>
+</html>

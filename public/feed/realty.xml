@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<realty-feed xmlns="http://webmaster.yandex.ru/schemas/feed/realty/2010-06">
+  <generation-date>2026-08-19T06:00:00.269Z</generation-date>
+  <offer internal-id="44">
+    <type>продажа</type>
+    <property-type>жилая</property-type>
+    <category>квартира</category>
+    <creation-date>2026-07-02T21:03:38.481Z</creation-date>
+    <last-update-date>2026-07-02T21:03:38.481Z</last-update-date>
+    <manually-added>1</manually-added>
+    <location>
+      <country>Россия</country>
+      <region></region>
+      <locality-name></locality-name>
+    </location>
+    <image>https://ironads.ru/uploads/1783026214653-751756113.jpg</image>
+    <image>https://ironads.ru/uploads/1783026215237-152085098.jpg</image>
+    <image>https://ironads.ru/uploads/1783026215613-35245484.jpg</image>
+    <image>https://ironads.ru/uploads/1783026216166-347192581.jpg</image>
+    <image>https://ironads.ru/uploads/1783026216532-93480416.jpg</image>
+    <image>https://ironads.ru/uploads/1783026216726-234320277.jpg</image>
+    <image>https://ironads.ru/uploads/1783026217261-898787071.jpg</image>
+    <image>https://ironads.ru/uploads/1783026218105-670111177.jpg</image>
+    <is-image-order-change-allowed>нет</is-image-order-change-allowed>
+    <sales-agent>
+      <name>Фатима</name>
+      <phone>+79288582784</phone>
+      <category>агентство</category>
+      <organization>АН Семья</organization>
+      <email>fatima.oganesyants@bk.ru</email>
+    </sales-agent>
+    <price>
+      <value>5200000</value>
+      <currency>RUR</currency>
+    </price>
+    <haggle>0</haggle>
+    <deal-status>прямая продажа</deal-status>
+    <description>ПРОДАЁТСЯ ДОМ 60м²
+3 комнаты.
+ул.Серобабова 36
+Общ.двор (Вход в дом отдельный 
+с улицы) 
+Машино-место под навесом.
+Тихая улица.
+Дружные соседи.
+(небольшой торг, реальному покупателю)
+</description>
+    <disable-flat-plan-guess>1</disable-flat-plan-guess>
+  </offer>
+  <offer internal-id="43">
+    <type>продажа</type>
+    <property-type>жилая</property-type>
+    <category>квартира</category>
+    <creation-date>2026-07-02T20:47:25.033Z</creation-date>
+    <last-update-date>2026-07-02T20:47:25.033Z</last-update-date>
+    <manually-added>1</manually-added>
+    <location>
+      <country>Россия</country>
+      <region></region>
+      <locality-name></locality-name>
+    </location>
+    <is-image-order-change-allowed>нет</is-image-order-change-allowed>
+    <sales-agent>
+      <name>Фатима</name>
+      <phone>+79288582784</phone>
+      <category>агентство</category>
+      <organization>АН Семья</organization>
+      <email>fatima.oganesyants@bk.ru</email>
+    </sales-agent>
+    <price>
+      <value>5200000</value>
+      <currency>RUR</currency>
+    </price>
+    <haggle>0</haggle>
+    <deal-status>прямая продажа</deal-status>
+    <description>Продается дом 60м²
+Общий двор (Вход отдельно с улицы)
+3-комнаты
+ул. Серобабова 36 
+Машино-место под навесом
+Тихая улица.
+Дружные соседи.</description>
+    <disable-flat-plan-guess>1</disable-flat-plan-guess>
+  </offer>
+</realty-feed>

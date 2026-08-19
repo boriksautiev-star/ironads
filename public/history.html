@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>История просмотров - IronAds</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+        .filter-card { background: white; border-radius: 1.25rem; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+        .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        .listings-list { display: flex; flex-direction: column; gap: 1rem; }
+        .listing-card { background: white; border-radius: 1rem; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.2s; cursor: pointer; position: relative; }
+        .listing-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+        .listing-image { width: 100%; height: 150px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .listing-image img { width: 100%; height: 100%; object-fit: cover; }
+        .listing-info { padding: 0.75rem; }
+        .listing-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.375rem; color: #1f2937; }
+        .listing-price { font-size: 1.125rem; font-weight: 800; color: #667eea; }
+        .viewed-date { font-size: 0.6875rem; color: #9ca3af; margin-top: 0.25rem; }
+        .delete-view { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 0.875rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; color: #ef4444; }
+        .delete-view:hover { background: #fee2e2; transform: scale(1.1); }
+
+        .listing-row { background: white; border-radius: 1rem; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s; cursor: pointer; display: flex; gap: 1.25rem; padding: 1rem; position: relative; }
+        .listing-row:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+        .listing-row-image { width: 120px; height: 120px; background: #f0f0f0; border-radius: 0.75rem; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .listing-row-image img { width: 100%; height: 100%; object-fit: cover; }
+        .listing-row-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .listing-row-title { font-size: 1.125rem; font-weight: 700; margin-bottom: 0.375rem; color: #1f2937; }
+        .listing-row-price { font-size: 1.25rem; font-weight: 800; color: #667eea; margin-bottom: 0.5rem; }
+        .listing-row-meta { font-size: 0.75rem; color: #9ca3af; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.375rem; }
+        .listing-row-description { font-size: 0.8125rem; color: #6b7280; line-height: 1.4; }
+
+        .back-link { display: inline-block; margin-bottom: 1.25rem; color: white; text-decoration: none; cursor: pointer; }
+        .actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem; }
+        .notification { position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 0.625rem 1.25rem; border-radius: 2.5rem; font-size: 0.8125rem; z-index: 2000; display: none; }
+        .notification.success { background: #10b981; }
+        .notification.error { background: #ef4444; }
+        .badge { background-color: #ef4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.6875rem; margin-left: 6px; display: inline-block; min-width: 18px; text-align: center; }
+        .badge.hidden { display: none; }
+        .hidden { display: none; }
+        .empty { text-align: center; padding: 2.5rem; color: #9ca3af; }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .listing-row { flex-direction: column; gap: 0.75rem; }
+            .listing-row-image { width: 100%; height: 140px; }
+            .listings-grid { grid-template-columns: 1fr; gap: 1rem; }
+        }
+    </style>
+    <link rel="stylesheet" href="/dark-theme.css">
+</head>
+<body>
+    <header id="main-header"></header>
+
+    <div class="container">
+        <a class="back-link" href="/profile.html">← Назад</a>
+        <div class="filter-card">
+            <h2 style="font-size: 1.5rem;">🕘 История просмотров</h2>
+            <div id="historyContainer" class="listings-grid"></div>
+            <div class="actions" id="clearBtnContainer" style="display: none;">
+                <button class="btn-secondary" onclick="clearHistory()">🗑️ Очистить всю историю</button>
+            </div>
+        </div>
+    </div>
+    <div id="notification" class="notification"></div>
+
+    <script src="https://js.hcaptcha.com/1/api.js?hl=ru" async defer></script>
+    <script src="/js/common.js"></script>
+
+    <script>
+        // ========== ТОКЕН ==========
+        const API_URL = '/api';
+        let currentToken = localStorage.getItem('token');
+        if (!currentToken) window.location.href = '/';
+
+        function showNotification(msg, type) {
+            const n = document.getElementById('notification');
+            n.textContent = msg;
+            n.className = `notification ${type}`;
+            n.style.display = 'block';
+            setTimeout(() => n.style.display = 'none', 2500);
+        }
+        function escapeHtml(t) { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+        // ========== ЗАГРУЗКА ИСТОРИИ ==========
+        async function loadHistory() {
+            try {
+                const resp = await fetch(`${API_URL}/listings/history/my`, {
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+                if (!resp.ok) throw new Error();
+                const history = await resp.json();
+                renderHistory(history);
+            } catch(e) {
+                console.error(e);
+                document.getElementById('historyContainer').innerHTML = '<div class="empty">Ошибка загрузки истории</div>';
+            }
+        }
+
+        function renderHistory(history) {
+            const container = document.getElementById('historyContainer');
+            const clearBtnContainer = document.getElementById('clearBtnContainer');
+            if (!history.length) {
+                container.innerHTML = '<div class="empty">Вы ещё не просматривали объявления</div>';
+                clearBtnContainer.style.display = 'none';
+                return;
+            }
+            clearBtnContainer.style.display = 'flex';
+            // Определяем режим
+            const viewMode = window.listingViewMode || 'grid-large';
+            if (viewMode === 'list') {
+                renderHistoryList(container, history);
+            } else {
+                renderHistoryGrid(container, history);
+            }
+            // Применяем сетку
+            if (typeof window.applyCurrentViewToContainers === 'function') {
+                window.applyCurrentViewToContainers();
+                setTimeout(() => window.applyCurrentViewToContainers(), 50);
+            }
+        }
+
+        // ИСПРАВЛЕНО: цена ПЕРВАЯ
+        function renderHistoryGrid(container, history) {
+            let html = '';
+            for (let item of history) {
+                let imageHtml = '<div class="listing-image">📷</div>';
+                if (item.first_media && item.first_media.file_path) {
+                    imageHtml = `<div class="listing-image"><img src="${item.first_media.file_path}" alt="${escapeHtml(item.title)}" onerror="this.onerror=null;this.parentElement.innerHTML='📷'"></div>`;
+                }
+                html += `
+                    <div class="listing-card" data-view-id="${item.view_id}" onclick="window.location.href='/listing.html?id=${item.id}'">
+                        <button class="delete-view" onclick="event.stopPropagation(); deleteHistoryItem(${item.view_id})">✕</button>
+                        ${imageHtml}
+                        <div class="listing-info">
+                            <!-- ИЗМЕНЕНО: цена ПЕРВАЯ -->
+                            <div class="listing-price">${item.price.toLocaleString()} ₽</div>
+                            <div class="listing-title">${escapeHtml(item.title)}</div>
+                            <!-- КОНЕЦ ИЗМЕНЕНИЙ -->
+                            <div class="viewed-date">Просмотрено: ${new Date(item.viewed_at).toLocaleString()}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function renderHistoryList(container, history) {
+            let html = '';
+            for (let item of history) {
+                let imageHtml = '<div class="listing-row-image">📷</div>';
+                if (item.first_media && item.first_media.file_path) {
+                    imageHtml = `<div class="listing-row-image"><img src="${item.first_media.file_path}" alt="${escapeHtml(item.title)}" onerror="this.onerror=null;this.parentElement.innerHTML='📷'"></div>`;
+                }
+                html += `
+                    <div class="listing-row" data-view-id="${item.view_id}" onclick="window.location.href='/listing.html?id=${item.id}'">
+                        <button class="delete-view" onclick="event.stopPropagation(); deleteHistoryItem(${item.view_id})">✕</button>
+                        ${imageHtml}
+                        <div class="listing-row-info">
+                            <!-- ИЗМЕНЕНО: цена ПЕРВАЯ -->
+                            <div class="listing-row-price">${item.price.toLocaleString()} ₽</div>
+                            <div class="listing-row-title">${escapeHtml(item.title)}</div>
+                            <!-- КОНЕЦ ИЗМЕНЕНИЙ -->
+                            <div class="listing-row-meta">Просмотрено: ${new Date(item.viewed_at).toLocaleString()}</div>
+                            <div class="listing-row-description">${escapeHtml(item.description || '')}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        // ========== УДАЛЕНИЕ ==========
+        async function deleteHistoryItem(viewId) {
+            if (!confirm('Удалить эту запись из истории?')) return;
+            try {
+                const resp = await fetch(`${API_URL}/listings/history/${viewId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+                if (resp.ok) {
+                    showNotification('Запись удалена', 'success');
+                    loadHistory();
+                } else {
+                    showNotification('Ошибка удаления', 'error');
+                }
+            } catch(e) { showNotification('Ошибка', 'error'); }
+        }
+
+        async function clearHistory() {
+            if (!confirm('Очистить всю историю просмотров?')) return;
+            try {
+                const resp = await fetch(`${API_URL}/listings/history/clear`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+                if (resp.ok) {
+                    showNotification('История очищена', 'success');
+                    loadHistory();
+                } else {
+                    showNotification('Ошибка очистки', 'error');
+                }
+            } catch(e) { showNotification('Ошибка', 'error'); }
+        }
+
+        // ===== ПЕРЕХВАТ setListView ДЛЯ ОБНОВЛЕНИЯ ИСТОРИИ =====
+        (function patchSetListViewForHistory() {
+            const originalSetView = window.setListingView;
+            if (typeof originalSetView === 'function') {
+                window.setListingView = function(view) {
+                    originalSetView(view);
+                    if (typeof window.applyCurrentViewToContainers === 'function') {
+                        window.applyCurrentViewToContainers();
+                    }
+                    // Если открыта страница истории, перезагружаем её, чтобы применить новый режим
+                    if (window.location.pathname.includes('history.html')) {
+                        loadHistory();
+                    }
+                };
+            }
+        })();
+
+        // ========== ЗАПУСК ==========
+        loadHistory();
+
+        // Обработка смены режима через кнопки (если они есть в шапке)
+        // Они уже переопределены через patchSetListViewForHistory
+    </script>
+</body>
+</html>

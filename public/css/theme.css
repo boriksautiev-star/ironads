@@ -1,0 +1,325 @@
+/* ============================================================
+   ТЕМА IRONADS — УНИВЕРСАЛЬНЫЙ CSS
+   ============================================================ */
+
+:root {
+  /* Светлая тема */
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f1f5f9;
+  --color-primary: #1e40af;          /* основной цвет (кнопки, ссылки) */
+  --color-primary-hover: #1e3a8a;
+  --color-primary-light: #dbeafe;
+  --color-secondary: #64748b;
+  --color-text: #0f172a;
+  --color-text-muted: #475569;
+  --color-border: #e2e8f0;
+  --color-shadow: rgba(0,0,0,0.06);
+  --color-shadow-hover: rgba(0,0,0,0.12);
+  --radius: 1.25rem;
+  --transition: 0.2s ease;
+}
+
+body.dark-theme {
+  /* Тёмная тема */
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-hover: #2d3a4e;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-primary-light: #1e3a5f;
+  --color-secondary: #94a3b8;
+  --color-text: #e2e8f0;
+  --color-text-muted: #94a3b8;
+  --color-border: #334155;
+  --color-shadow: rgba(0,0,0,0.3);
+  --color-shadow-hover: rgba(0,0,0,0.5);
+}
+
+/* ---------- Глобальный сброс ---------- */
+body {
+  background: var(--color-bg) !important;
+  color: var(--color-text);
+  font-family: 'Inter', sans-serif;
+}
+
+/* ---------- Убираем все градиенты ---------- */
+body,
+.container,
+.filter-card,
+.listing-card,
+.listing-row,
+.card,
+.modal-content,
+.ticket-item,
+.complaint-card,
+.new-ticket-form,
+.ticket-list,
+.ticket-view,
+.main-header,
+.admin-header,
+.header,
+.listing-image,
+.chat-header,
+#main-footer {
+  background: var(--color-surface) !important;
+  background-image: none !important;
+}
+
+/* ---------- Карточки и контейнеры ---------- */
+.filter-card,
+.listing-card,
+.listing-row,
+.card,
+.modal-content,
+.ticket-item,
+.complaint-card,
+.new-ticket-form,
+.ticket-list,
+.ticket-view {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 12px var(--color-shadow);
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+.listing-card:hover,
+.listing-row:hover {
+  box-shadow: 0 8px 24px var(--color-shadow-hover);
+  transform: translateY(-4px);
+}
+
+/* ---------- Кнопки (обычные) ---------- */
+.btn-primary,
+.btn-login,
+.register-btn,
+.btn-approve,
+.btn-view {
+  background: var(--color-primary) !important;
+  color: white !important;
+  border: none !important;
+  transition: background var(--transition), transform var(--transition);
+}
+.btn-primary:hover,
+.btn-login:hover,
+.register-btn:hover,
+.btn-approve:hover,
+.btn-view:hover {
+  background: var(--color-primary-hover) !important;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: var(--color-surface-hover) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important;
+}
+.btn-secondary:hover {
+  background: var(--color-border) !important;
+}
+
+/* ---------- ВЫДЕЛЕННЫЕ КНОПКИ ДЕЙСТВИЯ (оранжевые) ---------- */
+.chat-button,
+.btn-chat,
+button.chat-button {
+  background: #f97316 !important;
+  color: white !important;
+  border: none !important;
+  font-weight: 700 !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 0.75rem !important;
+  font-size: 1rem !important;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+.chat-button:hover,
+.btn-chat:hover,
+button.chat-button:hover {
+  background: #ea580c !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4) !important;
+}
+.chat-button:active {
+  transform: translateY(0) !important;
+}
+
+.btn-bump-listing,
+button.btn-bump-listing {
+  background: #f97316 !important;
+  color: white !important;
+  border: none !important;
+  font-weight: 600 !important;
+  padding: 0.4rem 1rem !important;
+  border-radius: 0.5rem !important;
+  font-size: 0.8rem !important;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.25) !important;
+  transition: all 0.2s ease !important;
+}
+.btn-bump-listing:hover:not(.disabled),
+button.btn-bump-listing:hover:not(.disabled) {
+  background: #ea580c !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.35) !important;
+}
+.btn-bump-listing.disabled,
+button.btn-bump-listing.disabled {
+  background: #9ca3af !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  opacity: 0.7 !important;
+}
+
+.btn-buy,
+button.btn-buy {
+  background: #f97316 !important;
+  color: white !important;
+  border: none !important;
+  font-weight: 700 !important;
+  padding: 0.75rem 2rem !important;
+  border-radius: 0.75rem !important;
+  font-size: 1.125rem !important;
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.35) !important;
+  transition: all 0.2s ease !important;
+}
+.btn-buy:hover,
+button.btn-buy:hover {
+  background: #ea580c !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 24px rgba(249, 115, 22, 0.45) !important;
+}
+
+/* ---------- Избранное ---------- */
+.favorite-btn {
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important;
+  transition: all 0.2s ease !important;
+}
+.favorite-btn:hover {
+  background: #fee2e2 !important;
+  border-color: #ef4444 !important;
+}
+.favorite-btn.active {
+  background: #ef4444 !important;
+  color: white !important;
+  border-color: #ef4444 !important;
+}
+
+/* ---------- Текст и ссылки ---------- */
+a,
+.listing-title,
+.listing-row-title,
+.chat-with,
+.logo a {
+  color: var(--color-text);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--color-primary);
+}
+
+/* ---------- Шапка ---------- */
+.main-header,
+.admin-header,
+.header {
+  background: var(--color-surface) !important;
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 2px 8px var(--color-shadow);
+}
+
+/* ---------- Модальные окна ---------- */
+.modal {
+  background: rgba(0,0,0,0.5) !important;
+  backdrop-filter: blur(4px);
+}
+.modal-content {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+/* ---------- Таблицы ---------- */
+table th {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+table td {
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* ---------- Поля ввода ---------- */
+input,
+textarea,
+select {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: 0.75rem;
+  padding: 0.6rem 0.8rem;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+/* ---------- Пагинация ---------- */
+.pagination button {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+.pagination button.active {
+  background: var(--color-primary);
+  color: white;
+}
+.pagination button:hover:not(.active) {
+  background: var(--color-surface-hover);
+}
+
+/* ---------- Чат ---------- */
+.floating-chat {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 10px 40px var(--color-shadow);
+}
+.floating-chat-header {
+  background: var(--color-primary);
+  color: white;
+}
+.messages-container {
+  background: var(--color-bg);
+}
+.message.received {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.message.sent {
+  background: var(--color-primary);
+  color: white;
+}
+
+/* ---------- Админ-панель ---------- */
+.stat-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.stat-number {
+  color: var(--color-primary);
+}
+.tab-btn {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+.tab-btn.active {
+  background: var(--color-primary);
+  color: white;
+}
+
+/* ---------- Дополнительно для тёмной темы ---------- */
+body.dark-theme .back-link,
+body.dark-theme .back-home,
+body.dark-theme .support-link {
+  color: var(--color-primary);
+}

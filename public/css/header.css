@@ -1,0 +1,445 @@
+/* header.css – адаптивная шапка и глобальные стили режимов просмотра */
+:root {
+    --header-bg: #ffffff;
+    --header-text: #1f2937;
+    --header-border: #e5e7eb;
+    --header-hover: #f3f4f6;
+    --accent: #3b82f6;
+}
+body.dark-theme {
+    --header-bg: #1f2937;
+    --header-text: #f9fafb;
+    --header-border: #374151;
+    --header-hover: #374151;
+}
+
+/* Фиксированная шапка */
+.main-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--header-border);
+    z-index: 1000;
+}
+body {
+    padding-top: 138px !important;
+}
+@media (max-width: 768px) {
+    body {
+        padding-top: 60px !important;
+    }
+}
+
+.header-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+.logo-area {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.logo a {
+    font-size: 1.5rem;
+    font-weight: 800;
+    text-decoration: none;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+}
+.user-name {
+    font-size: 0.9rem;
+    color: var(--header-text);
+    opacity: 0.8;
+    white-space: nowrap;
+}
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+.nav-links a, .nav-links button {
+    background: none;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--header-text);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.nav-links a:hover, .nav-links button:hover {
+    background: var(--header-hover);
+}
+.theme-toggle, .font-btn {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.4rem 0.6rem;
+}
+.font-controls {
+    display: flex;
+    gap: 4px;
+    background: var(--header-hover);
+    border-radius: 9999px;
+    padding: 2px;
+}
+.view-toggle-group {
+    display: inline-flex;
+    gap: 6px;
+    margin-left: 8px;
+    background: var(--header-hover);
+    padding: 4px;
+    border-radius: 48px;
+}
+.view-toggle {
+    background: transparent;
+    border: none;
+    padding: 0.3rem 1rem;
+    border-radius: 40px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--header-text);
+}
+.view-toggle.active {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.install-btn {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 9999px;
+}
+.login-btn, .register-btn, .logout-btn {
+    background: none;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 9999px;
+    cursor: pointer;
+    color: var(--header-text);
+}
+.burger {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--header-text);
+}
+
+/* ========== МОБИЛЬНОЕ МЕНЮ (СЕТКА 2 КОЛОНКИ + ДВЕ РАСТЯНУТЫЕ СТРОКИ УПРАВЛЕНИЯ) ========== */
+@media (max-width: 768px) {
+    .burger {
+        display: block;
+        font-size: 1.8rem;
+        padding: 0.2rem 0.5rem;
+        color: var(--header-text);
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+
+    .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 0.4rem;
+        padding: 0.6rem 0.8rem;
+        box-shadow: 0 15px 30px -8px rgba(0,0,0,0.15);
+        border-radius: 0 0 20px 20px;
+        z-index: 999;
+        max-height: 80vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    body.dark-theme .nav-links {
+        background: #1e293b;
+    }
+
+    .nav-links.open {
+        display: flex;
+    }
+
+    /* Каждый пункт меню — карточка, занимает 50% ширины (2 колонки) */
+    .nav-links a,
+    .nav-links button,
+    .nav-links .tab-btn,
+    .nav-links .back-home,
+    .nav-links .support-link,
+    .nav-links .guide-link,
+    .nav-links .install-pwa-btn,
+    .nav-links .theme-toggle-btn {
+        flex: 0 0 calc(50% - 0.2rem) !important;
+        max-width: calc(50% - 0.2rem) !important;
+        box-sizing: border-box;
+        text-align: center !important;
+        justify-content: center !important;
+        white-space: normal !important;
+        margin: 0 !important;
+        padding: 0.5rem 0.3rem !important;
+        border-radius: 12px !important;
+        background: #f1f5f9 !important;
+        color: #1f2937 !important;
+        font-size: 0.75rem !important;
+        font-weight: 500 !important;
+        border: none !important;
+        cursor: pointer;
+        transition: all 0.15s ease !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 0.2rem !important;
+        line-height: 1.2;
+        min-height: 52px;
+    }
+    body.dark-theme .nav-links a,
+    body.dark-theme .nav-links button,
+    body.dark-theme .nav-links .tab-btn,
+    body.dark-theme .nav-links .back-home,
+    body.dark-theme .nav-links .support-link,
+    body.dark-theme .nav-links .guide-link,
+    body.dark-theme .nav-links .install-pwa-btn,
+    body.dark-theme .nav-links .theme-toggle-btn {
+        background: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    /* Наведение */
+    .nav-links a:hover,
+    .nav-links button:hover,
+    .nav-links .tab-btn:hover,
+    .nav-links .back-home:hover,
+    .nav-links .support-link:hover,
+    .nav-links .guide-link:hover,
+    .nav-links .install-pwa-btn:hover,
+    .nav-links .theme-toggle-btn:hover {
+        background: #e5e7eb !important;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    body.dark-theme .nav-links a:hover,
+    body.dark-theme .nav-links button:hover,
+    body.dark-theme .nav-links .tab-btn:hover,
+    body.dark-theme .nav-links .back-home:hover,
+    body.dark-theme .nav-links .support-link:hover,
+    body.dark-theme .nav-links .guide-link:hover,
+    body.dark-theme .nav-links .install-pwa-btn:hover,
+    body.dark-theme .nav-links .theme-toggle-btn:hover {
+        background: #475569 !important;
+    }
+
+    /* Активная вкладка (админка) */
+    .nav-links .tab-btn.active {
+        background: #667eea !important;
+        color: white !important;
+        box-shadow: 0 2px 8px rgba(102,126,234,0.25);
+    }
+    body.dark-theme .nav-links .tab-btn.active {
+        background: #3b82f6 !important;
+    }
+
+    /* Иконки в меню — крупнее */
+    .nav-links .menu-icon {
+        font-size: 1.2rem;
+        display: block;
+        line-height: 1.2;
+    }
+    .nav-links .menu-text {
+        font-size: 0.65rem;
+        display: block;
+        word-break: break-word;
+        max-width: 100%;
+    }
+
+    /* Кнопка "Выйти" — красная */
+    .nav-links .logout-btn {
+        color: #dc2626 !important;
+        font-weight: 600 !important;
+    }
+    body.dark-theme .nav-links .logout-btn {
+        color: #f87171 !important;
+    }
+    .nav-links .logout-btn:hover {
+        background: #fee2e2 !important;
+    }
+    body.dark-theme .nav-links .logout-btn:hover {
+        background: #7f1d1d !important;
+    }
+
+    /* Кнопка "Установить" — зелёная */
+    .nav-links .install-pwa-btn {
+        background: #10b981 !important;
+        color: white !important;
+        font-weight: 600 !important;
+    }
+    body.dark-theme .nav-links .install-pwa-btn {
+        background: #059669 !important;
+    }
+    .nav-links .install-pwa-btn:hover {
+        background: #059669 !important;
+        transform: translateY(-2px) !important;
+    }
+    body.dark-theme .nav-links .install-pwa-btn:hover {
+        background: #047857 !important;
+    }
+
+    /* ===== УПРАВЛЕНИЕ: две строки, растянутые на всю ширину ===== */
+    .nav-links .font-controls,
+    .nav-links .view-toggle-group {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        justify-content: stretch !important;
+        align-items: stretch !important;
+        gap: 0.3rem !important;
+        background: transparent !important;
+        padding: 0.15rem 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        width: 100% !important;
+        order: 10;
+    }
+
+    /* Каждая кнопка внутри — занимает равную долю */
+    .nav-links .font-controls .font-btn,
+    .nav-links .view-toggle-group .view-toggle {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        padding: 0.2rem 0.2rem !important;
+        font-size: 0.6rem !important;
+        font-weight: 500 !important;
+        border-radius: 30px !important;
+        background: #f1f5f9 !important;
+        color: #1f2937 !important;
+        border: none !important;
+        cursor: pointer;
+        transition: all 0.2s;
+        min-height: 28px !important;
+        line-height: 1.2;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        white-space: nowrap !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        text-align: center;
+        flex-shrink: 1;
+    }
+    body.dark-theme .nav-links .font-controls .font-btn,
+    body.dark-theme .nav-links .view-toggle-group .view-toggle {
+        background: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    .nav-links .font-controls .font-btn:hover,
+    .nav-links .view-toggle-group .view-toggle:hover {
+        background: #e5e7eb !important;
+        transform: translateY(-1px);
+    }
+    body.dark-theme .nav-links .font-controls .font-btn:hover,
+    body.dark-theme .nav-links .view-toggle-group .view-toggle:hover {
+        background: #475569 !important;
+    }
+
+    /* Активный вид */
+    .nav-links .view-toggle-group .view-toggle.active {
+        background: #3b82f6 !important;
+        color: white !important;
+    }
+
+    /* Скрываем отдельную кнопку темы, если она дублируется */
+    .nav-links .theme-toggle-btn {
+        display: none !important;
+    }
+
+    /* Для очень маленьких экранов — ещё уменьшаем */
+    @media (max-width: 400px) {
+        .nav-links a,
+        .nav-links button,
+        .nav-links .tab-btn,
+        .nav-links .back-home,
+        .nav-links .support-link,
+        .nav-links .guide-link,
+        .nav-links .install-pwa-btn,
+        .nav-links .theme-toggle-btn {
+            flex: 0 0 calc(50% - 0.15rem) !important;
+            max-width: calc(50% - 0.15rem) !important;
+            padding: 0.4rem 0.2rem !important;
+            font-size: 0.65rem !important;
+            min-height: 44px;
+        }
+        .nav-links .menu-icon {
+            font-size: 1rem;
+        }
+        .nav-links .menu-text {
+            font-size: 0.55rem;
+        }
+        .nav-links .font-controls .font-btn,
+        .nav-links .view-toggle-group .view-toggle {
+            font-size: 0.5rem !important;
+            padding: 0.1rem 0.1rem !important;
+            min-height: 24px !important;
+        }
+    }
+}
+
+/* Базовые классы для видов (используются JS) */
+.grid-view-large {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+.grid-view-compact {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+}
+.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+}
+.list-view .listing-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+}
+@media (max-width: 768px) {
+    .list-view .listing-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .list-view .listing-row-image {
+        width: 100% !important;
+        height: auto !important;
+        max-height: 150px;
+    }
+}

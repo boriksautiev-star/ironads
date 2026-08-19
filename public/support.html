@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Поддержка - IronAds</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body { font-family: 'Inter', 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .support-container { max-width: 1000px; margin: 0 auto; padding: 1.5rem; }
+        .new-ticket-form, .ticket-list, .ticket-view { background: white; border-radius: 1.5rem; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .ticket-item { border-bottom: 1px solid #f0f0f0; padding: 1rem; cursor: pointer; transition: background 0.2s; }
+        .ticket-item:hover { background: #f8f9fa; }
+        .ticket-status { display: inline-block; padding: 0.2rem 0.7rem; border-radius: 2rem; font-size: 0.7rem; font-weight: bold; margin-left: 0.5rem; }
+        .status-open { background: #ffc107; color: #333; }
+        .status-in_progress { background: #17a2b8; color: white; }
+        .status-closed { background: #6c757d; color: white; }
+        .priority-badge { font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 2rem; margin-left: 0.5rem; }
+        .priority-low { background: #28a745; color: white; }
+        .priority-medium { background: #ffc107; color: #333; }
+        .priority-high { background: #dc3545; color: white; }
+        .message-list { max-height: 400px; overflow-y: auto; margin-bottom: 1.5rem; }
+        .message { padding: 0.8rem; border-radius: 1rem; margin-bottom: 1rem; }
+        .message-user { background: #f3f4f6; }
+        .message-staff { background: #e0e7ff; }
+        .reply-form { display: flex; gap: 0.8rem; margin-top: 1rem; }
+        .reply-form textarea { flex: 1; padding: 0.7rem; border: 1px solid #e5e7eb; border-radius: 1rem; font-family: inherit; resize: vertical; }
+        .back-btn { background: none; border: none; color: #667eea; font-size: 0.9rem; cursor: pointer; margin-bottom: 1rem; display: inline-flex; align-items: center; gap: 0.3rem; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 2rem; cursor: pointer; font-weight: 500; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        input, textarea, select { font-family: inherit; }
+        @media (max-width: 768px) {
+            .support-container { padding: 1rem; }
+            .new-ticket-form, .ticket-list, .ticket-view { padding: 1rem; }
+        }
+    </style>
+    <link rel="stylesheet" href="/dark-theme.css">
+</head>
+<body>
+    <header id="main-header"></header>
+    <div class="support-container">
+        <h1 style="color: white; margin-bottom: 1rem;">🛎️ Техподдержка</h1>
+        <div id="support-content"></div>
+    </div>
+    <script src="/js/common.js"></script>
+    <script src="/js/support.js"></script>
+</body>
+</html>

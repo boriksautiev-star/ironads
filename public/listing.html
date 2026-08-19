@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title> - Просмотр объявления</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <style>
+        /* все ваши существующие стили (я их не изменял, они остаются) */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+        .header { background: white; border-radius: 1.25rem; padding: 1rem 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .logo { font-size: 1.75rem; font-weight: 800; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; background-clip: text; color: transparent; cursor: pointer; }
+        .nav { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+        .nav button, .btn-login, .btn-logout { padding: 0.625rem 1.25rem; border: none; border-radius: 0.75rem; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s; }
+        .btn-login { background: #667eea; color: white; }
+        .btn-logout { background: #ef4444; color: white; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 0.75rem; cursor: pointer; font-weight: 600; }
+        .btn-secondary { background: #f3f4f6; color: #374151; padding: 0.625rem 1.25rem; border: none; border-radius: 0.75rem; cursor: pointer; }
+        .complaint-btn { background: #fee2e2; color: #dc2626; border: none; padding: 0.5rem 1rem; border-radius: 2.5rem; cursor: pointer; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 6px; }
+        .complaint-btn:hover { background: #fecaca; }
+        .listing-container { background: white; border-radius: 1.5rem; overflow: hidden; }
+        .listing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+        .gallery { padding: 1.5rem; background: #fafafa; }
+        .main-image { width: 100%; height: 400px; background: white; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 1rem; margin-bottom: 0.75rem; }
+        .main-image img, .main-image video { width: 100%; height: 100%; object-fit: contain; }
+        .thumbnail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.625rem; margin-top: 0.75rem; }
+        .thumbnail { width: 80px; height: 80px; background: white; border-radius: 0.625rem; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
+        .thumbnail.active { border-color: #667eea; }
+        .thumbnail img, .thumbnail video { width: 100%; height: 100%; object-fit: cover; }
+        .info { padding: 2rem; }
+        .listing-title { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.75rem; color: #1f2937; }
+        .listing-price-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 1.25rem; gap: 0.75rem; }
+        .listing-price { font-size: 2rem; font-weight: 800; color: #667eea; }
+        .favorite-btn { background: none; border: none; font-size: 1.75rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 2.5rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; background: #f3f4f6; color: #6b7280; }
+        .favorite-btn.active { color: #ef4444; background: #fee2e2; }
+        .listing-meta { font-size: 0.875rem; color: #6b7280; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid #f0f0f0; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+        .rating-stars { display: inline-flex; align-items: center; gap: 4px; background: #fbbf24; padding: 4px 8px; border-radius: 20px; font-size: 0.8125rem; font-weight: bold; color: #333; }
+        .listing-description { font-size: 1rem; color: #374151; line-height: 1.6; margin-bottom: 2rem; }
+        .contacts { background: #f8f9fa; padding: 1.5rem; border-radius: 1.25rem; margin-bottom: 1.25rem; }
+        .contacts h3 { font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; color: #1f2937; }
+        .seller-name { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: #374151; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .seller-name a { color: #667eea; text-decoration: none; }
+        .chat-button { width: 100%; padding: 0.875rem; font-size: 1rem; font-weight: 600; border-radius: 0.75rem; }
+        .back-link { display: inline-block; margin-bottom: 1.25rem; color: white; text-decoration: none; cursor: pointer; font-size: 0.875rem; }
+        .blocked-warning { background: #fee2e2; border-left: 4px solid #dc2626; padding: 0.75rem; margin-bottom: 1.25rem; border-radius: 0.75rem; color: #dc2626; font-weight: 500; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1001; justify-content: center; align-items: center; }
+        .modal-content { background: white; border-radius: 1.5rem; padding: 2rem; width: 90%; max-width: 600px; animation: modalFadeIn 0.2s ease; max-height: 80vh; overflow-y: auto; }
+        @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group textarea { width: 100%; padding: 0.75rem 1rem; border: 1px solid #e5e7eb; border-radius: 0.75rem; font-size: 0.875rem; font-family: inherit; resize: vertical; min-height: 100px; }
+        .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }
+        .notification { position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 0.625rem 1.25rem; border-radius: 2.5rem; font-size: 0.8125rem; z-index: 2000; display: none; }
+        .notification.success { background: #10b981; }
+        .notification.error { background: #ef4444; }
+        .online-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; box-shadow: 0 0 0 2px white; }
+        .offline-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #9ca3af; box-shadow: 0 0 0 2px white; }
+        .hidden { display: none; }
+        .badge { background-color: #ef4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.6875rem; margin-left: 6px; display: inline-block; min-width: 18px; text-align: center; }
+        .badge.hidden { display: none; }
+        .font-control { display: inline-flex; gap: 5px; align-items: center; margin-left: 10px; }
+        .font-btn { background: #f3f4f6; border: none; border-radius: 20px; padding: 5px 12px; cursor: pointer; font-size: 0.875rem; font-weight: bold; color: #333; transition: 0.2s; }
+        .font-btn:hover { background: #e5e7eb; transform: scale(1.05); }
+        .font-btn.reset { background: #e5e7eb; color: #374151; }
+        .install-pwa-btn { background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 40px; cursor: pointer; font-size: 0.75rem; font-weight: 500; display: inline-block; margin-left: 8px; }
+        .image-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .image-modal-content { position: relative; max-width: 90%; max-height: 90%; text-align: center; }
+        .image-modal-img { max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 8px; }
+        .image-modal-close { position: absolute; top: -40px; right: 0; color: #fff; font-size: 40px; cursor: pointer; }
+        .image-modal-controls { position: absolute; bottom: -60px; left: 0; right: 0; display: flex; justify-content: center; gap: 20px; }
+        .modal-prev, .modal-next { background: rgba(0,0,0,0.6); color: white; border: none; font-size: 24px; padding: 10px 20px; cursor: pointer; border-radius: 50%; }
+        .image-modal-counter { position: absolute; bottom: -25px; left: 0; right: 0; text-align: center; color: white; background: rgba(0,0,0,0.5); display: inline-block; width: auto; margin: 0 auto; padding: 4px 12px; border-radius: 20px; }
+
+        .category-breadcrumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #6b7280; margin-bottom: 1rem; }
+        .category-breadcrumbs .crumb { display: inline-flex; align-items: center; gap: 0.3rem; }
+        .category-breadcrumbs .crumb a { color: #667eea; text-decoration: none; }
+        .category-breadcrumbs .crumb a:hover { text-decoration: underline; }
+        .category-breadcrumbs .separator { color: #9ca3af; }
+
+        .contacts-block {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 1rem;
+            border: 1px solid #e5e7eb;
+        }
+        .contacts-block h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+        .contact-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            border: none;
+            border-radius: 2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+        .contact-btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn-phone {
+            background: #10b981;
+            color: white;
+        }
+        .btn-whatsapp {
+            background: #25D366;
+            color: white;
+        }
+        .btn-telegram {
+            background: #0088cc;
+            color: white;
+        }
+        .contact-owner-settings {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .contact-owner-settings label {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.85rem;
+        }
+        .contact-owner-settings input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+
+        .share-block {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        .share-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #374151;
+            margin-right: 0.25rem;
+        }
+        .share-btn {
+            background: #f3f4f6;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s, color 0.2s;
+            color: #4b5563;
+            padding: 0;
+        }
+        .share-btn:hover {
+            background: #e5e7eb;
+            transform: scale(1.05);
+        }
+        .share-btn:active {
+            transform: scale(0.92);
+        }
+        .share-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+        .share-btn[data-share="vk"]:hover { background: #4a76a8; color: white; }
+        .share-btn[data-share="wa"]:hover { background: #25D366; color: white; }
+        .share-btn[data-share="tg"]:hover { background: #0088cc; color: white; }
+        .share-btn[data-share="fb"]:hover { background: #1877f2; color: white; }
+        .share-btn[data-share="tw"]:hover { background: #1da1f2; color: white; }
+        #shareNativeBtn:hover { background: #6b7280; color: white; }
+        #copyLinkBtn { background: #e5e7eb; }
+        #copyLinkBtn:hover { background: #d1d5db; }
+        #copyLinkBtn.copied { background: #10b981; color: white; }
+
+        body.dark-theme .share-block { border-top-color: #334155; }
+        body.dark-theme .share-label { color: #cbd5e1; }
+        body.dark-theme .share-btn { background: #1e293b; color: #94a3b8; }
+        body.dark-theme .share-btn:hover { background: #334155; }
+        body.dark-theme #copyLinkBtn { background: #1e293b; }
+        body.dark-theme #copyLinkBtn:hover { background: #334155; }
+        body.dark-theme #copyLinkBtn.copied { background: #059669; color: white; }
+        body.dark-theme .modal-content { background: #1e293b; color: #e2e8f0; }
+        body.dark-theme .modal-content .close { color: #e2e8f0; }
+        body.dark-theme .modal-content .close:hover { color: #ef4444; }
+
+        @media (max-width: 480px) {
+            .share-btn { width: 44px; height: 44px; }
+            .share-btn svg { width: 22px; height: 22px; }
+            .share-label { font-size: 0.8rem; width: 100%; margin-bottom: 0.25rem; }
+        }
+
+        @media (max-width: 768px) {
+            .listing-grid { grid-template-columns: 1fr; }
+            .main-image { height: 280px; }
+            .info { padding: 1.25rem; }
+            .listing-title { font-size: 1.375rem; }
+            .listing-price { font-size: 1.625rem; }
+            .thumbnail { width: 60px; height: 60px; }
+            .header { flex-direction: column; text-align: center; padding: 0.75rem 1rem; }
+            .nav { justify-content: center; }
+            .font-control { justify-content: center; margin-left: 0; }
+            .category-breadcrumbs { font-size: 0.75rem; }
+        }
+
+        /* дополнительные стили для модалки */
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        .close:hover {
+            color: #ef4444;
+        }
+        .phone-number-display {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+            padding: 0.5rem 0 1rem;
+            color: #1f2937;
+            word-break: break-all;
+        }
+        body.dark-theme .phone-number-display {
+            color: #e2e8f0;
+        }
+        .phone-modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .phone-modal-actions button {
+            flex: 1;
+            min-width: 120px;
+            padding: 0.6rem 1rem;
+            border: none;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        .phone-modal-actions button:active { transform: scale(0.96); }
+        .btn-call { background: #10b981; color: white; }
+        .btn-copy { background: #e5e7eb; color: #1f2937; }
+        body.dark-theme .btn-copy { background: #334155; color: #e2e8f0; }
+        .btn-copy.copied { background: #10b981; color: white; }
+        .phone-modal-close {
+            margin-top: 1rem;
+            background: transparent;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-align: center;
+            width: 100%;
+        }
+        body.dark-theme .phone-modal-close { color: #94a3b8; }
+        .phone-modal-close:hover { text-decoration: underline; }
+
+        /* стили для кнопки статистики */
+        .btn-stats {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-left: 0.5rem;
+        }
+        .btn-stats:hover {
+            opacity: 0.8;
+        }
+    </style>
+    <link rel="stylesheet" href="/dark-theme.css">
+    <style>
+        @media (max-width: 768px) {
+            .header { padding: 0.5rem 0.75rem !important; flex-wrap: nowrap !important; gap: 0.5rem !important; }
+            .logo { font-size: 1.2rem !important; white-space: nowrap; }
+            .nav { gap: 0.25rem !important; flex-wrap: nowrap !important; }
+            .nav button, .nav .btn-login, .nav .btn-logout, .nav .btn-primary, .nav .btn-secondary, .nav .install-pwa-btn {
+                padding: 0.4rem 0.6rem !important;
+                font-size: 0.7rem !important;
+                min-width: auto !important;
+            }
+            .nav button span.btn-text, .nav .btn-login span.btn-text, .nav .btn-logout span.btn-text, .nav .btn-primary span.btn-text, .nav .btn-secondary span.btn-text {
+                display: none;
+            }
+            .nav button .emoji-only, .nav .btn-logout .emoji-only {
+                display: inline;
+            }
+            .font-control { gap: 2px; }
+            .font-btn { padding: 0.3rem 0.5rem !important; font-size: 0.7rem !important; }
+            .font-btn.reset { display: none; }
+            .install-pwa-btn { font-size: 0.7rem !important; padding: 0.3rem 0.6rem !important; }
+            .modal-content { padding: 1rem; }
+        }
+        @media (max-width: 480px) {
+            .install-pwa-btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="logo" onclick="window.location.href='/'">IronAds</div>
+        <div class="nav">
+            <div id="authButtons"><button class="btn-login" onclick="showLoginModal()">Вход</button><button class="btn-login" onclick="showRegisterModal()">Регистрация</button></div>
+            <div id="userInfo" class="hidden">
+                <span id="username" style="font-weight:500; color:#333;"></span>
+                <button class="btn-login" id="chatsBtn" onclick="goToChats()">💬 Чаты <span id="unreadBadge" class="badge hidden">0</span></button>
+                <div class="font-control">
+                    <button class="font-btn" id="fontIncrease">A+</button>
+                    <button class="font-btn" id="fontDecrease">A-</button>
+                    <button class="font-btn reset" id="fontReset">A</button>
+                </div>
+                <button id="themeToggleBtn" class="theme-toggle-btn" >🌙</button>
+                <button id="installPwaBtn" class="install-pwa-btn">📲 Установить приложение</button>
+                <button class="btn-logout" onclick="logout()">Выйти</button>
+            </div>
+        </div>
+    </div>
+    <a class="back-link" onclick="history.back()">← Назад</a>
+    <div id="listingContent" class="listing-container"><div style="text-align:center;padding:50px;">Загрузка...</div></div>
+</div>
+
+<!-- Модальные окна -->
+<div id="complaintModal" class="modal">
+    <div class="modal-content">
+        <h3>🚩 Пожаловаться</h3>
+        <div class="form-group"><label>Причина жалобы</label><textarea id="complaintReason" rows="4" placeholder="Опишите причину жалобы (обман, спам, оскорбления и т.д.)"></textarea></div>
+        <div class="form-actions"><button class="btn-secondary" onclick="closeModal('complaintModal')">Отмена</button><button class="btn-primary" onclick="submitComplaint()">Отправить</button></div>
+    </div>
+</div>
+<div id="loginModal" class="modal"><div class="modal-content"><h3>🔐 Вход</h3><div class="form-group"><label>Имя пользователя</label><input type="text" id="loginUsername"></div><div class="form-group"><label>Пароль</label><input type="password" id="loginPassword"></div><div class="form-actions"><button class="btn-secondary" onclick="closeModal('loginModal')">Отмена</button><button class="btn-primary" onclick="login()">Войти</button></div></div></div>
+<div id="registerModal" class="modal"><div class="modal-content"><h3>📝 Регистрация</h3><div class="form-group"><label>Имя пользователя</label><input type="text" id="regUsername"></div><div class="form-group"><label>Пароль</label><input type="password" id="regPassword"></div><div class="form-group"><label>Телефон</label><input type="text" id="regPhone" placeholder="+79991234567"></div><div class="form-actions"><button class="btn-secondary" onclick="closeModal('registerModal')">Отмена</button><button class="btn-primary" onclick="register()">Зарегистрироваться</button></div></div></div>
+
+<!-- Модалка для отображения номера телефона -->
+<div id="phoneModal" class="modal">
+    <div class="modal-content" style="text-align:center;">
+        <h3 style="margin-bottom:0.5rem;">📞 Номер телефона</h3>
+        <div class="phone-number-display" id="phoneNumberDisplay"></div>
+        <div class="phone-modal-actions">
+            <button class="btn-call" id="phoneCallBtn"><i class="fas fa-phone"></i> Позвонить</button>
+            <button class="btn-copy" id="phoneCopyBtn"><i class="fas fa-copy"></i> Скопировать</button>
+        </div>
+        <button class="phone-modal-close" onclick="closeModal('phoneModal')">✕ Закрыть</button>
+    </div>
+</div>
+
+<!-- Модальное окно детальной статистики -->
+<div id="statsModal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <span class="close" onclick="document.getElementById('statsModal').style.display='none'">&times;</span>
+        <h3>📊 Детальная статистика объявления #<span id="statsListingId"></span></h3>
+        <p><strong>👁️ Просмотры:</strong> всего <span id="statsViewsTotal"></span>, за неделю <span id="statsViewsWeek"></span>, за месяц <span id="statsViewsMonth"></span></p>
+        <p><strong>📞 Телефон:</strong> показано <span id="statsPhoneShow"></span>, скопировано <span id="statsPhoneCopy"></span></p>
+        <p><strong>💬 WhatsApp:</strong> <span id="statsWhatsapp"></span></p>
+        <p><strong>✈️ Telegram:</strong> <span id="statsTelegram"></span></p>
+        <p><strong>❤️ Избранное:</strong> <span id="statsFavorites"></span></p>
+        <p><strong>💬 Сообщения:</strong> <span id="statsMessages"></span></p>
+        <h4>Динамика просмотров за 7 дней:</h4>
+        <ul id="statsDaily"></ul>
+    </div>
+</div>
+
+<div id="notification" class="notification"></div>
+<div id="imageModal" class="image-modal" style="display: none;"><div class="image-modal-content"><span class="image-modal-close">&times;</span><img class="image-modal-img" id="modalImage" src=""><div class="image-modal-controls"><button class="modal-prev" id="modalPrevBtn">&#10094;</button><button class="modal-next" id="modalNextBtn">&#10095;</button></div><div class="image-modal-counter" id="imageCounter"></div></div></div>
+
+<script>
+    const API_URL = '/api';
+    let currentToken = localStorage.getItem('token');
+    let listingData = null;
+    let favorited = false;
+    let currentUserId = null;
+    let isModerator = false;
+    let galleryImages = [];
+    let currentImageIndex = 0;
+    let currentPhoneNumber = '';
+
+    function showNotification(m, t) { const n = document.getElementById('notification'); n.textContent = m; n.className = `notification ${t}`; n.style.display = 'block'; setTimeout(() => n.style.display = 'none', 2500); }
+    function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function goHome() { window.location.href = '/'; }
+    function goToChats() { window.location.href = '/chats.html'; }
+    function logout() { localStorage.removeItem('token'); window.location.href = '/'; }
+    function escapeHtml(t) { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+    // ===== ФУНКЦИИ ДЛЯ РАБОТЫ С НОМЕРОМ ТЕЛЕФОНА =====
+    function showPhoneNumberModal(phoneNumber) {
+        currentPhoneNumber = phoneNumber;
+        document.getElementById('phoneNumberDisplay').textContent = phoneNumber;
+        showModal('phoneModal');
+    }
+
+    function callPhoneNumber() {
+        if (!currentPhoneNumber) return;
+        let cleanNumber = currentPhoneNumber.replace(/[^0-9+]/g, '');
+        if (!cleanNumber.startsWith('+')) {
+            if (cleanNumber.startsWith('8')) {
+                cleanNumber = '+7' + cleanNumber.substring(1);
+            } else {
+                cleanNumber = '+7' + cleanNumber;
+            }
+        }
+        window.location.href = `tel:${cleanNumber}`;
+    }
+
+    // ===== ОБНОВЛЁННАЯ ФУНКЦИЯ КОПИРОВАНИЯ С ЛОГИРОВАНИЕМ =====
+    async function copyPhoneNumber() {
+        const phone = currentPhoneNumber;
+        if (!phone) return;
+        try {
+            await navigator.clipboard.writeText(phone);
+            const copyBtn = document.getElementById('phoneCopyBtn');
+            copyBtn.classList.add('copied');
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> Скопировано!';
+            setTimeout(() => {
+                copyBtn.classList.remove('copied');
+                copyBtn.innerHTML = '<i class="fas fa-copy"></i> Скопировать';
+            }, 2000);
+            showNotification('Номер скопирован', 'success');
+
+            // --- ЛОГИРУЕМ КОПИРОВАНИЕ ---
+            const listingId = new URLSearchParams(window.location.search).get('id');
+            if (currentToken && listingId) {
+                await fetch(`${API_URL}/listings/${listingId}/contact-log`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
+                    body: JSON.stringify({ contact_type: 'phone', action: 'copy' })
+                });
+            }
+            // --- КОНЕЦ ЛОГИРОВАНИЯ ---
+
+        } catch (err) {
+            // fallback
+            const input = document.createElement('input');
+            input.value = phone;
+            document.body.appendChild(input);
+            input.select();
+            try {
+                document.execCommand('copy');
+                showNotification('Номер скопирован', 'success');
+                // тоже логируем
+                const listingId = new URLSearchParams(window.location.search).get('id');
+                if (currentToken && listingId) {
+                    await fetch(`${API_URL}/listings/${listingId}/contact-log`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
+                        body: JSON.stringify({ contact_type: 'phone', action: 'copy' })
+                    });
+                }
+            } catch(e) {
+                showNotification('Не удалось скопировать', 'error');
+            }
+            document.body.removeChild(input);
+        }
+    }
+
+    document.getElementById('phoneCallBtn')?.addEventListener('click', callPhoneNumber);
+    document.getElementById('phoneCopyBtn')?.addEventListener('click', copyPhoneNumber);
+
+    // ===== ФУНКЦИИ ДЛЯ ГАЛЕРЕИ =====
+    function changeMedia(i) { if (!listingData?.media) return; const m = listingData.media[i]; const mainDiv = document.getElementById('mainImage'); if (m.file_type === 'image') mainDiv.innerHTML = `<img src="${m.file_path}" id="mainMedia" style="width:100%;height:100%;object-fit:contain; cursor:pointer;">`; else mainDiv.innerHTML = `<video src="${m.file_path}" controls id="mainMedia" style="width:100%;height:100%;object-fit:contain;"></video>`; document.querySelectorAll('.thumbnail').forEach((th, idx) => { if (idx === i) th.classList.add('active'); else th.classList.remove('active'); }); currentImageIndex = i; attachMainImageClick(); }
+    function attachMainImageClick() { const mainMedia = document.getElementById('mainMedia'); if (!mainMedia) return; if (mainMedia.tagName === 'IMG') { mainMedia.style.cursor = 'pointer'; const newMain = mainMedia.cloneNode(true); mainMedia.parentNode.replaceChild(newMain, mainMedia); newMain.id = 'mainMedia'; newMain.addEventListener('click', (e) => { e.stopPropagation(); if (galleryImages.length > 0) openImageModal(currentImageIndex); }); } }
+    function openImageModal(index) { if (!galleryImages.length) return; currentImageIndex = index; const modal = document.getElementById('imageModal'); const modalImg = document.getElementById('modalImage'); const counter = document.getElementById('imageCounter'); modalImg.src = galleryImages[currentImageIndex]; counter.textContent = `${currentImageIndex+1} / ${galleryImages.length}`; modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+    function closeImageModal() { document.getElementById('imageModal').style.display = 'none'; document.body.style.overflow = ''; }
+    function nextImage() { if (!galleryImages.length) return; currentImageIndex = (currentImageIndex + 1) % galleryImages.length; const modalImg = document.getElementById('modalImage'); const counter = document.getElementById('imageCounter'); modalImg.src = galleryImages[currentImageIndex]; counter.textContent = `${currentImageIndex+1} / ${galleryImages.length}`; }
+    function prevImage() { if (!galleryImages.length) return; currentImageIndex = (currentImageIndex - 1 + galleryImages.length) % galleryImages.length; const modalImg = document.getElementById('modalImage'); const counter = document.getElementById('imageCounter'); modalImg.src = galleryImages[currentImageIndex]; counter.textContent = `${currentImageIndex+1} / ${galleryImages.length}`; }
+    function initImageModal() { const modal = document.getElementById('imageModal'); if (!modal) return; document.querySelector('.image-modal-close')?.addEventListener('click', closeImageModal); document.getElementById('modalPrevBtn')?.addEventListener('click', prevImage); document.getElementById('modalNextBtn')?.addEventListener('click', nextImage); modal.addEventListener('click', (e) => { if (e.target === modal) closeImageModal(); }); document.addEventListener('keydown', (e) => { if (modal.style.display !== 'flex') return; if (e.key === 'ArrowLeft') prevImage(); if (e.key === 'ArrowRight') nextImage(); if (e.key === 'Escape') closeImageModal(); }); }
+    function setupGalleryFromListing(listing) { galleryImages = (listing.media || []).filter(m => m.file_type === 'image').map(m => m.file_path); if (galleryImages.length === 0) return; attachMainImageClick(); }
+
+    // ===== ХЛЕБНЫЕ КРОШКИ =====
+    async function renderCategoryBreadcrumbs(categoryId) {
+        const container = document.getElementById('categoryBreadcrumbs');
+        if (!container) return;
+        if (!categoryId) {
+            container.innerHTML = '';
+            container.classList.add('hidden');
+            return;
+        }
+        try {
+            const resp = await fetch(`${API_URL}/categories/ancestors/${categoryId}`);
+            if (!resp.ok) throw new Error();
+            const ancestors = await resp.json();
+            let html = '';
+            for (let i = 0; i < ancestors.length; i++) {
+                const cat = ancestors[i];
+                html += `<span class="crumb"><a href="/?category_id=${cat.id}">${escapeHtml(cat.name)}</a></span>`;
+                if (i < ancestors.length - 1) html += `<span class="separator">→</span>`;
+            }
+            container.innerHTML = html;
+            container.classList.remove('hidden');
+        } catch(e) {
+            console.error('Ошибка загрузки хлебных крошек:', e);
+            container.innerHTML = '';
+            container.classList.add('hidden');
+        }
+    }
+
+    // ===== АВТОРИЗАЦИЯ =====
+    async function updateUnreadCount() {
+        if (!currentToken) return;
+        try {
+            const resp = await fetch(`${API_URL}/chats/unread/count`, {
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+            if (resp.ok) {
+                const data = await resp.json();
+                const badge = document.getElementById('unreadBadge');
+                if (data.count > 0) {
+                    badge.textContent = data.count > 99 ? '99+' : data.count;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    async function checkAuth() {
+        if (!currentToken) return;
+        try {
+            const r = await fetch(`${API_URL}/auth/me`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
+            if (r.ok) {
+                const u = await r.json();
+                document.getElementById('username').textContent = u.username;
+                document.getElementById('authButtons').classList.add('hidden');
+                document.getElementById('userInfo').classList.remove('hidden');
+                if (u.role === 'admin' || u.role === 'moderator') isModerator = true;
+                updateUnreadCount();
+            } else { localStorage.removeItem('token'); currentToken = null; location.reload(); }
+        } catch(e) { console.error(e); }
+    }
+
+    async function register() { const u = document.getElementById('regUsername').value, p = document.getElementById('regPassword').value, ph = document.getElementById('regPhone').value; if (!u || !p || !ph) { showNotification('Заполните все поля', 'error'); return; } try { const r = await fetch(`${API_URL}/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p, phone: ph }) }); const d = await r.json(); if (r.ok) { localStorage.setItem('token', d.token); currentToken = d.token; showNotification('Регистрация успешна!', 'success'); closeModal('registerModal'); checkAuth(); loadListing(); } else { showNotification(d.error || 'Ошибка', 'error'); } } catch(e) { showNotification('Ошибка соединения', 'error'); } }
+    async function login() { const u = document.getElementById('loginUsername').value, p = document.getElementById('loginPassword').value; if (!u || !p) { showNotification('Заполните все поля', 'error'); return; } try { const r = await fetch(`${API_URL}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) }); const d = await r.json(); if (r.ok) { localStorage.setItem('token', d.token); currentToken = d.token; showNotification('Вход выполнен!', 'success'); closeModal('loginModal'); checkAuth(); loadListing(); } else { showNotification(d.error || 'Ошибка', 'error'); } } catch(e) { showNotification('Ошибка соединения', 'error'); } }
+
+    async function startChat() { const id = new URLSearchParams(window.location.search).get('id'); try { const r = await fetch(`${API_URL}/chats/create`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ listing_id: id }) }); const chat = await r.json(); if (r.ok) window.location.href = `/chat.html?chatId=${chat.id}`; else showNotification(chat.error || 'Ошибка', 'error'); } catch(e) { showNotification('Ошибка', 'error'); } }
+    async function checkFavoriteStatus(listingId) { if (!currentToken) return false; try { const resp = await fetch(`${API_URL}/listings/favorites/check/${listingId}`, { headers: { 'Authorization': `Bearer ${currentToken}` } }); const data = await resp.json(); favorited = data.favorited; return favorited; } catch(e) { return false; } }
+    async function toggleFavorite() { if (!currentToken) { showNotification('Войдите, чтобы добавить в избранное', 'error'); return; } const listingId = new URLSearchParams(window.location.search).get('id'); try { const resp = await fetch(`${API_URL}/listings/favorites/toggle`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ listing_id: listingId }) }); const data = await resp.json(); if (resp.ok) { favorited = data.favorited; const favBtn = document.getElementById('favoriteButton'); if (favBtn) { favBtn.innerHTML = favorited ? '❤️ В избранном' : '🤍 В избранное'; favBtn.classList.toggle('active', favorited); } showNotification(favorited ? 'Добавлено в избранное' : 'Удалено из избранного', 'success'); } else { showNotification(data.error || 'Ошибка', 'error'); } } catch(e) { showNotification('Ошибка соединения', 'error'); } }
+    function renderRatingStars(rating) { if (!rating || rating === 0) return ''; return `<span class="rating-stars">⭐ ${rating.toFixed(1)}</span>`; }
+    async function saveView(listingId) { if (!currentToken) return; try { await fetch(`${API_URL}/listings/${listingId}/view`, { method: 'POST', headers: { 'Authorization': `Bearer ${currentToken}` } }); } catch(e) { console.error(e); } }
+    let currentComplaintTarget = null;
+    function showComplaintModal(type, id) { if (!currentToken) { showNotification('Войдите, чтобы пожаловаться', 'error'); return; } currentComplaintTarget = { type, id }; document.getElementById('complaintReason').value = ''; showModal('complaintModal'); }
+    async function submitComplaint() { const reason = document.getElementById('complaintReason').value.trim(); if (!reason) { showNotification('Укажите причину жалобы', 'error'); return; } if (!currentComplaintTarget) return; let url = ''; if (currentComplaintTarget.type === 'listing') { url = `${API_URL}/listings/${currentComplaintTarget.id}/complaint`; } else { url = `${API_URL}/users/${currentComplaintTarget.id}/complaint`; } try { const resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ reason }) }); const data = await resp.json(); if (resp.ok) { showNotification('Жалоба отправлена, спасибо!', 'success'); closeModal('complaintModal'); } else { showNotification(data.error || 'Ошибка', 'error'); } } catch(e) { showNotification('Ошибка соединения', 'error'); } }
+    
+    function updateMetaForListing(listing) {
+        if (typeof window.updatePageMeta !== 'function') {
+            console.warn('updatePageMeta не найдена в common.js');
+            return;
+        }
+        const typeLabel = listing.type === 'sell' ? 'Продам' : listing.type === 'buy' ? 'Куплю' : 'Обмен';
+        let title = listing.title + ' — ' + typeLabel;
+        if (listing.city_name) title += ' в ' + listing.city_name;
+        let description = (listing.description || '').substring(0, 150);
+        if (description.length === 150) description += '...';
+        description += ' Цена: ' + listing.price + ' ₽.';
+        window.updatePageMeta(title, description);
+    }
+
+    function addSchemaMarkup(listing) {
+        try {
+            const script = document.createElement('script');
+            script.type = 'application/ld+json';
+            const schema = {
+                "@context": "https://schema.org",
+                "@type": "Product",
+                "name": listing.title,
+                "description": listing.description || '',
+                "offers": {
+                    "@type": "Offer",
+                    "price": listing.price,
+                    "priceCurrency": "RUB",
+                    "availability": "https://schema.org/InStock",
+                    "url": window.location.href
+                },
+                "brand": "IronAds",
+                "category": listing.category_name || ''
+            };
+            if (listing.city_name) {
+                schema.offers.availableAtOrFrom = {
+                    "@type": "Place",
+                    "address": {
+                        "@type": "PostalAddress",
+                        "addressLocality": listing.city_name
+                    }
+                };
+            }
+            script.textContent = JSON.stringify(schema);
+            const oldScript = document.querySelector('script[data-schema="listing"]');
+            if (oldScript) oldScript.remove();
+            script.setAttribute('data-schema', 'listing');
+            document.head.appendChild(script);
+        } catch(e) {
+            console.error('Ошибка добавления микроразметки:', e);
+        }
+    }
+
+    // ===== ФУНКЦИИ ШАРИНГА =====
+    function initShareButtons(listing) {
+        const shareBlock = document.getElementById('shareBlock');
+        if (!shareBlock) return;
+        shareBlock.querySelectorAll('.share-btn[data-share]').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                shareViaSocial(this.dataset.share);
+            });
+        });
+        document.getElementById('copyLinkBtn')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            copyListingLink();
+        });
+        const nativeBtn = document.getElementById('shareNativeBtn');
+        if (nativeBtn && navigator.share) {
+            nativeBtn.style.display = 'inline-flex';
+            nativeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                shareViaNative(listing);
+            });
+        } else if (nativeBtn) {
+            nativeBtn.style.display = 'none';
+        }
+    }
+
+    function shareViaSocial(platform) {
+        const url = window.location.href;
+        const title = document.querySelector('.listing-title')?.textContent || 'Объявление на IronAds';
+        const text = `Посмотрите объявление: ${title}`;
+        let shareUrl = '';
+        switch (platform) {
+            case 'vk': shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&description=${encodeURIComponent(text)}`; break;
+            case 'wa': shareUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`; break;
+            case 'tg': shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`; break;
+            case 'fb': shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`; break;
+            case 'tw': shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`; break;
+            default: return;
+        }
+        window.open(shareUrl, '_blank', 'width=600,height=400,scrollbars=yes');
+    }
+
+    async function copyListingLink() {
+        const btn = document.getElementById('copyLinkBtn');
+        const url = window.location.href;
+        try {
+            await navigator.clipboard.writeText(url);
+            btn.classList.add('copied');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M9 16.2l-3.5-3.5-1.4 1.4L9 19l10-10-1.4-1.4L9 16.2z"/></svg>`;
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                btn.innerHTML = originalHtml;
+            }, 2000);
+            showNotification('Ссылка скопирована!', 'success');
+        } catch (err) {
+            const textarea = document.createElement('textarea');
+            textarea.value = url;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showNotification('Ссылка скопирована!', 'success');
+        }
+    }
+
+    function shareViaNative(listing) {
+        const title = listing.title || document.title;
+        const text = listing.description ? listing.description.substring(0, 200) : 'Объявление на IronAds';
+        const url = window.location.href;
+        navigator.share({
+            title: title,
+            text: text,
+            url: url
+        }).catch(err => {
+            if (err.name !== 'AbortError') {
+                console.error('Ошибка шаринга:', err);
+                showNotification('Не удалось поделиться', 'error');
+            }
+        });
+    }
+
+    // ===== ПУБЛИЧНЫЙ ПРОСМОТР =====
+    async function loadViews(listingId) {
+        try {
+            const resp = await fetch(`${API_URL}/listings/${listingId}/views`);
+            if (resp.ok) {
+                const data = await resp.json();
+                document.getElementById('viewsNumber').textContent = data.views;
+            }
+        } catch (e) {
+            console.error('Ошибка загрузки просмотров:', e);
+        }
+    }
+
+    // ===== ДЕТАЛЬНАЯ СТАТИСТИКА (ДЛЯ ВЛАДЕЛЬЦА) =====
+    async function showDetailedStats(listingId) {
+        try {
+            const resp = await fetch(`${API_URL}/listings/${listingId}/stats`, {
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+            if (!resp.ok) throw new Error('Ошибка загрузки статистики');
+            const stats = await resp.json();
+
+            document.getElementById('statsListingId').textContent = stats.listing_id;
+            document.getElementById('statsViewsTotal').textContent = stats.views.total;
+            document.getElementById('statsViewsWeek').textContent = stats.views.week;
+            document.getElementById('statsViewsMonth').textContent = stats.views.month;
+            document.getElementById('statsPhoneShow').textContent = stats.contacts.phone.show;
+            document.getElementById('statsPhoneCopy').textContent = stats.contacts.phone.copy;
+            document.getElementById('statsWhatsapp').textContent = stats.contacts.whatsapp;
+            document.getElementById('statsTelegram').textContent = stats.contacts.telegram;
+            document.getElementById('statsFavorites').textContent = stats.favorites;
+            document.getElementById('statsMessages').textContent = stats.messages;
+
+            const dailyContainer = document.getElementById('statsDaily');
+            dailyContainer.innerHTML = stats.views.daily.map(d =>
+                `<li>${d.date}: ${d.count} просмотров</li>`
+            ).join('');
+
+            document.getElementById('statsModal').style.display = 'flex';
+        } catch (err) {
+            showNotification('Ошибка загрузки статистики', 'error');
+        }
+    }
+
+    // ===== ЗАГРУЗКА ПРОФИЛЯ =====
+    async function loadUserProfileForContacts() {
+        if (!currentToken) return null;
+        try {
+            const resp = await fetch(`${API_URL}/auth/me`, {
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+            if (resp.ok) {
+                const user = await resp.json();
+                return user;
+            }
+        } catch(e) {
+            console.warn('Ошибка загрузки профиля:', e);
+        }
+        return null;
+    }
+
+    // ===== ОСНОВНАЯ ЗАГРУЗКА ОБЪЯВЛЕНИЯ =====
+    async function loadListing() { 
+        const id = new URLSearchParams(window.location.search).get('id'); 
+        if (!id) { goHome(); return; } 
+        const container = document.getElementById('listingContent'); 
+        try { 
+            const headers = {}; 
+            if (currentToken) headers['Authorization'] = `Bearer ${currentToken}`; 
+            const r = await fetch(`${API_URL}/listings/${id}`, { headers }); 
+            if (!r.ok) { const errorText = await r.text(); throw new Error(`HTTP ${r.status}: ${errorText}`); } 
+            listingData = await r.json(); 
+            
+            updateMetaForListing(listingData);
+            addSchemaMarkup(listingData);
+            await saveView(id); 
+            
+            let ratingHtml = ''; 
+            if (listingData.user_id) { 
+                try { 
+                    const ratingResp = await fetch(`${API_URL}/users/${listingData.user_id}/rating`); 
+                    const ratingData = await ratingResp.json(); 
+                    if (ratingData.average && ratingData.average > 0) ratingHtml = renderRatingStars(ratingData.average); 
+                } catch(e) { console.error(e); } 
+            } 
+            if (currentToken) await checkFavoriteStatus(id); 
+            
+            if (listingData.category_id) {
+                await renderCategoryBreadcrumbs(listingData.category_id);
+            } else {
+                const bc = document.getElementById('categoryBreadcrumbs');
+                if (bc) bc.classList.add('hidden');
+            }
+            
+            renderListing(listingData, ratingHtml); 
+            // Загружаем просмотры
+            if (listingData.id) {
+                loadViews(listingData.id);
+            }
+        } catch(e) { 
+            console.error(e); 
+            container.innerHTML = `<div style="text-align:center;padding:50px;color:red;">❌ Ошибка загрузки объявления: ${e.message}</div>`; 
+            showNotification('Ошибка загрузки: ' + e.message, 'error'); 
+        } 
+    }
+    
+    function renderListing(listing, ratingHtml) { 
+        let currentUserId = null; 
+        try { if(currentToken) currentUserId = JSON.parse(atob(currentToken.split('.')[1])).userId; } catch(e) {} 
+        const isOwner = currentToken && listing.user_id === currentUserId; 
+        let mediaHtml = ''; 
+        if (listing.media && listing.media.length) { 
+            mediaHtml = `<div class="gallery"><div class="main-image" id="mainImage">${listing.media[0].file_type === 'image' ? `<img src="${listing.media[0].file_path}" id="mainMedia" style="width:100%;height:100%;object-fit:contain; cursor:pointer;">` : `<video src="${listing.media[0].file_path}" controls id="mainMedia" style="width:100%;height:100%;object-fit:contain;"></video>`}</div><div class="thumbnail-grid" id="thumbnailGrid">${listing.media.map((m, i) => `<div class="thumbnail ${i === 0 ? 'active' : ''}" onclick="changeMedia(${i})">${m.file_type === 'image' ? `<img src="${m.file_path}">` : `<video src="${m.file_path}"></video>`}</div>`).join('')}</div></div>`; 
+        } else { 
+            mediaHtml = `<div class="gallery"><div class="main-image">📷 Нет фото</div></div>`; 
+        } 
+        let warningHtml = ''; 
+        if (listing.status === 'blocked' && isModerator) warningHtml = `<div class="blocked-warning">⚠️ ОБЪЯВЛЕНИЕ ЗАБЛОКИРОВАНО МОДЕРАТОРОМ<br>Причина: ${escapeHtml(listing.block_reason || 'Не указана')}</div>`; 
+
+        // Блок контактов
+        let contactsHtml = '';
+        if (isOwner) { 
+            contactsHtml = `
+                <div class="contacts-block">
+                    <h3>📞 Мои контакты</h3>
+                    <div id="contactsContent">Загрузка...</div>
+                    <div style="margin-top:0.5rem; font-size:0.8rem; color:#6b7280;">
+                        <i class="fas fa-info-circle"></i> Контакты синхронизируются с профилем
+                    </div>
+                </div>
+            `;
+        } else if (currentToken) {
+            contactsHtml = `
+                <div class="contacts-block">
+                    <h3>📞 Контакты продавца</h3>
+                    <div id="contactsContent">Загрузка...</div>
+                </div>
+            `;
+        } else {
+            contactsHtml = `
+                <div class="contacts-block">
+                    <h3>📞 Контакты продавца</h3>
+                    <p>Для просмотра контактов <button class="btn-primary" onclick="showLoginModal()">войдите</button></p>
+                </div>
+            `;
+        }
+
+        const breadcrumbsHtml = `<div id="categoryBreadcrumbs" class="category-breadcrumbs hidden"></div>`;
+        
+        // Блок шаринга
+        const shareHtml = `
+            <div class="share-block" id="shareBlock">
+                <span class="share-label">Поделиться:</span>
+                <button class="share-btn" data-share="vk" title="ВКонтакте">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21.6 6.6c.1-.3 0-.5-.4-.6h-3.4c-.4 0-.6.2-.7.5 0 0-.8 2-2 3.3-.4.4-.6.5-.8.5-.1 0-.3-.1-.3-.5V6.6c0-.4-.1-.6-.5-.6h-3.6c-.3 0-.5.2-.5.5 0 .5.7.6.8 2v3.2c0 .6-.1.7-.3.7-.6 0-2-2.1-2.8-4.5-.2-.4-.4-.6-.8-.6H4.2c-.5 0-.6.3-.6.6 0 .5.7 3.1 3.2 6.5 1.7 2.4 4 3.7 6.1 3.7 1.3 0 1.4-.6 1.4-1.3v-2.7c0-.4.2-.5.5-.5.3 0 .8.1 2 1.3 1.2 1.2 1.4 1.7 2 1.7h3.4c.4 0 .6-.2.5-.6-.1-.4-.6-1.2-1.4-2.1-.4-.5-.9-.9-1.1-1.2-.2-.2-.3-.4-.2-.7 0-.2.1-.4.3-.7z"/></svg>
+                </button>
+                <button class="share-btn" data-share="wa" title="WhatsApp">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17.5 6.5C15.6 4.6 13.1 3.5 10.5 3.5 5.8 3.5 2 7.3 2 12c0 1.9.6 3.7 1.7 5.2L2.5 21l4-.8c1.4.7 3 1.1 4.6 1.1 4.7 0 8.5-3.8 8.5-8.5 0-2.3-.9-4.4-2.6-6.1zm-7 13.7c-1.6 0-3.1-.4-4.5-1.2l-.3-.2-3 .6.6-2.9-.2-.3c-.8-1.3-1.2-2.8-1.2-4.4 0-3.9 3.2-7 7-7 1.9 0 3.7.7 5 2 1.3 1.3 2 3 2 5 0 3.8-3.1 6.9-7 6.9zm3.8-4.1c-.2-.1-1.2-.6-1.4-.7-.2-.1-.3-.1-.5.1-.2.2-.8.8-.9 1-.1.2-.2.2-.4.1-.2-.1-.8-.3-1.5-.9-.6-.5-1-1.1-1.1-1.3-.1-.2 0-.3.1-.4.1-.1.2-.3.3-.4.1-.1.2-.2.2-.3 0-.1 0-.2-.1-.3-.1-.1-.5-1.2-.7-1.6-.2-.4-.4-.3-.5-.3h-.4c-.1 0-.3.1-.5.2-.2.2-.8.8-.8 2s.8 2.3 1 2.5c.2.2 1.7 2.6 4.1 3.6.6.2 1.1.3 1.5.4.6.1 1.2.1 1.6-.1.5-.2 1.2-.5 1.4-1 .2-.5.2-.9.1-1-.1 0-.3-.1-.5-.2z"/></svg>
+                </button>
+                <button class="share-btn" data-share="tg" title="Telegram">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21.4 4.1c-.2-.4-.7-.6-1.2-.4L3.8 10.8c-.5.2-.7.7-.5 1.1.1.3.4.5.7.6l3.8 1.3 1.3 4.2c.1.4.5.7.9.7h.1c.4 0 .7-.2.9-.5l2.1-2.1 4.2 3.1c.3.2.7.3 1.1.1.4-.2.6-.5.7-.9L21.4 5c.1-.4 0-.7-.2-.9zM8.5 13.1l6.1-4.6-4.8 5.2-1.3-4.2 5.3-3.2-6.6 4.6 1.3 4.2z"/></svg>
+                </button>
+                <button class="share-btn" data-share="fb" title="Facebook">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M24 12.1c0-6.6-5.4-12-12-12S0 5.5 0 12.1c0 6 4.4 10.9 10.1 11.8v-8.4H7.1v-3.4h3V9.9c0-3 1.8-4.7 4.5-4.7 1.3 0 2.7.2 2.7.2v2.9h-1.5c-1.5 0-2 .9-2 1.9v2.3h3.4l-.5 3.4h-2.9v8.4C19.6 23 24 18.1 24 12.1z"/></svg>
+                </button>
+                <button class="share-btn" data-share="tw" title="Twitter">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M23.9 4.8c-.8.4-1.7.7-2.7.8 1-.6 1.7-1.5 2.1-2.6-.9.5-1.9.9-3 1.1-.8-.9-2-1.4-3.3-1.4-2.5 0-4.5 2-4.5 4.5 0 .4 0 .7.1 1.1-3.7-.2-7-2-9.2-4.7-.4.7-.6 1.5-.6 2.3 0 1.6.8 3 2 3.8-.7 0-1.4-.2-2-.5v.1c0 2.2 1.6 4.1 3.7 4.5-.4.1-.8.2-1.2.2-.3 0-.6 0-.9-.1.6 2 2.4 3.5 4.5 3.5-1.6 1.3-3.7 2-5.9 2-.4 0-.8 0-1.2-.1 2.2 1.4 4.8 2.2 7.6 2.2 9.1 0 14-7.5 14-14v-.6c1-.7 1.9-1.6 2.6-2.6z"/></svg>
+                </button>
+                <button class="share-btn" id="shareNativeBtn" title="Поделиться через систему" style="display:none;">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18 16.1c-.8 0-1.5.3-2.1.8l-6.7-4.2c.1-.3.1-.6.1-.9s0-.6-.1-.9l6.7-4.2c.6.5 1.3.8 2.1.8 1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3c0 .3 0 .6.1.9L8.4 7.7c-.6-.5-1.3-.8-2.1-.8-1.7 0-3 1.3-3 3s1.3 3 3 3c.8 0 1.5-.3 2.1-.8l6.7 4.2c-.1.3-.1.6-.1.9 0 1.7 1.3 3 3 3s3-1.3 3-3-1.3-3-3-3z"/></svg>
+                </button>
+                <button class="share-btn" id="copyLinkBtn" title="Скопировать ссылку">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19.7 9.3c-.4-.4-1-.4-1.4 0L12 15.6l-2.3-2.3c-.4-.4-1-.4-1.4 0s-.4 1 0 1.4l3 3c.2.2.5.3.7.3.3 0 .5-.1.7-.3l7-7c.4-.4.4-1 0-1.4z"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z"/></svg>
+                </button>
+            </div>
+        `;
+
+        // Кнопка детальной статистики (только для владельца)
+        let statsButtonHtml = '';
+        if (isOwner) {
+            statsButtonHtml = `<button class="btn-primary" onclick="showDetailedStats(${listing.id})" style="margin-right:0.5rem;">📊 Детальная статистика</button>`;
+        }
+
+        document.getElementById('listingContent').innerHTML = `<div class="listing-grid">${mediaHtml}<div class="info">${warningHtml}${breadcrumbsHtml}<div class="listing-title">${escapeHtml(listing.title)}</div><div class="listing-price-row"><div class="listing-price">${listing.price.toLocaleString()} ₽</div><div><button id="favoriteButton" class="favorite-btn ${favorited ? 'active' : ''}" onclick="toggleFavorite()">${favorited ? '❤️ В избранном' : '🤍 В избранное'}</button><button class="complaint-btn" onclick="showComplaintModal('listing', ${listing.id})">🚩 Пожаловаться</button></div></div><div class="listing-meta"><span>📁 ${escapeHtml(listing.category_name || 'Без категории')}</span><span>📅 ${new Date(listing.created_at).toLocaleDateString()}</span>${listing.city_name ? `<span>📍 ${escapeHtml(listing.city_name)}</span>` : ''}${ratingHtml ? `<span>${ratingHtml}</span>` : ''}<span>👁️ <span id="viewsNumber">0</span></span></div><div class="listing-description">${escapeHtml(listing.description || 'Описание отсутствует')}</div>
+        ${contactsHtml}
+        ${shareHtml}
+        <div class="contacts" style="margin-top:1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+            ${statsButtonHtml}
+            <button class="btn-primary chat-button" onclick="startChat()" style="flex:1;">💬 Написать продавцу</button>
+            ${!isOwner ? `<button class="complaint-btn" onclick="showComplaintModal('user', ${listing.user_id})">🚩 Пожаловаться на пользователя</button>` : ''}
+        </div>
+        </div></div>`; 
+        
+        setupGalleryFromListing(listing); 
+        currentImageIndex = 0; 
+        attachMainImageClick(); 
+        
+        if (listing.category_id) {
+            renderCategoryBreadcrumbs(listing.category_id);
+        }
+
+        if (currentToken) {
+            loadContacts(listing.id);
+        }
+        initShareButtons(listing);
+    }
+
+    // ===== КОНТАКТЫ =====
+    async function loadContacts(listingId) {
+        const container = document.getElementById('contactsContent');
+        if (!container) return;
+        try {
+            const resp = await fetch(`${API_URL}/listings/${listingId}/contacts`, {
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+            if (!resp.ok) throw new Error('Ошибка загрузки контактов');
+            let data = await resp.json();
+
+            if (data.is_owner) {
+                const user = await loadUserProfileForContacts();
+                if (user) {
+                    const needUpdate = 
+                        (data.phone || '') !== (user.phone || '') ||
+                        (data.whatsapp || '') !== (user.whatsapp || '') ||
+                        (data.telegram || '') !== (user.telegram || '');
+                    if (needUpdate) {
+                        await fetch(`${API_URL}/listings/${listingId}/contacts-settings`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${currentToken}`
+                            },
+                            body: JSON.stringify({
+                                phone: user.phone || '',
+                                whatsapp: user.whatsapp || '',
+                                telegram: user.telegram || '',
+                                show_phone: data.show_phone,
+                                show_whatsapp: data.show_whatsapp,
+                                show_telegram: data.show_telegram
+                            })
+                        });
+                        data.phone = user.phone || '';
+                        data.whatsapp = user.whatsapp || '';
+                        data.telegram = user.telegram || '';
+                    }
+                }
+                container.innerHTML = `
+                    <div class="contact-owner-settings">
+                        <label><input type="checkbox" ${data.show_phone ? 'checked' : ''} onchange="updateContactSetting('phone', this.checked, '${data.phone || ''}', '${data.whatsapp || ''}', '${data.telegram || ''}')"> Телефон: ${data.phone || 'не указан'}</label>
+                        <label><input type="checkbox" ${data.show_whatsapp ? 'checked' : ''} onchange="updateContactSetting('whatsapp', this.checked, '${data.phone || ''}', '${data.whatsapp || ''}', '${data.telegram || ''}')"> WhatsApp: ${data.whatsapp || 'не указан'}</label>
+                        <label><input type="checkbox" ${data.show_telegram ? 'checked' : ''} onchange="updateContactSetting('telegram', this.checked, '${data.phone || ''}', '${data.whatsapp || ''}', '${data.telegram || ''}')"> Telegram: ${data.telegram || 'не указан'}</label>
+                    </div>
+                `;
+                window._contactsData = data;
+                return;
+            }
+
+            let html = '';
+            if (data.phone) {
+                html += `<button class="contact-btn btn-phone" onclick="showContact('phone', '${data.phone}', ${listingId})"><i class="fas fa-phone"></i> Показать телефон</button>`;
+            }
+            if (data.whatsapp) {
+                html += `<button class="contact-btn btn-whatsapp" onclick="showContact('whatsapp', '${data.whatsapp}', ${listingId})"><i class="fab fa-whatsapp"></i> WhatsApp</button>`;
+            }
+            if (data.telegram) {
+                html += `<button class="contact-btn btn-telegram" onclick="showContact('telegram', '${data.telegram}', ${listingId})"><i class="fab fa-telegram"></i> Telegram</button>`;
+            }
+            if (!html) {
+                html = '<p style="color: #6b7280;">Продавец не указал контакты для связи.</p>';
+            }
+            container.innerHTML = html;
+        } catch (err) {
+            container.innerHTML = `<p style="color:red;">Ошибка загрузки контактов</p>`;
+        }
+    }
+
+    // ===== ОБНОВЛЁННАЯ ФУНКЦИЯ showContact С ПОДДЕРЖКОЙ ACTION =====
+    async function showContact(type, value, listingId) {
+        if (!currentToken) {
+            showNotification('Войдите, чтобы увидеть контакты', 'error');
+            return;
+        }
+        if (type === 'phone') {
+            try {
+                await fetch(`${API_URL}/listings/${listingId}/contact-log`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({ contact_type: 'phone', action: 'show' })
+                });
+            } catch(e) {}
+            showPhoneNumberModal(value);
+        } else if (type === 'whatsapp') {
+            try {
+                await fetch(`${API_URL}/listings/${listingId}/contact-log`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
+                    body: JSON.stringify({ contact_type: 'whatsapp', action: 'show' })
+                });
+            } catch(e) {}
+            window.open(`https://wa.me/${value.replace(/[^0-9]/g, '')}`, '_blank');
+        } else if (type === 'telegram') {
+            try {
+                await fetch(`${API_URL}/listings/${listingId}/contact-log`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
+                    body: JSON.stringify({ contact_type: 'telegram', action: 'show' })
+                });
+            } catch(e) {}
+            const cleanValue = value.replace('@', '');
+            if (/^\d+$/.test(cleanValue)) {
+                window.open(`https://t.me/+${cleanValue}`, '_blank');
+            } else {
+                window.open(`https://t.me/${cleanValue}`, '_blank');
+            }
+        }
+    }
+
+    async function updateContactSetting(type, checked, phone, whatsapp, telegram) {
+        const listingId = new URLSearchParams(window.location.search).get('id');
+        const settingKey = `show_${type}`;
+        try {
+            const resp = await fetch(`${API_URL}/listings/${listingId}/contacts-settings`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${currentToken}`
+                },
+                body: JSON.stringify({
+                    [settingKey]: checked,
+                    phone: phone,
+                    whatsapp: whatsapp,
+                    telegram: telegram
+                })
+            });
+            if (!resp.ok) throw new Error('Ошибка обновления');
+            showNotification(`Настройка обновлена`, 'success');
+        } catch(e) {
+            showNotification('Ошибка обновления', 'error');
+        }
+    }
+
+    function showLoginModal() { showModal('loginModal'); }
+    function showRegisterModal() { showModal('registerModal'); }
+
+    // ===== ЗАКРЫТИЕ МОДАЛОК ПО КЛИКУ ВНЕ =====
+    document.getElementById('phoneModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeModal('phoneModal');
+    });
+    document.getElementById('statsModal')?.addEventListener('click', function(e) {
+        if (e.target === this) document.getElementById('statsModal').style.display = 'none';
+    });
+
+    document.getElementById('loginPassword')?.addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
+    document.getElementById('regPassword')?.addEventListener('keypress', e => { if (e.key === 'Enter') register(); });
+    initImageModal(); checkAuth(); loadListing();
+
+    (function() {
+        const STORAGE_KEY = '_font_size';
+        let currentRootSize = localStorage.getItem(STORAGE_KEY) ? parseFloat(localStorage.getItem(STORAGE_KEY)) : 16;
+        function setRootSize(size) {
+            if (size < 12) size = 12;
+            if (size > 24) size = 24;
+            document.documentElement.style.fontSize = size + 'px';
+            localStorage.setItem(STORAGE_KEY, size);
+            currentRootSize = size;
+        }
+        const incBtn = document.getElementById('fontIncrease');
+        const decBtn = document.getElementById('fontDecrease');
+        const resetBtn = document.getElementById('fontReset');
+        if (incBtn) incBtn.addEventListener('click', () => setRootSize(currentRootSize + 1));
+        if (decBtn) decBtn.addEventListener('click', () => setRootSize(currentRootSize - 1));
+        if (resetBtn) resetBtn.addEventListener('click', () => setRootSize(16));
+        if (currentRootSize !== 16) document.documentElement.style.fontSize = currentRootSize + 'px';
+    })();
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        const installBtn = document.getElementById('installPwaBtn');
+        if (installBtn) {
+            installBtn.style.display = 'inline-block';
+            installBtn.onclick = () => {
+                installBtn.style.display = 'none';
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+            };
+        }
+    });
+    if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+        const installBtn = document.getElementById('installPwaBtn');
+        if (installBtn) {
+            installBtn.style.display = 'inline-block';
+            installBtn.onclick = () => alert('Нажмите "Поделиться" → "На экран домой"');
+        }
+    }
+</script>
+<script src="/register-sw.js"></script>
+<script>
+(function() {
+    const STORAGE_KEY = 'ironads_theme';
+    const applyTheme = (theme) => {
+        if (theme === 'dark') {
+            document.body.classList.add('dark-theme');
+            const btn = document.getElementById('themeToggleBtn');
+            if (btn) btn.textContent = '☀️';
+        } else {
+            document.body.classList.remove('dark-theme');
+            const btn = document.getElementById('themeToggleBtn');
+            if (btn) btn.textContent = '🌙';
+        }
+        localStorage.setItem(STORAGE_KEY, theme);
+    };
+    const savedTheme = localStorage.getItem(STORAGE_KEY);
+    if (savedTheme === 'dark') {
+        applyTheme('dark');
+    } else if (savedTheme === 'light') {
+        applyTheme('light');
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        applyTheme('dark');
+    } else {
+        applyTheme('light');
+    }
+    const toggleBtn = document.getElementById('themeToggleBtn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            const isDark = document.body.classList.contains('dark-theme');
+            applyTheme(isDark ? 'light' : 'dark');
+        });
+    }
+})();
+</script>
+<script src="/js/common.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Руководство администратора - IronAds</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/dark-theme.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 2rem;
+        }
+        .docs-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        .docs-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            transition: background 0.2s;
+        }
+        body.dark-theme .docs-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+        }
+        .docs-card h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+        body.dark-theme .docs-card h1 {
+            color: #f1f5f9;
+        }
+        .docs-card h2 {
+            font-size: 1.4rem;
+            margin: 1.5rem 0 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e5e7eb;
+            color: #1f2937;
+        }
+        body.dark-theme .docs-card h2 {
+            color: #e2e8f0;
+            border-bottom-color: #334155;
+        }
+        .docs-card h3 {
+            font-size: 1.2rem;
+            margin: 1rem 0 0.5rem;
+            color: #374151;
+        }
+        body.dark-theme .docs-card h3 {
+            color: #cbd5e1;
+        }
+        .docs-card p, .docs-card li {
+            line-height: 1.6;
+            color: #4b5563;
+        }
+        body.dark-theme .docs-card p,
+        body.dark-theme .docs-card li {
+            color: #cbd5e1;
+        }
+        .docs-card ul, .docs-card ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .docs-card code {
+            background: #f3f4f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        body.dark-theme .docs-card code {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        .warning {
+            background: #fee2e2;
+            border-left: 4px solid #dc2626;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            margin: 1rem 0;
+        }
+        body.dark-theme .warning {
+            background: #7f1d1d;
+            border-left-color: #ef4444;
+            color: #fecaca;
+        }
+        @media (max-width: 768px) {
+            .docs-container { padding: 0 1rem; }
+            .docs-card { padding: 1.25rem; }
+            .docs-card h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <header id="main-header"></header>
+    <div class="docs-container">
+        <div class="docs-card">
+            <h1>🛡️ Руководство администратора / модератора IronAds</h1>
+            <p>Данное руководство предназначено для пользователей с ролью <strong>администратор</strong> или <strong>модератор</strong>. Описаны все возможности админ-панели.</p>
+
+            <h2>🚪 Доступ к админ-панели</h2>
+            <ul>
+                <li>После входа в систему, в шапке появится кнопка «⚙️ Админ-панель».</li>
+                <li>Админ-панель также доступна по адресу <code>/admin.html</code> (требуется авторизация и права).</li>
+            </ul>
+
+            <h2>👥 Управление пользователями (вкладка «Пользователи»)</h2>
+            <ul>
+                <li><strong>Поиск и фильтры</strong>: по имени, email, телефону, роли, статусу блокировки, включая удалённых.</li>
+                <li><strong>Редактирование</strong> (кнопка ✏️): изменить имя, email, телефон, роль. Также можно задать/изменить <strong>контрольный вопрос и ответ</strong> (полезно для старых аккаунтов).</li>
+                <li><strong>Сброс пароля</strong> – генерируется новый пароль, который отображается на экране (сообщите пользователю).</li>
+                <li><strong>Блокировка/разблокировка</strong> – заблокированный пользователь не может входить и размещать объявления.</li>
+                <li><strong>Удаление (мягкое)</strong> – пользователь скрывается. Восстановление возможно в течение 90 дней.</li>
+                <li><strong>Создание пользователя</strong> – вручную (логин, пароль, телефон, email, роль).</li>
+                <li><strong>Экспорт/импорт CSV</strong> – массовое добавление пользователей или выгрузка списка.</li>
+            </ul>
+
+            <h2>📦 Управление объявлениями (вкладка «Объявления»)</h2>
+            <ul>
+                <li>Поиск по названию, фильтр по статусу (активные, архивные, заблокированные), поиск по ID пользователя, опция показа удалённых.</li>
+                <li>Действия над объявлением:
+                    <ul>
+                        <li><strong>Просмотр</strong> – открыть на сайте.</li>
+                        <li><strong>Заблокировать</strong> – с указанием причины. Объявление скрывается для всех (кроме модераторов).</li>
+                        <li><strong>Разблокировать</strong> – возвращает активный статус.</li>
+                        <li><strong>Удалить (мягкое)</strong> – скрывает объявление, можно восстановить в течение 30 дней.</li>
+                        <li><strong>Восстановить</strong> – возвращает удалённое объявление.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h2>🚨 Жалобы (вкладка «Жалобы»)</h2>
+            <ul>
+                <li>Список жалоб от пользователей на объявления или других пользователей.</li>
+                <li>Для каждой жалобы:
+                    <ul>
+                        <li><strong>Принять</strong> – объявление блокируется, либо пользователь блокируется. Жалоба получает статус «Рассмотрена».</li>
+                        <li><strong>Отклонить</strong> – жалоба закрывается без последствий.</li>
+                        <li><strong>Просмотреть</strong> – открыть объявление в новой вкладке.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h2>📂 Управление категориями (вкладка «Категории (дерево)»)</h2>
+            <ul>
+                <li>Иерархическое дерево: группы → подгруппы → категории.</li>
+                <li>Кнопки: добавить корневую группу, добавить подкатегорию, редактировать (название, slug, иконку, родителя, порядок, активность), скрыть/восстановить.</li>
+                <li>Slug должен быть уникальным, содержать латиницу, цифры, дефисы.</li>
+            </ul>
+
+            <h2>🏙️ Управление городами (вкладка «Города»)</h2>
+            <ul>
+                <li>Иерархия: регионы → города. Можно добавлять, редактировать, удалять регионы и города.</li>
+                <li>Удаление региона удаляет все его города. Город нельзя удалить, если к нему привязаны объявления.</li>
+                <li>Для городов можно установить флаг «Популярный» и порядок сортировки.</li>
+            </ul>
+
+            <h2>⚙️ Системные настройки (вкладка «Настройки»)</h2>
+            <ul>
+                <li><strong>hCaptcha</strong> – включение/выключение капчи, публичный и секретный ключи (получаются на сайте hCaptcha).</li>
+                <li><strong>Цены и периоды</strong> – стоимость размещения, продления, автопилота; сроки действия. Все значения редактируются через интерфейс.</li>
+                <li>После изменения параметров обязательно нажмите «Сохранить всё».</li>
+                <li>Кнопка «↺ Сбросить цены к значениям по умолчанию» – восстанавливает 200, 150, 100.</li>
+            </ul>
+
+            <h2>📨 Обращения с сайта (вкладка «Обращения с сайта»)</h2>
+            <ul>
+                <li>Сообщения, отправленные через форму «Связаться с поддержкой» (доступна без авторизации).</li>
+                <li>Для каждого сообщения видны: дата, имя (если указано), email, тема, текст, IP, статус (новое/прочитано).</li>
+                <li>Действия: отметить прочитанным, ответить по email (откроется почтовый клиент).</li>
+            </ul>
+
+            <h2>🛎️ Обращения в техподдержку (тикеты)</h2>
+            <ul>
+                <li>Тикеты, созданные авторизованными пользователями через раздел «Поддержка» в меню.</li>
+                <li>Администратор может отвечать на тикеты, менять статус (открыто, в обработке, закрыто), создавать отдельный чат с пользователем.</li>
+                <li>Количество непрочитанных сообщений отображается бейджем на вкладке.</li>
+            </ul>
+
+            <h2>📜 Журнал действий (аудит)</h2>
+            <ul>
+                <li>Фиксируются все важные действия администраторов (блокировки, смена ролей, удаление, изменение настроек и т.д.).</li>
+                <li>Доступны фильтры по дате, администратору, типу действия.</li>
+                <li>Используется для контроля и расследования инцидентов.</li>
+            </ul>
+
+            <h2>🔧 Мониторинг и восстановление (системное)</h2>
+            <ul>
+                <li>На сервере работает процесс <code>monitor-realtime</code>, который проверяет доступность сайта каждые 5 секунд.</li>
+                <li>При двух последовательных сбоях он автоматически перезапускает туннель <code>xtunnel</code> и отправляет email-уведомление.</li>
+                <li>После восстановления также приходит уведомление с указанием времени простоя.</li>
+                <li>При трёх перезапусках подряд – критическое уведомление (требуется ручное вмешательство).</li>
+            </ul>
+
+            <div class="warning">
+                ⚠️ Внимание! Действия в админ-панели (особенно удаление, блокировка, смена ролей) необратимы без возможности отката. Всегда подтверждайте ответственные операции и делайте резервные копии.
+            </div>
+
+            <h2>📌 Дополнительные рекомендации</h2>
+            <ul>
+                <li><strong>Резервное копирование</strong> – регулярно запускайте скрипт <code>backup_simple.bat</code> (создаёт архив проекта в папке <code>C:\Yandex.Disk\IronMarket_Backups</code>).</li>
+                <li><strong>Обновление версии</strong> – после замены статических файлов увеличьте версию кэша в <code>sw.js</code> (например, <code>IronAds-v5</code>).</li>
+                <li><strong>Логи сервера</strong> – при ошибках смотрите логи через <code>pm2 logs ironads --lines 50</code>.</li>
+                <li><strong>Тестирование</strong> – любые изменения сначала проверяйте на локальной копии.</li>
+            </ul>
+        </div>
+    </div>
+    <script src="/js/common.js"></script>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('ironads_theme');
+            if (savedTheme === 'dark') document.body.classList.add('dark-theme');
+            else if (savedTheme === 'light') document.body.classList.remove('dark-theme');
+            else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.body.classList.add('dark-theme');
+                localStorage.setItem('ironads_theme', 'dark');
+            } else {
+                document.body.classList.remove('dark-theme');
+                localStorage.setItem('ironads_theme', 'light');
+            }
+        })();
+    </script>
+</body>
+</html>
