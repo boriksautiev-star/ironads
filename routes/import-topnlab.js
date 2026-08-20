@@ -7,7 +7,7 @@ const path = require('path');
 const { XMLParser } = require('fast-xml-parser');
 const { Pool } = require('pg');
 
-// ===== ПОДКЛЮЧЕНИЕ К БД (БЕЗ ХАРДКОДА) =====
+// ===== ПОДКЛЮЧЕНИЕ К БД =====
 const pool = new Pool({
     user: process.env.DB_USER || 'postgres',
     host: process.env.DB_HOST || 'localhost',
@@ -19,7 +19,7 @@ const pool = new Pool({
 });
 
 if (!process.env.DB_PASSWORD) {
-    console.error('❌ ОШИБКА: переменная окружения DB_PASSWORD не задана!');
+    console.error('❌ DB_PASSWORD не задан в .env');
     process.exit(1);
 }
 
@@ -59,7 +59,7 @@ async function releaseLock() {
     }
 }
 
-// ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (без изменений) =====
+// ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
 function safeString(value) {
     return value && typeof value === 'string' ? value.trim() : null;
 }
@@ -292,11 +292,9 @@ async function findOrCreateCity(cityName, regionName) {
 }
 
 const FINAL_DIR = path.join(__dirname, '../public/uploads/topnlab');
-const TEMP_DIR = path.join(FINAL_DIR, 'temp');
 
 async function ensureDirs() {
     await fsPromises.mkdir(FINAL_DIR, { recursive: true });
-    await fsPromises.mkdir(TEMP_DIR, { recursive: true });
 }
 
 async function downloadImageWithRetry(url, filename, retries = 2) {
@@ -327,13 +325,15 @@ async function downloadImageWithRetry(url, filename, retries = 2) {
     return false;
 }
 
+// ===== ОБНОВЛЁННАЯ ФУНКЦИЯ ЗАГРУЗКИ ФОТО (С ТРАНЗАКЦИЕЙ) =====
 async function downloadPhotosInParallel(items, concurrency = 5) {
-    const tasks = [];
     for (const item of items) {
         const { externalId, images, listingId } = item;
         const imageUrls = Array.isArray(images) ? images : (images ? [images] : []);
         const limited = imageUrls.slice(0, 10);
         const downloaded = [];
+
+        // Скачиваем файлы
         for (let i = 0; i < limited.length; i++) {
             const url = limited[i];
             const filename = `${externalId}_${i}.jpg`;
@@ -342,20 +342,50 @@ async function downloadPhotosInParallel(items, concurrency = 5) {
                 downloaded.push({ filename, url });
             }
         }
-        if (downloaded.length > 0) {
-            await pool.query('DELETE FROM listing_media WHERE listing_id = $1', [listingId]);
+
+        if (downloaded.length === 0) {
+            continue; // нет фото – ничего не делаем
+        }
+
+        // Используем транзакцию для атомарного обновления
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            // 1. Удаляем старые медиа для этого объявления
+            await client.query('DELETE FROM listing_media WHERE listing_id = $1', [listingId]);
+
+            // 2. Вставляем новые, но проверяем, что такой file_path ещё не существует
             for (let i = 0; i < downloaded.length; i++) {
                 const filePath = `/uploads/topnlab/${downloaded[i].filename}`;
-                await pool.query(
-                    `INSERT INTO listing_media (listing_id, file_path, file_order, media_type, file_type, created_at)
-                     VALUES ($1, $2, $3, $4, $5, NOW())`,
-                    [listingId, filePath, i, 'image', 'image']
+                // Проверка на дубликат (на случай, если транзакция прервалась и остались старые)
+                const check = await client.query(
+                    `SELECT id FROM listing_media WHERE listing_id = $1 AND file_path = $2`,
+                    [listingId, filePath]
                 );
+                if (check.rows.length === 0) {
+                    await client.query(
+                        `INSERT INTO listing_media (listing_id, file_path, file_order, media_type, file_type, created_at)
+                         VALUES ($1, $2, $3, $4, $5, NOW())`,
+                        [listingId, filePath, i, 'image', 'image']
+                    );
+                } else {
+                    console.warn(`⚠️ Файл ${filePath} уже существует для объявления ${listingId}, пропускаем вставку`);
+                }
             }
+
+            await client.query('COMMIT');
+            console.log(`✅ Фото обновлены для ${listingId} (${downloaded.length} шт.)`);
+        } catch (err) {
+            await client.query('ROLLBACK');
+            console.error(`❌ Ошибка обновления фото для ${listingId}:`, err.message);
+        } finally {
+            client.release();
         }
     }
 }
 
+// ===== ОСНОВНАЯ ФУНКЦИЯ ИМПОРТА (БЕЗ ИЗМЕНЕНИЙ) =====
 async function importTopnlab() {
     if (!await acquireLock()) {
         console.log('⏳ Импорт уже выполняется другим процессом, пропускаем');
@@ -729,7 +759,7 @@ async function importTopnlab() {
             }
         }
 
-        // ---- Фоновая загрузка фото ----
+        // ---- Фоновая загрузка фото (уже с транзакциями) ----
         const photoTasks = [];
         for (const offer of [...newOffers, ...updateOffers]) {
             if (offer.listingId && offer.images && offer.images.length > 0) {
@@ -743,6 +773,7 @@ async function importTopnlab() {
 
         if (photoTasks.length > 0) {
             console.log(`📷 Начинаем фоновую загрузку фото для ${photoTasks.length} объявлений...`);
+            // Запускаем без await, чтобы не блокировать
             downloadPhotosInParallel(photoTasks, 5)
                 .then(() => console.log('✅ Фото загружены успешно'))
                 .catch(err => console.error('❌ Ошибка при загрузке фото:', err.message));

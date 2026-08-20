@@ -1,3 +1,16 @@
+// ========== УПРАВЛЕНИЕ КОЛИЧЕСТВОМ ОБЪЯВЛЕНИЙ НА СТРАНИЦЕ =====
+let currentLimit = parseInt(localStorage.getItem('listingsLimit')) || 20;
+
+function setLimit(value) {
+    currentLimit = parseInt(value);
+    localStorage.setItem('listingsLimit', currentLimit);
+    if (typeof applyFilters === 'function') {
+        applyFilters();
+    } else if (typeof loadListingsWithoutFilters === 'function') {
+        loadListingsWithoutFilters();
+    }
+}
+
 // ========== ИСПРАВЛЕННАЯ ФУНКЦИЯ initMapForModal ========== 
 function initMapForModal(containerId, latInputId, lngInputId, searchInputId, searchBtnId, clearBtnId, geoBtnId, suggestListId) {
     if (typeof ymaps === 'undefined') {
@@ -489,8 +502,7 @@ function renderMapListings(listings) {
         });
     }
 }
-
-// ========== applyFilters (С ПОДДЕРЖКОЙ ДИАПАЗОНА ЦЕН) ==========
+// ========== applyFilters (С ПОДДЕРЖКОЙ ДИАПАЗОНА ЦЕН И currentLimit) ==========
 async function applyFilters() {
     console.log('🔄 applyFilters вызвана');
     if (isLoading) return;
@@ -546,7 +558,8 @@ async function applyFilters() {
         radius = radiusInput ? parseFloat(radiusInput.value) || 10 : 10;
     }
 
-    let url = API_URL + '/listings/filter?page=' + currentPage + '&limit=22';
+    // ===== ИСПОЛЬЗУЕМ currentLimit вместо 22 =====
+    let url = API_URL + '/listings/filter?page=' + currentPage + '&limit=' + currentLimit;
     if (categoryId !== 'all') url += '&category_id=' + categoryId;
     if (cityId !== 'all') {
         url += '&city_id=' + cityId;
@@ -692,10 +705,8 @@ function renderGridView(listings) {
         html += '<button class="favorite-btn ' + (isFav ? 'active' : '') + '" onclick="event.stopPropagation(); toggleFavorite(' + l.id + ', this)">' + (isFav ? '❤️' : '🤍') + '</button>';
         html += imageHtml;
         html += '<div class="listing-info">';
-        // ===== ИЗМЕНЕНО: цена теперь ПЕРВАЯ =====
         html += '<div class="listing-price">' + priceDisplay + '</div>';
         html += '<div class="listing-title">' + escapeHtml(l.title) + '</div>';
-        // ===== КОНЕЦ ИЗМЕНЕНИЙ =====
         html += '<div class="listing-meta">';
         html += '<span>👤 <a href="#" onclick="event.stopPropagation(); window.location.href=\'/profile.html?id=' + l.user_id + '\'; return false;" style="color:#667eea;text-decoration:none;">' + escapeHtml(l.username) + '</a> ' + (l.is_online ? '<span class="online-indicator"></span>' : '') + '</span>';
         if (l.rating_avg && l.rating_avg > 0) html += ' | ' + renderRatingStars(l.rating_avg);
@@ -704,7 +715,6 @@ function renderGridView(listings) {
         html += ' | <span class="listing-type-badge ' + typeClass + '">' + typeLabel + '</span>';
         html += '</div>';
         html += '<div class="listing-description">' + escapeHtml(l.description || '') + '</div>';
-        // ===== ДОБАВЛЕНО: КОНТАКТЫ НА КАРТОЧКЕ =====
         if (typeof getContactsHtml === 'function') {
             html += getContactsHtml(l, currentUserId);
         }
@@ -736,10 +746,8 @@ function renderListView(listings) {
         html += '<button class="favorite-btn ' + (isFav ? 'active' : '') + '" onclick="event.stopPropagation(); toggleFavorite(' + l.id + ', this)">' + (isFav ? '❤️' : '🤍') + '</button>';
         html += imageHtml;
         html += '<div class="listing-row-info">';
-        // ===== ИЗМЕНЕНО: цена теперь ПЕРВАЯ =====
         html += '<div class="listing-row-price">' + priceDisplay + '</div>';
         html += '<div class="listing-row-title">' + escapeHtml(l.title) + '</div>';
-        // ===== КОНЕЦ ИЗМЕНЕНИЙ =====
         html += '<div class="listing-row-meta">';
         html += '<span>👤 <a href="#" onclick="event.stopPropagation(); window.location.href=\'/profile.html?id=' + l.user_id + '\'; return false;" style="color:#667eea;text-decoration:none;">' + escapeHtml(l.username) + '</a> ' + (l.is_online ? '<span class="online-indicator"></span>' : '') + '</span>';
         if (l.rating_avg && l.rating_avg > 0) html += ' | ' + renderRatingStars(l.rating_avg);
@@ -748,7 +756,6 @@ function renderListView(listings) {
         html += ' | <span class="listing-type-badge ' + typeClass + '">' + typeLabel + '</span>';
         html += '</div>';
         html += '<div class="listing-row-description">' + escapeHtml(l.description || '') + '</div>';
-        // ===== ДОБАВЛЕНО: КОНТАКТЫ НА КАРТОЧКЕ =====
         if (typeof getContactsHtml === 'function') {
             html += getContactsHtml(l, currentUserId);
         }
@@ -840,10 +847,8 @@ function renderFavoritesGrid() {
             <div class="listing-card" onclick="window.location.href='/listing.html?id=${l.id}'">
                 ${imageHtml}
                 <div class="listing-info">
-                    <!-- ===== ИЗМЕНЕНО: цена теперь ПЕРВАЯ ===== -->
                     <div class="listing-price">${priceDisplay}</div>
                     <div class="listing-title">${escapeHtml(l.title)}</div>
-                    <!-- ===== КОНЕЦ ИЗМЕНЕНИЙ ===== -->
                     <div class="listing-meta">
                         👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/profile.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a> ${l.is_online ? '<span class="online-indicator"></span>' : ''}
                         | 📁 ${escapeHtml(l.category_name || 'Без категории')}
@@ -851,7 +856,6 @@ function renderFavoritesGrid() {
                         | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
                     </div>
                     <div class="listing-description">${escapeHtml(l.description || '')}</div>
-                    <!-- ===== ДОБАВЛЕНО: КОНТАКТЫ ===== -->
                     ${typeof getContactsHtml === 'function' ? getContactsHtml(l, currentUserId) : ''}
                     <button class="remove-fav-btn" onclick="event.stopPropagation(); removeFromFavorites(${l.id}, this)">🗑️ Удалить из избранного</button>
                 </div>
@@ -886,10 +890,8 @@ function renderFavoritesList() {
             <div class="listing-row" onclick="window.location.href='/listing.html?id=${l.id}'">
                 ${imageHtml}
                 <div class="listing-row-info">
-                    <!-- ===== ИЗМЕНЕНО: цена теперь ПЕРВАЯ ===== -->
                     <div class="listing-row-price">${priceDisplay}</div>
                     <div class="listing-row-title">${escapeHtml(l.title)}</div>
-                    <!-- ===== КОНЕЦ ИЗМЕНЕНИЙ ===== -->
                     <div class="listing-row-meta">
                         👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/profile.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a>
                         | 📁 ${escapeHtml(l.category_name || 'Без категории')}
@@ -897,7 +899,6 @@ function renderFavoritesList() {
                         | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
                     </div>
                     <div class="listing-row-description">${escapeHtml(l.description || '')}</div>
-                    <!-- ===== ДОБАВЛЕНО: КОНТАКТЫ ===== -->
                     ${typeof getContactsHtml === 'function' ? getContactsHtml(l, currentUserId) : ''}
                     <button class="remove-fav-btn" onclick="event.stopPropagation(); removeFromFavorites(${l.id}, this)">🗑️ Удалить</button>
                 </div>
@@ -965,7 +966,6 @@ async function checkFavoriteStatus(listingId) {
         return data.favorited;
     } catch(e) { return false; }
 }
-
 // ========== ЛИЧНЫЙ КАБИНЕТ И АРХИВ ==========
 async function showMyListings() {
     document.getElementById('myListings').classList.remove('hidden');
@@ -976,7 +976,6 @@ async function showMyListings() {
     await loadMyListings();
 }
 
-// ===== ДОБАВЛЕНА ПРОВЕРКА ТОКЕНА =====
 async function loadMyListings() {
     if (!currentToken) {
         console.warn('Попытка загрузить мои объявления без токена');
@@ -1011,13 +1010,10 @@ function renderMyListingsGrid() {
             <div class="listing-card" onclick="window.location.href='/listing.html?id=${l.id}'">
                 ${imageHtml}
                 <div class="listing-info">
-                    <!-- ===== ИЗМЕНЕНО: цена теперь ПЕРВАЯ ===== -->
                     <div class="listing-price">${priceDisplay}</div>
                     <div class="listing-title">${escapeHtml(l.title)}</div>
-                    <!-- ===== КОНЕЦ ИЗМЕНЕНИЙ ===== -->
                     <div class="listing-meta">📁 ${escapeHtml(l.category_name || 'Без категории')}${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''} | <span class="listing-type-badge ${typeClass}">${typeLabel}</span></div>
                     <div class="listing-description">${escapeHtml(l.description || '')}</div>
-                    <!-- ===== ДОБАВЛЕНО: КОНТАКТЫ (для владельца) ===== -->
                     ${typeof getContactsHtml === 'function' ? getContactsHtml(l, currentUserId) : ''}
                     <div class="listing-actions">
                         <button class="btn-view-listing" onclick="event.stopPropagation(); window.location.href='/listing.html?id=${l.id}'">🔍 Открыть</button>
@@ -1057,13 +1053,10 @@ function renderMyListingsList() {
             <div class="listing-row" onclick="window.location.href='/listing.html?id=${l.id}'">
                 ${imageHtml}
                 <div class="listing-row-info">
-                    <!-- ===== ИЗМЕНЕНО: цена теперь ПЕРВАЯ ===== -->
                     <div class="listing-row-price">${priceDisplay}</div>
                     <div class="listing-row-title">${escapeHtml(l.title)}</div>
-                    <!-- ===== КОНЕЦ ИЗМЕНЕНИЙ ===== -->
                     <div class="listing-row-meta">📁 ${escapeHtml(l.category_name || 'Без категории')}${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''} | <span class="listing-type-badge ${typeClass}">${typeLabel}</span></div>
                     <div class="listing-row-description">${escapeHtml((l.description || '').substring(0, 100))}</div>
-                    <!-- ===== ДОБАВЛЕНО: КОНТАКТЫ ===== -->
                     ${typeof getContactsHtml === 'function' ? getContactsHtml(l, currentUserId) : ''}
                     <div class="listing-actions">
                         <button class="btn-view-listing" onclick="event.stopPropagation(); window.location.href='/listing.html?id=${l.id}'">🔍 Открыть</button>
@@ -1085,7 +1078,6 @@ function renderMyListingsList() {
 
 function renderMyListingsByMode() { const viewMode = window.listingViewMode || 'grid-large'; if (viewMode === 'list') renderMyListingsList(); else renderMyListingsGrid(); }
 
-// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ ПОДНЯТИЯ ==========
 function getBumpButtonHtml(listing) {
     if (!listing.last_bump_at) {
         return `<button class="btn-bump-listing" data-id="${listing.id}">🚀 Поднять</button>`;
@@ -1133,9 +1125,7 @@ function attachBumpButtons() {
         };
     });
 }
-// ========== КОНЕЦ ВСПОМОГАТЕЛЬНЫХ ФУНКЦИЙ ==========
 
-// ===== ДОБАВЛЕНА ПРОВЕРКА ТОКЕНА =====
 async function archiveListing(id) {
     if (!currentToken) {
         showNotification('Войдите, чтобы архивировать объявление', 'error');
@@ -1155,7 +1145,6 @@ async function showFavoritesInProfile() {
     await loadFavoritesInProfile();
 }
 
-// ===== ДОБАВЛЕНА ПРОВЕРКА ТОКЕНА =====
 async function loadFavoritesInProfile() {
     if (!currentToken) {
         console.warn('Попытка загрузить избранное в профиле без токена');
@@ -1181,13 +1170,10 @@ async function loadFavoritesInProfile() {
                 <div class="listing-card" onclick="window.location.href='/listing.html?id=${l.id}'">
                     ${imageHtml}
                     <div class="listing-info">
-                        <!-- ===== ИЗМЕНЕНО: цена теперь ПЕРВАЯ ===== -->
                         <div class="listing-price">${priceDisplay}</div>
                         <div class="listing-title">${escapeHtml(l.title)}</div>
-                        <!-- ===== КОНЕЦ ИЗМЕНЕНИЙ ===== -->
                         <div class="listing-meta">👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/profile.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a> | 📁 ${escapeHtml(l.category_name || 'Без категории')}${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''} | <span class="listing-type-badge ${typeClass}">${typeLabel}</span></div>
                         <div class="listing-description">${escapeHtml(l.description || '')}</div>
-                        <!-- ===== ДОБАВЛЕНО: КОНТАКТЫ ===== -->
                         ${typeof getContactsHtml === 'function' ? getContactsHtml(l, currentUserId) : ''}
                         <button class="remove-fav-btn" onclick="event.stopPropagation(); removeFromFavoritesInProfile(${l.id}, this)">🗑️ Удалить</button>
                     </div>
@@ -1203,7 +1189,6 @@ async function loadFavoritesInProfile() {
     } catch(e) { container.innerHTML = '<div style="text-align:center;padding:40px;">Ошибка загрузки</div>'; }
 }
 
-// ===== ДОБАВЛЕНА ПРОВЕРКА ТОКЕНА =====
 async function removeFromFavoritesInProfile(listingId, btn) {
     if (!currentToken) {
         showNotification('Войдите, чтобы удалить из избранного', 'error');
@@ -1232,7 +1217,6 @@ async function showArchivedListings() {
     await loadArchivedListings();
 }
 
-// ===== ДОБАВЛЕНА ПРОВЕРКА ТОКЕНА =====
 async function loadArchivedListings() {
     if (!currentToken) {
         console.warn('Попытка загрузить архив без токена');
@@ -1266,13 +1250,10 @@ function renderArchivedGrid() {
             <div class="listing-card">
                 ${imageHtml}
                 <div class="listing-info">
-                    <!-- ===== ИЗМЕНЕНО: цена теперь ПЕРВАЯ ===== -->
                     <div class="listing-price">${priceDisplay}</div>
                     <div class="listing-title">${escapeHtml(l.title)}</div>
-                    <!-- ===== КОНЕЦ ИЗМЕНЕНИЙ ===== -->
                     <div class="listing-meta"><span class="listing-type-badge ${typeClass}">${typeLabel}</span></div>
                     <div class="listing-description">${escapeHtml(l.description || '')}</div>
-                    <!-- ===== ДОБАВЛЕНО: КОНТАКТЫ (даже в архиве) ===== -->
                     ${typeof getContactsHtml === 'function' ? getContactsHtml(l, currentUserId) : ''}
                     <div class="listing-actions">
                         <button class="btn-secondary" onclick="restoreListing(${l.id})">🔄 Восстановить</button>
@@ -1310,13 +1291,10 @@ function renderArchivedList() {
             <div class="listing-row">
                 ${imageHtml}
                 <div class="listing-row-info">
-                    <!-- ===== ИЗМЕНЕНО: цена теперь ПЕРВАЯ ===== -->
                     <div class="listing-row-price">${priceDisplay}</div>
                     <div class="listing-row-title">${escapeHtml(l.title)}</div>
-                    <!-- ===== КОНЕЦ ИЗМЕНЕНИЙ ===== -->
                     <div class="listing-meta"><span class="listing-type-badge ${typeClass}">${typeLabel}</span></div>
                     <div class="listing-row-description">${escapeHtml(l.description || '')}</div>
-                    <!-- ===== ДОБАВЛЕНО: КОНТАКТЫ ===== -->
                     ${typeof getContactsHtml === 'function' ? getContactsHtml(l, currentUserId) : ''}
                     <div class="listing-actions">
                         <button class="btn-secondary" onclick="restoreListing(${l.id})">🔄 Восстановить</button>
@@ -1336,7 +1314,6 @@ function renderArchivedList() {
 
 function renderArchivedByMode() { const viewMode = window.listingViewMode || 'grid-large'; if (viewMode === 'list') renderArchivedList(); else renderArchivedGrid(); }
 
-// ===== ДОБАВЛЕНА ПРОВЕРКА ТОКЕНА =====
 async function restoreListing(id) {
     if (!currentToken) {
         showNotification('Войдите, чтобы восстановить объявление', 'error');
@@ -1347,7 +1324,6 @@ async function restoreListing(id) {
     showArchivedListings();
 }
 
-// ===== ДОБАВЛЕНА ПРОВЕРКА ТОКЕНА =====
 async function deleteListingForever(id) {
     if (!currentToken) {
         showNotification('Войдите, чтобы удалить объявление', 'error');
@@ -1369,7 +1345,6 @@ async function deleteListingForever(id) {
     } catch(e) { showNotification('Ошибка соединения', 'error'); }
 }
 
-// ========== ОБРАБОТЧИКИ ДЛЯ МОДАЛКИ РЕДАКТИРОВАНИЯ ==========
 function setupEditCategoryHandlers() {
     const groupSelect = document.getElementById('editGroup');
     const subgroupSelect = document.getElementById('editSubgroup');
@@ -1403,7 +1378,6 @@ function setupEditCategoryHandlers() {
     });
 }
 
-// ========== РЕДАКТИРОВАНИЕ (С ПОДДЕРЖКОЙ price_max И КОНТАКТОВ) ==========
 async function openEditModal(listingId) {
     try {
         const resp = await fetch(`${API_URL}/listings/${listingId}`);
@@ -1418,7 +1392,6 @@ async function openEditModal(listingId) {
             document.getElementById('editLat').value = listing.lat;
             document.getElementById('editLng').value = listing.lng;
         }
-        // ===== ЗАГРУЗКА КОНТАКТОВ С ПОДСТАНОВКОЙ ИЗ ПРОФИЛЯ =====
         let phone = listing.phone || '';
         let whatsapp = listing.whatsapp || '';
         let telegram = listing.telegram || '';
@@ -1448,7 +1421,6 @@ async function openEditModal(listingId) {
         document.getElementById('editShowPhone').checked = showPhone;
         document.getElementById('editShowWhatsapp').checked = showWhatsapp;
         document.getElementById('editShowTelegram').checked = showTelegram;
-        // ===== КОНЕЦ =====
 
         currentMediaList = listing.media || [];
         renderEditMediaList();
@@ -1518,7 +1490,6 @@ async function deletePhoto(mediaId) {
     } catch(e) { showNotification('Ошибка', 'error'); }
 }
 
-// ===== ИСПРАВЛЕННАЯ ФУНКЦИЯ submitUpdateModalBtn (для редактирования) =====
 document.getElementById('submitUpdateModalBtn')?.addEventListener('click', async function() {
     let categoryId = document.getElementById('editCategorySelect').value;
     if (!categoryId) categoryId = document.getElementById('editSubgroup').value;
@@ -1538,14 +1509,12 @@ document.getElementById('submitUpdateModalBtn')?.addEventListener('click', async
         showNotification('Максимальная цена не может быть меньше минимальной', 'error');
         return;
     }
-    // ===== НОВЫЕ ПОЛЯ =====
     const phone = document.getElementById('editPhone').value.trim();
     const whatsapp = document.getElementById('editWhatsapp').value.trim();
     const telegram = document.getElementById('editTelegram').value.trim();
     const showPhone = document.getElementById('editShowPhone').checked;
     const showWhatsapp = document.getElementById('editShowWhatsapp').checked;
     const showTelegram = document.getElementById('editShowTelegram').checked;
-    // ===== КОНЕЦ =====
     const updateBtn = this;
     if (updateBtn.disabled) return;
     updateBtn.disabled = true;
@@ -1565,14 +1534,12 @@ document.getElementById('submitUpdateModalBtn')?.addEventListener('click', async
         fd.append('lat', lat);
         fd.append('lng', lng);
     }
-    // ===== ДОБАВЛЯЕМ КОНТАКТЫ =====
     fd.append('phone', phone);
     fd.append('whatsapp', whatsapp);
     fd.append('telegram', telegram);
     fd.append('show_phone', showPhone ? 'true' : 'false');
     fd.append('show_whatsapp', showWhatsapp ? 'true' : 'false');
     fd.append('show_telegram', showTelegram ? 'true' : 'false');
-    // ===== КОНЕЦ =====
     let files = document.getElementById('editMedia').files;
     for (let i=0; i<files.length; i++) fd.append('media', files[i]);
     try {
@@ -1602,7 +1569,6 @@ document.getElementById('submitUpdateModalBtn')?.addEventListener('click', async
     }
 });
 
-// ===== ИСПРАВЛЕННАЯ ФУНКЦИЯ submitCreateModalBtn (для создания) =====
 document.getElementById('submitCreateModalBtn')?.addEventListener('click', async function() {
     let categoryId = null;
     const catSelect = document.getElementById('modalCategory');
@@ -1634,14 +1600,12 @@ document.getElementById('submitCreateModalBtn')?.addEventListener('click', async
         showNotification('Максимальная цена не может быть меньше минимальной', 'error');
         return;
     }
-    // ===== НОВЫЕ ПОЛЯ =====
     const phone = document.getElementById('createPhone').value.trim();
     const whatsapp = document.getElementById('createWhatsapp').value.trim();
     const telegram = document.getElementById('createTelegram').value.trim();
     const showPhone = document.getElementById('createShowPhone').checked;
     const showWhatsapp = document.getElementById('createShowWhatsapp').checked;
     const showTelegram = document.getElementById('createShowTelegram').checked;
-    // ===== КОНЕЦ =====
     const submitBtn = this;
     if (submitBtn.disabled) return;
     submitBtn.disabled = true;
@@ -1660,14 +1624,12 @@ document.getElementById('submitCreateModalBtn')?.addEventListener('click', async
         fd.append('lat', lat);
         fd.append('lng', lng);
     }
-    // ===== ДОБАВЛЯЕМ КОНТАКТЫ =====
     fd.append('phone', phone);
     fd.append('whatsapp', whatsapp);
     fd.append('telegram', telegram);
     fd.append('show_phone', showPhone ? 'true' : 'false');
     fd.append('show_whatsapp', showWhatsapp ? 'true' : 'false');
     fd.append('show_telegram', showTelegram ? 'true' : 'false');
-    // ===== КОНЕЦ =====
     let files = document.getElementById('listingMediaModal').files;
     for (let i = 0; i < files.length; i++) {
         const compressed = await safeCompressImage(files[i], 1200, 1200, 0.7);
@@ -1696,14 +1658,12 @@ document.getElementById('submitCreateModalBtn')?.addEventListener('click', async
             document.getElementById('modalCityGroup').style.display = 'none';
             document.getElementById('modalCity').innerHTML = '<option value="">-- Сначала выберите регион --</option>';
             document.getElementById('listingTypeModal').value = 'sell';
-            // ===== СБРАСЫВАЕМ ПОЛЯ КОНТАКТОВ =====
             document.getElementById('createPhone').value = '';
             document.getElementById('createWhatsapp').value = '';
             document.getElementById('createTelegram').value = '';
             document.getElementById('createShowPhone').checked = true;
             document.getElementById('createShowWhatsapp').checked = true;
             document.getElementById('createShowTelegram').checked = true;
-            // ===== КОНЕЦ =====
             applyFilters();
             showMainPage();
         } else {
@@ -1723,7 +1683,6 @@ document.getElementById('submitCreateModalBtn')?.addEventListener('click', async
     }
 });
 
-// ========== КАТЕГОРИИ ==========
 async function loadGroups(selectId, targetValue) {
     try {
         const resp = await fetch(API_URL + '/categories?parent_id=');
@@ -1796,7 +1755,6 @@ async function loadGroupsForFilter() {
     } catch(e) { console.error(e); }
 }
 
-// Функция для загрузки подгрупп в фильтр
 async function loadSubcategoriesForFilter(parentId, targetSelectId, defaultValue) {
     const select = document.getElementById(targetSelectId);
     if (!select) return;
@@ -1815,7 +1773,6 @@ async function loadSubcategoriesForFilter(parentId, targetSelectId, defaultValue
     } catch(e) { console.error(e); }
 }
 
-// Функция для загрузки категорий в фильтр
 async function loadCategoryChildrenForFilter(parentId, targetSelectId) {
     const select = document.getElementById(targetSelectId);
     if (!select) return;
@@ -1871,7 +1828,6 @@ async function getAncestors(categoryId) {
     } catch(e) { return []; }
 }
 
-// ========== АВТОРИЗАЦИЯ ==========
 async function loadCategories() {
     try {
         let r = await fetch(API_URL + '/categories');
@@ -1954,7 +1910,7 @@ async function loadListingsWithoutFilters() {
     if (isLoading) return;
     isLoading = true;
     document.getElementById('loadingIndicator').style.display = 'block';
-    let url = API_URL + '/listings/filter?page=' + currentPage + '&limit=22';
+    let url = API_URL + '/listings/filter?page=' + currentPage + '&limit=' + currentLimit;
     try {
         let r = await fetch(url);
         let data = await r.json();
@@ -1987,7 +1943,6 @@ async function loadListingsWithoutFilters() {
     }
 }
 
-// ========== КАПЧА ==========
 let hcaptchaSiteKey = null;
 let hcaptchaEnabled = false;
 let loginWidgetId = null;
@@ -2045,7 +2000,6 @@ function getCaptchaToken(widgetId) {
     return null;
 }
 
-// ========== ИСПРАВЛЕННАЯ showLoginModal С ЗАДЕРЖКОЙ ==========
 function showLoginModal() {
     showModal('loginModal');
     if (hcaptchaEnabled && hcaptchaSiteKey) {
@@ -2059,7 +2013,6 @@ function showLoginModal() {
     }
 }
 
-// ========== ИСПРАВЛЕННАЯ showRegisterModal С ЗАДЕРЖКОЙ ==========
 function showRegisterModal() {
     const successDiv = document.getElementById('regSuccessMessage');
     const errorDiv = document.getElementById('regTermsError');
@@ -2089,9 +2042,6 @@ function showRegisterModal() {
     }
 }
 
-// ========== ВХОД/РЕГИСТРАЦИЯ ==========
-
-// ===== ИСПРАВЛЕННАЯ ФУНКЦИЯ login (ПРАВИЛЬНЫЙ ПОРЯДОК) =====
 async function login() {
     let u = document.getElementById('loginUsername').value, p = document.getElementById('loginPassword').value;
     if (!u || !p) { showNotification('Заполните все поля', 'error'); return; }
@@ -2105,7 +2055,6 @@ async function login() {
                 return;
             }
         }
-        // Сначала ПОЛУЧАЕМ токен (НЕ сбрасываем!)
         hcaptchaToken = getCaptchaToken(loginWidgetId);
         if (!hcaptchaToken) {
             showNotification('Пожалуйста, подтвердите, что вы не робот', 'error');
@@ -2133,14 +2082,12 @@ async function login() {
             localStorage.setItem('token', d.token);
             showNotification('Вход выполнен!', 'success');
             closeModal('loginModal');
-            // Сбрасываем капчу после успешного входа
             if (loginWidgetId !== null) {
                 try { hcaptcha.reset(loginWidgetId); } catch(e) {}
             }
             location.reload();
         } else {
             showNotification(d.error || 'Ошибка входа', 'error');
-            // Сбрасываем капчу при ошибке
             if (loginWidgetId !== null) {
                 try { hcaptcha.reset(loginWidgetId); } catch(e) {}
             }
@@ -2154,7 +2101,6 @@ async function login() {
     }
 }
 
-// ===== ИСПРАВЛЕННАЯ ФУНКЦИЯ register (ПРАВИЛЬНЫЙ ПОРЯДОК) =====
 async function register() {
     const successDiv = document.getElementById('regSuccessMessage');
     const errorDiv = document.getElementById('regTermsError');
@@ -2199,7 +2145,6 @@ async function register() {
                 return;
             }
         }
-        // Получаем токен ДО сброса
         hcaptchaToken = getCaptchaToken(registerWidgetId);
         if (!hcaptchaToken) {
             showNotification('Пожалуйста, подтвердите, что вы не робот', 'error');
@@ -2232,7 +2177,6 @@ async function register() {
                 successDiv.textContent = 'Регистрация успешна! Выполняется вход...';
                 successDiv.style.display = 'block';
             }
-            // Сбрасываем после успеха
             if (registerWidgetId !== null) {
                 try { hcaptcha.reset(registerWidgetId); } catch(e) {}
             }
@@ -2260,7 +2204,6 @@ async function updateProfile() {
     } catch(e) { showNotification('Ошибка соединения', 'error'); }
 }
 
-// ===== ИСПРАВЛЕННАЯ ФУНКЦИЯ submitCreateListingBtn (для создания в кабинете) =====
 document.getElementById('submitCreateListingBtn')?.addEventListener('click', async function() {
     let categoryId = document.getElementById('listingCategory').value;
     let cityId = document.getElementById('listingCity').value;
@@ -2275,14 +2218,12 @@ document.getElementById('submitCreateListingBtn')?.addEventListener('click', asy
         showNotification('Максимальная цена не может быть меньше минимальной', 'error');
         return;
     }
-    // ===== НОВЫЕ ПОЛЯ =====
     const phone = document.getElementById('createPhone')?.value?.trim() || '';
     const whatsapp = document.getElementById('createWhatsapp')?.value?.trim() || '';
     const telegram = document.getElementById('createTelegram')?.value?.trim() || '';
     const showPhone = document.getElementById('createShowPhone')?.checked ?? true;
     const showWhatsapp = document.getElementById('createShowWhatsapp')?.checked ?? true;
     const showTelegram = document.getElementById('createShowTelegram')?.checked ?? true;
-    // ===== КОНЕЦ =====
     const submitBtn = this;
     if (submitBtn.disabled) return;
     submitBtn.disabled = true;
@@ -2297,14 +2238,12 @@ document.getElementById('submitCreateListingBtn')?.addEventListener('click', asy
     fd.append('category_id', categoryId);
     fd.append('type', 'sell');
     if (cityId) fd.append('city_id', cityId);
-    // ===== ДОБАВЛЯЕМ КОНТАКТЫ =====
     fd.append('phone', phone);
     fd.append('whatsapp', whatsapp);
     fd.append('telegram', telegram);
     fd.append('show_phone', showPhone ? 'true' : 'false');
     fd.append('show_whatsapp', showWhatsapp ? 'true' : 'false');
     fd.append('show_telegram', showTelegram ? 'true' : 'false');
-    // ===== КОНЕЦ =====
     let files = document.getElementById('listingMedia').files;
     for (let i = 0; i < files.length; i++) {
         const compressed = await safeCompressImage(files[i], 1200, 1200, 0.7);
@@ -2342,7 +2281,6 @@ document.getElementById('submitCreateListingBtn')?.addEventListener('click', asy
     }
 });
 
-// ========== НОВАЯ ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ ПРОФИЛЯ ==========
 async function loadUserProfileForCreate() {
     if (!currentToken) return null;
     try {
@@ -2359,7 +2297,6 @@ async function loadUserProfileForCreate() {
     return null;
 }
 
-// ===== ОБНОВЛЁННАЯ ФУНКЦИЯ showCreateModal =====
 function showCreateModal() {
     document.getElementById('modalGroup').value = '';
     document.getElementById('modalSubgroupGroup').style.display = 'none';
@@ -2379,7 +2316,6 @@ function showCreateModal() {
     document.getElementById('createLng').value = '';
     document.getElementById('createMapSearch').value = '';
 
-    // ===== ЗАГРУЖАЕМ КОНТАКТЫ ИЗ ПРОФИЛЯ =====
     loadUserProfileForCreate().then(user => {
         if (user) {
             document.getElementById('createPhone').value = user.phone || '';
@@ -2397,7 +2333,6 @@ function showCreateModal() {
             document.getElementById('createShowTelegram').checked = true;
         }
     });
-    // ===== КОНЕЦ =====
 
     loadRegionsForSelect('modalRegion');
     loadModalGroups();
@@ -2409,7 +2344,6 @@ function showCreateModal() {
 
 function showMainPage() { document.getElementById('profilePage').classList.add('hidden'); document.getElementById('favoritesPage').classList.add('hidden'); document.getElementById('mainPage').classList.remove('hidden'); loadListingsWithoutFilters(); }
 
-// ===== ПЕРЕХВАТ setListingView =====
 (function patchSetListingView() {
     const originalSetView = window.setListingView;
     if (typeof originalSetView === 'function') {
@@ -2425,7 +2359,6 @@ function showMainPage() { document.getElementById('profilePage').classList.add('
     }
 })();
 
-// ===== ОБРАБОТКА ПАРАМЕТРА TAB =====
 (function handleTabOnLoad() {
     const urlParams = new URLSearchParams(window.location.search);
     const tab = urlParams.get('tab');
@@ -2442,7 +2375,6 @@ function showMainPage() { document.getElementById('profilePage').classList.add('
     }
 })();
 
-// ========== ЗАПУСК ==========
 (async function init() {
     await loadHCaptchaSettings();
     if (currentToken) checkAuth();
@@ -2458,7 +2390,6 @@ function showMainPage() { document.getElementById('profilePage').classList.add('
     loadListingsWithoutFilters();
     setupEditCategoryHandlers();
 
-    // ========== ДОБАВЛЕННЫЕ ОБРАБОТЧИКИ ДЛЯ АВТОМАТИЧЕСКОЙ ФИЛЬТРАЦИИ ==========
     document.getElementById('filterGroup')?.addEventListener('change', async function() {
         const groupId = this.value;
         const subgroupGroup = document.getElementById('subgroupFilterGroup');
@@ -2522,7 +2453,6 @@ function goBackInProfile() { showMyListings(); }
 (function() {
     const originalShow = window.showCreateModal;
     window.showCreateModal = function() {
-        // Сброс полей
         document.getElementById('modalGroup').value = '';
         document.getElementById('modalSubgroupGroup').style.display = 'none';
         document.getElementById('modalCategoryGroup').style.display = 'none';
@@ -2541,7 +2471,6 @@ function goBackInProfile() { showMyListings(); }
         document.getElementById('createLng').value = '';
         document.getElementById('createMapSearch').value = '';
 
-        // ===== ЗАГРУЖАЕМ КОНТАКТЫ ИЗ ПРОФИЛЯ =====
         loadUserProfileForCreate().then(user => {
             if (user) {
                 document.getElementById('createPhone').value = user.phone || '';
@@ -2559,9 +2488,7 @@ function goBackInProfile() { showMyListings(); }
                 document.getElementById('createShowTelegram').checked = true;
             }
         });
-        // ===== КОНЕЦ =====
 
-        // Загружаем категории и регионы
         fetch('/api/categories?parent_id=')
             .then(r => r.json())
             .then(groups => {
@@ -2617,9 +2544,7 @@ function goBackInProfile() { showMyListings(); }
     };
 })();
 
-// ===== НАВЕШИВАЕМ ОБРАБОТЧИКИ НА СЕЛЕКТЫ В МОДАЛКЕ СОЗДАНИЯ =====
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Группа → подгруппы
     const groupSelect = document.getElementById('modalGroup');
     if (groupSelect) {
         const newGroup = groupSelect.cloneNode(true);
@@ -2657,7 +2582,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 2. Подгруппа → категории
     const subgroupSelect = document.getElementById('modalSubgroup');
     if (subgroupSelect) {
         const newSubgroup = subgroupSelect.cloneNode(true);
@@ -2689,7 +2613,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 3. Регион → города
     const regionSelect = document.getElementById('modalRegion');
     if (regionSelect) {
         const newRegion = regionSelect.cloneNode(true);
@@ -2721,9 +2644,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 .catch(console.error);
         });
     }
+
+    // ===== ИНИЦИАЛИЗАЦИЯ SELECT ДЛЯ КОЛИЧЕСТВА =====
+    const limitSelect = document.getElementById('limitSelect');
+    if (limitSelect) {
+        limitSelect.value = currentLimit;
+        limitSelect.addEventListener('change', function() {
+            setLimit(this.value);
+        });
+    }
 });
 
-// ========== ОТКРЫТИЕ ОПИСАНИЯ КАТЕГОРИИ (МОДАЛКА) ==========
 document.getElementById('categoryInfoBtn')?.addEventListener('click', function() {
     const desc = this.dataset.description || 'Описание отсутствует';
     const title = this.dataset.title || 'Категория';

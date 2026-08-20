@@ -621,7 +621,7 @@
                     </div>
                     <div class="filter-group"><button class="btn-primary" id="searchBtn">Найти</button></div>
                 </div>
-                <div class="view-toggle-group" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+                <div class="view-toggle-group" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; align-items: center;">
                     <button class="view-toggle active" data-view="grid" id="viewGrid">📋 Список</button>
                     <button class="view-toggle" data-view="map" id="viewMap">🗺️ Карта</button>
                     <div class="location-btn-wrapper">
@@ -630,6 +630,16 @@
                             <button class="option-btn" id="autoLocationBtn">📍 Определить автоматически</button>
                             <button class="option-btn" id="mapLocationBtn">🗺️ Указать на карте</button>
                         </div>
+                    </div>
+                    <!-- ===== НОВЫЙ БЛОК ВЫБОРА КОЛИЧЕСТВА ===== -->
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: 0.5rem;">
+                        <label for="limitSelect" style="font-size: 0.75rem; font-weight: 500; color: #374151; white-space: nowrap;">Показывать:</label>
+                        <select id="limitSelect" style="padding: 0.3rem 0.6rem; border-radius: 0.5rem; border: 1px solid #d1d5db; font-size: 0.75rem; background: white; cursor: pointer;">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -980,18 +990,11 @@
 
     <!-- ===== ПРИНУДИТЕЛЬНОЕ ПРИМЕНЕНИЕ ОТСТУПА ===== -->
     <script>
-        // Этот скрипт гарантирует, что отступ 150px будет применён даже если JS-корректировка попытается его перезаписать
         (function() {
-            // Отключаем встроенную автокорректировку (если она есть)
             if (window.adjustHeaderOffset) {
-                window.adjustHeaderOffset = function() {
-                    // Ничего не делаем
-                };
+                window.adjustHeaderOffset = function() {};
             }
-            // Принудительно устанавливаем отступ с !important
             document.body.style.setProperty('padding-top', '150px', 'important');
-            // Также для мобильных — отдельно, но в CSS уже есть медиа-запрос
-            // Если нужно, можно и для мобильных переопределить
             if (window.innerWidth <= 768) {
                 document.body.style.setProperty('padding-top', '100px', 'important');
             }

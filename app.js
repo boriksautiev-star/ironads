@@ -7,13 +7,13 @@ const passport = require('passport');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
+const helmet = require('helmet');
 const pool = require('./db/pool');
 
 // ===== ПОДКЛЮЧЕНИЕ REDIS =====
 const redis = require('redis');
 const RedisStore = require('connect-redis')(session);
 
-// Создаём клиент Redis
 const redisClient = redis.createClient({
     socket: {
         host: process.env.REDIS_HOST || '127.0.0.1',
@@ -22,12 +22,10 @@ const redisClient = redis.createClient({
     password: process.env.REDIS_PASSWORD || undefined
 });
 
-// Обработка ошибок Redis (чтобы сервер не падал)
 redisClient.on('error', (err) => {
     console.error('❌ Redis Client Error:', err);
 });
 
-// Подключаемся к Redis
 redisClient.connect().catch(err => {
     console.error('❌ Не удалось подключиться к Redis:', err.message);
     console.warn('⚠️ Сессии будут использовать MemoryStore (временное решение)');
@@ -116,11 +114,65 @@ const server = http.createServer(app);
 // ===== УВЕЛИЧИВАЕМ ТАЙМАУТ =====
 server.timeout = 600000;
 
+// ===== БЕЗОПАСНОСТЬ: HELMET С НАСТРОЙКОЙ CSP =====
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "'unsafe-eval'",
+                "https://api-maps.yandex.ru",
+                "https://js.hcaptcha.com",
+                "https://yastatic.net"          // ДОБАВЛЕНО для Яндекс.Карт
+            ],
+            scriptSrcAttr: [
+                "'unsafe-inline'"               // ДОБАВЛЕНО для inline-обработчиков (onclick и др.)
+            ],
+            styleSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "https://fonts.googleapis.com",
+                "https://cdnjs.cloudflare.com"
+            ],
+            fontSrc: [
+                "'self'",
+                "https://fonts.gstatic.com",
+                "https://cdnjs.cloudflare.com"
+            ],
+            imgSrc: [
+                "'self'",
+                "data:",
+                "https://api-maps.yandex.ru"
+            ],
+            connectSrc: [
+                "'self'",
+                "https://api-maps.yandex.ru",
+                "https://js.hcaptcha.com",
+                "https://cdnjs.cloudflare.com",
+                "https://*.hcaptcha.com"        // ДОБАВЛЕНО для hCaptcha (логотипы, API)
+            ],
+            frameSrc: [
+                "'self'",
+                "https://js.hcaptcha.com"
+            ]
+        }
+    }
+}));
+
 // ===== НАСТРОЙКА ДОВЕРИЯ ПРОКСИ =====
 app.set('trust proxy', false);
 
+// ===== CORS (разрешаем только ваш домен) =====
+app.use(cors({
+    origin: process.env.ALLOWED_ORIGIN ? [process.env.ALLOWED_ORIGIN] : '*',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 // ===== MIDDLEWARE =====
-app.use(cors());
 app.use(cookieParser());
 app.use(express.json({ limit: '500mb' }));
 app.use(express.urlencoded({ extended: true, limit: '500mb' }));
@@ -128,11 +180,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(passport.initialize());
 
 // ===== SESSION (RedisStore) =====
-// Используем RedisStore, если подключение удалось, иначе fallback на MemoryStore
 let sessionStore;
 let useRedis = true;
-// Проверяем, что клиент подключён (redisClient.isReady может быть доступен после connect)
-// Но мы не можем проверить синхронно, поэтому используем try/catch при инициализации
 try {
     sessionStore = new RedisStore({ client: redisClient });
     console.log('✅ RedisStore для сессий инициализирован');
@@ -146,7 +195,7 @@ app.use(session({
     store: sessionStore,
     secret: process.env.SESSION_SECRET || 'fallback_secret_key_for_vk_oauth',
     resave: false,
-    saveUninitialized: false,  // меняем на false для экономии памяти
+    saveUninitialized: false,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         maxAge: 7 * 24 * 60 * 60 * 1000
@@ -213,7 +262,31 @@ if (feedEnabled && feedRoutes) {
 
 // ========== ПУБЛИЧНЫЕ НАСТРОЙКИ ==========
 app.get('/api/public-settings', async (req, res) => {
-    res.json({}); // временная заглушка
+    try {
+        const settings = {
+            siteName: 'IronAds',
+            contactEmail: 'support@ironads.ru',
+            contactPhone: '+7 (123) 456-78-90',
+            registrationEnabled: true,
+            popularCities: ['Москва', 'Санкт-Петербург', 'Казань', 'Новосибирск', 'Екатеринбург'],
+            priceMin: 0,
+            priceMax: 100000000,
+            currency: 'RUB',
+            listingPrice: 0,
+            renewalPrice: 0,
+            autobumpPrice: 0,
+        };
+        res.json(settings);
+    } catch (err) {
+        console.error('Ошибка получения public-settings:', err.message);
+        res.status(500).json({
+            success: false,
+            error: {
+                message: 'Ошибка загрузки настроек',
+                code: 'SETTINGS_ERROR'
+            }
+        });
+    }
 });
 
 // ========== ПУБЛИЧНЫЕ ЦЕНЫ ==========
@@ -232,7 +305,13 @@ app.get('/api/public-prices', async (req, res) => {
         res.json(prices);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Ошибка загрузки цен' });
+        res.status(500).json({
+            success: false,
+            error: {
+                message: 'Ошибка загрузки цен',
+                code: 'PRICES_ERROR'
+            }
+        });
     }
 });
 
@@ -243,6 +322,34 @@ app.get('/city/:slug', (req, res) => {
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// ===== ЦЕНТРАЛИЗОВАННЫЙ ОБРАБОТЧИК ОШИБОК =====
+app.use((err, req, res, next) => {
+    console.error(`❌ Ошибка в ${req.method} ${req.url}:`, err.message);
+    if (err.stack) console.error(err.stack);
+
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || 'Внутренняя ошибка сервера';
+
+    res.status(status).json({
+        success: false,
+        error: {
+            message,
+            code: err.code || 'INTERNAL_ERROR',
+        }
+    });
+});
+
+// ===== ОБРАБОТКА 404 =====
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        error: {
+            message: 'Маршрут не найден',
+            code: 'NOT_FOUND'
+        }
+    });
 });
 
 // ===== ЗАПУСК =====
