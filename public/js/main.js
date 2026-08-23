@@ -2000,16 +2000,31 @@ function getCaptchaToken(widgetId) {
     return null;
 }
 
+// ===== ИСПРАВЛЕННЫЕ ФУНКЦИИ showLoginModal И showRegisterModal =====
 function showLoginModal() {
     showModal('loginModal');
     if (hcaptchaEnabled && hcaptchaSiteKey) {
-        setTimeout(() => {
+        let attempts = 0;
+        const maxAttempts = 5;
+        const tryRender = () => {
+            attempts++;
             if (loginWidgetId !== null) {
                 try { hcaptcha.reset(loginWidgetId); } catch(e) {}
-            } else {
-                loginWidgetId = createCaptchaWidget('loginCaptchaContainer', true);
+                return;
             }
-        }, 300);
+            loginWidgetId = createCaptchaWidget('loginCaptchaContainer', true);
+            if (loginWidgetId !== null) {
+                console.log('✅ Виджет создан (логин)');
+                return;
+            }
+            if (attempts < maxAttempts) {
+                console.log(`⏳ Попытка ${attempts}...`);
+                setTimeout(tryRender, 500);
+            } else {
+                console.warn('⚠️ Не удалось создать виджет за ' + maxAttempts + ' попыток');
+            }
+        };
+        setTimeout(tryRender, 400);
     }
 }
 
@@ -2032,16 +2047,31 @@ function showRegisterModal() {
     loadRegionsForSelect('regRegion');
     showModal('registerModal');
     if (hcaptchaEnabled && hcaptchaSiteKey) {
-        setTimeout(() => {
+        let attempts = 0;
+        const maxAttempts = 5;
+        const tryRender = () => {
+            attempts++;
             if (registerWidgetId !== null) {
                 try { hcaptcha.reset(registerWidgetId); } catch(e) {}
-            } else {
-                registerWidgetId = createCaptchaWidget('registerCaptchaContainer', false);
+                return;
             }
-        }, 300);
+            registerWidgetId = createCaptchaWidget('registerCaptchaContainer', false);
+            if (registerWidgetId !== null) {
+                console.log('✅ Виджет создан (регистрация)');
+                return;
+            }
+            if (attempts < maxAttempts) {
+                console.log(`⏳ Попытка ${attempts}...`);
+                setTimeout(tryRender, 500);
+            } else {
+                console.warn('⚠️ Не удалось создать виджет за ' + maxAttempts + ' попыток');
+            }
+        };
+        setTimeout(tryRender, 400);
     }
 }
 
+// ===== ОСТАЛЬНЫЕ ФУНКЦИИ (LOGIN, REGISTER, UPDATE PROFILE, И Т.Д.) БЕЗ ИЗМЕНЕНИЙ =====
 async function login() {
     let u = document.getElementById('loginUsername').value, p = document.getElementById('loginPassword').value;
     if (!u || !p) { showNotification('Заполните все поля', 'error'); return; }
@@ -2672,3 +2702,15 @@ document.getElementById('categoryDescriptionModal')?.addEventListener('click', f
         closeCategoryDescription();
     }
 });
+
+// ===== ГЛОБАЛЬНЫЕ ФУНКЦИИ ДЛЯ ИНИЦИАЛИЗАЦИИ КАПЧИ =====
+window.initLoginCaptcha = function() {
+    if (hcaptchaEnabled && hcaptchaSiteKey) {
+        loginWidgetId = createCaptchaWidget('loginCaptchaContainer', true);
+    }
+};
+window.initRegisterCaptcha = function() {
+    if (hcaptchaEnabled && hcaptchaSiteKey) {
+        registerWidgetId = createCaptchaWidget('registerCaptchaContainer', false);
+    }
+};

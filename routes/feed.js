@@ -4,7 +4,7 @@ const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 
-// ===== ПОДКЛЮЧЕНИЕ К БД (БЕЗ ХАРДКОДА) =====
+// ===== ПОДКЛЮЧЕНИЕ К БД =====
 const pool = new Pool({
     user: process.env.DB_USER || 'postgres',
     host: process.env.DB_HOST || 'localhost',
@@ -35,11 +35,13 @@ const AGENCY_EMAILS = [
     'khatunasemyahv@bk.ru'
 ];
 
-// Генерация фида
+// Генерация фида (с таймингом)
 async function generateFeed() {
+    const startTime = Date.now();
     console.log('🔄 Генерация фида...');
+
     try {
-        // Исправленный запрос: без GROUP BY, используем подзапрос для медиа
+        // Оптимизированный запрос с использованием COALESCE
         const result = await pool.query(`
             SELECT 
                 l.id,
@@ -59,12 +61,13 @@ async function generateFeed() {
                 u.email,
                 u.phone,
                 u.username,
-                (SELECT json_agg(json_build_object(
-                    'path', lm.file_path,
-                    'order', lm.file_order
-                ) ORDER BY lm.file_order) 
-                 FROM listing_media lm 
-                 WHERE lm.listing_id = l.id) as media
+                COALESCE(
+                    (SELECT json_agg(
+                        json_build_object('path', lm.file_path, 'order', lm.file_order)
+                        ORDER BY lm.file_order
+                    ) FROM listing_media lm WHERE lm.listing_id = l.id),
+                    '[]'::json
+                ) as media
             FROM listings l
             JOIN users u ON l.user_id = u.id
             WHERE u.email = ANY($1)
@@ -73,6 +76,7 @@ async function generateFeed() {
         `, [AGENCY_EMAILS]);
 
         const listings = result.rows;
+        console.log(`📊 Найдено ${listings.length} объявлений для фида`);
 
         // Формируем XML
         let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
@@ -80,7 +84,6 @@ async function generateFeed() {
         xml += `  <generation-date>${new Date().toISOString()}</generation-date>\n`;
 
         for (const listing of listings) {
-            // extra_data уже должен быть объектом, если сохранён как JSON
             let extra = {};
             if (listing.extra_data) {
                 try {
@@ -187,7 +190,8 @@ async function generateFeed() {
         if (!fs.existsSync(feedDir)) fs.mkdirSync(feedDir, { recursive: true });
         fs.writeFileSync(feedPath, xml, 'utf8');
 
-        console.log(`✅ Фид сохранён (${listings.length} объявлений)`);
+        const elapsed = Date.now() - startTime;
+        console.log(`✅ Фид сохранён (${listings.length} объявлений) за ${elapsed} мс`);
         return true;
     } catch (err) {
         console.error('❌ Ошибка генерации фида:', err.message);

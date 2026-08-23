@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
     <style>
-        /* все ваши существующие стили (я их не изменял, они остаются) */
+        /* все ваши существующие стили (без изменений) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { font-size: 16px; scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
@@ -359,8 +359,8 @@
         <div class="form-actions"><button class="btn-secondary" onclick="closeModal('complaintModal')">Отмена</button><button class="btn-primary" onclick="submitComplaint()">Отправить</button></div>
     </div>
 </div>
-<div id="loginModal" class="modal"><div class="modal-content"><h3>🔐 Вход</h3><div class="form-group"><label>Имя пользователя</label><input type="text" id="loginUsername"></div><div class="form-group"><label>Пароль</label><input type="password" id="loginPassword"></div><div class="form-actions"><button class="btn-secondary" onclick="closeModal('loginModal')">Отмена</button><button class="btn-primary" onclick="login()">Войти</button></div></div></div>
-<div id="registerModal" class="modal"><div class="modal-content"><h3>📝 Регистрация</h3><div class="form-group"><label>Имя пользователя</label><input type="text" id="regUsername"></div><div class="form-group"><label>Пароль</label><input type="password" id="regPassword"></div><div class="form-group"><label>Телефон</label><input type="text" id="regPhone" placeholder="+79991234567"></div><div class="form-actions"><button class="btn-secondary" onclick="closeModal('registerModal')">Отмена</button><button class="btn-primary" onclick="register()">Зарегистрироваться</button></div></div></div>
+<div id="loginModal" class="modal"><div class="modal-content"><h3>🔐 Вход</h3><div class="form-group"><label>Имя пользователя</label><input type="text" id="loginUsername"></div><div class="form-group"><label>Пароль</label><input type="password" id="loginPassword"></div><div class="form-group" id="loginCaptchaContainer"></div><div class="form-actions"><button class="btn-secondary" onclick="closeModal('loginModal')">Отмена</button><button class="btn-primary" onclick="login()">Войти</button></div></div></div>
+<div id="registerModal" class="modal"><div class="modal-content"><h3>📝 Регистрация</h3><div class="form-group"><label>Имя пользователя</label><input type="text" id="regUsername"></div><div class="form-group"><label>Пароль</label><input type="password" id="regPassword"></div><div class="form-group"><label>Телефон</label><input type="text" id="regPhone" placeholder="+79991234567"></div><!-- ===== КОНТЕЙНЕР ДЛЯ КАПЧИ ===== --><div class="form-group" id="registerCaptchaContainer"></div><!-- ============================== --><div class="form-actions"><button class="btn-secondary" onclick="closeModal('registerModal')">Отмена</button><button class="btn-primary" onclick="register()">Зарегистрироваться</button></div></div></div>
 
 <!-- Модалка для отображения номера телефона -->
 <div id="phoneModal" class="modal">
@@ -1142,5 +1142,28 @@
 })();
 </script>
 <script src="/js/common.js" defer></script>
+
+<!-- ===== ПЕРЕОПРЕДЕЛЕНИЕ ФУНКЦИЙ ДЛЯ ИНИЦИАЛИЗАЦИИ КАПЧИ ===== -->
+<script>
+    (function() {
+        // Переопределяем showLoginModal и showRegisterModal
+        const origLogin = window.showLoginModal || function() { showModal('loginModal'); };
+        const origRegister = window.showRegisterModal || function() { showModal('registerModal'); };
+
+        window.showLoginModal = function() {
+            origLogin();
+            setTimeout(function() {
+                if (typeof initLoginCaptcha === 'function') initLoginCaptcha();
+            }, 150);
+        };
+
+        window.showRegisterModal = function() {
+            origRegister();
+            setTimeout(function() {
+                if (typeof initRegisterCaptcha === 'function') initRegisterCaptcha();
+            }, 150);
+        };
+    })();
+</script>
 </body>
 </html>

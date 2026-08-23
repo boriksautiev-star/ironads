@@ -100,6 +100,7 @@ router.get('/yandex', (req, res) => {
 });
 
 router.get('/yandex/callback', async (req, res) => {
+    console.log('📥 Яндекс OAuth callback, query:', req.query);
     const { code } = req.query;
     if (!code) return res.status(400).send('Не получен код авторизации');
 
@@ -195,7 +196,7 @@ router.get('/yandex/callback', async (req, res) => {
     }
 });
 
-// ========== VK ID OAUTH ==========
+// ========== VK ID OAUTH (С ИСПРАВЛЕНИЯМИ) ==========
 (async function ensureVkIdColumn() {
     try {
         const check = await pool.query(`
@@ -237,10 +238,16 @@ router.get('/vk', (req, res) => {
         const codeChallenge = generateCodeChallenge(codeVerifier);
         
         req.session.vk_code_verifier = codeVerifier;
-        
-        const authUrl = `https://id.vk.com/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
-        
-        res.redirect(authUrl);
+        // Гарантируем сохранение сессии перед редиректом
+        req.session.save(err => {
+            if (err) {
+                console.error('❌ Ошибка сохранения сессии VK:', err);
+                return res.status(500).send('Ошибка инициализации входа через ВКонтакте');
+            }
+            const authUrl = `https://id.vk.com/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
+            console.log('🔄 VK OAuth: редирект на', authUrl);
+            res.redirect(authUrl);
+        });
     } catch (err) {
         console.error('❌ Ошибка в /auth/vk:', err);
         res.status(500).send('Ошибка инициализации входа через ВКонтакте');
@@ -248,6 +255,8 @@ router.get('/vk', (req, res) => {
 });
 
 router.get('/vk/callback', async (req, res) => {
+    console.log('📥 VK OAuth callback, query:', req.query);
+    console.log('📥 Сессия (vk_code_verifier):', req.session?.vk_code_verifier);
     try {
         const { code, device_id, state } = req.query;
         const action = req.query.action || 'login';
@@ -270,6 +279,7 @@ router.get('/vk/callback', async (req, res) => {
         } else {
             codeVerifier = req.session.vk_code_verifier;
             if (!codeVerifier) {
+                console.error('❌ code_verifier отсутствует в сессии!');
                 return res.status(400).json({ error: 'Отсутствует code_verifier. Попробуйте снова.' });
             }
         }
@@ -406,8 +416,12 @@ router.get('/vk/callback', async (req, res) => {
         const jwtToken = generateToken(user.rows[0].id);
         await logUserAction(user.rows[0].id, 'login', { via: 'vk_id' }, req);
         
+        // Очищаем code_verifier из сессии
         req.session.vk_code_verifier = null;
-        res.redirect(`${process.env.APP_URL || 'https://ironads.ru'}?token=${jwtToken}`);
+        req.session.save(err => {
+            if (err) console.error('❌ Ошибка очистки сессии VK:', err);
+            res.redirect(`${process.env.APP_URL || 'https://ironads.ru'}?token=${jwtToken}`);
+        });
         
     } catch (error) {
         console.error('❌ Ошибка VK ID OAuth callback:', error);
@@ -562,14 +576,28 @@ router.post('/register', async (req, res) => {
     const hcaptchaEnabled = await getSetting('hcaptcha_enabled', 'false') === 'true';
     if (hcaptchaEnabled) {
         const secretKey = await getSetting('hcaptcha_secret_key', '');
-        if (!secretKey) return res.status(500).json({ error: 'Ошибка конфигурации капчи' });
-        // Передаём контекст для уведомлений
-        const context = {
-            username: finalUsername,
-            ip: req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'неизвестно'
-        };
-        const isValid = await verifyToken(hcaptchaToken, secretKey, context);
-        if (!isValid) return res.status(400).json({ error: 'Пожалуйста, подтвердите, что вы не робот' });
+        if (!secretKey) {
+            console.error('❌ Секретный ключ hCaptcha не найден в БД');
+            return res.status(500).json({ error: 'Ошибка конфигурации капчи' });
+        }
+        console.log(`🔍 Регистрация: токен капчи получен: ${hcaptchaToken ? hcaptchaToken.substring(0, 15) + '...' : 'ОТСУТСТВУЕТ'}`);
+        console.log(`🔍 Секретный ключ (первые 20 символов): ${secretKey.substring(0, 20)}`);
+        try {
+            const context = {
+                username: finalUsername,
+                ip: req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'неизвестно'
+            };
+            const isValid = await verifyToken(hcaptchaToken, secretKey, context);
+            console.log(`🔍 Результат проверки капчи: ${isValid}`);
+            if (!isValid) {
+                return res.status(400).json({ error: 'Пожалуйста, подтвердите, что вы не робот' });
+            }
+        } catch (err) {
+            console.error('❌ Исключение при проверке капчи:', err.message);
+            return res.status(500).json({ error: 'Ошибка проверки капчи', details: err.message });
+        }
+    } else {
+        console.log('ℹ️ Капча отключена, проверка пропущена');
     }
 
     try {
@@ -587,25 +615,44 @@ router.post('/register', async (req, res) => {
         const token = generateToken(user.id);
         await logUserAction(user.id, 'register', { username: finalUsername }, req);
         res.status(201).json({ message: 'Регистрация успешна!', token, user: { id: user.id, username: user.username, email: user.email, phone: user.phone, role: user.role } });
-    } catch (err) { res.status(500).json({ error: 'Ошибка сервера' }); }
+    } catch (err) {
+        console.error('❌ Ошибка регистрации:', err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
 });
 
-// ========== ВХОД ==========
+// ========== ВХОД (С РАСШИРЕННЫМ ЛОГИРОВАНИЕМ) ==========
 router.post('/login', async (req, res) => {
+    console.log('📥 Получен запрос /login, body:', JSON.stringify(req.body));
+
     const { username, password, hcaptchaToken } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Введите имя и пароль' });
 
     const hcaptchaEnabled = await getSetting('hcaptcha_enabled', 'false') === 'true';
     if (hcaptchaEnabled) {
         const secretKey = await getSetting('hcaptcha_secret_key', '');
-        if (!secretKey) return res.status(500).json({ error: 'Ошибка конфигурации капчи' });
-        // Передаём контекст для уведомлений
-        const context = {
-            username: username,
-            ip: req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'неизвестно'
-        };
-        const isValid = await verifyToken(hcaptchaToken, secretKey, context);
-        if (!isValid) return res.status(400).json({ error: 'Пожалуйста, подтвердите, что вы не робот' });
+        if (!secretKey) {
+            console.error('❌ Секретный ключ hCaptcha не найден в БД');
+            return res.status(500).json({ error: 'Ошибка конфигурации капчи' });
+        }
+        console.log(`🔍 Вход: токен капчи получен: ${hcaptchaToken ? hcaptchaToken.substring(0, 15) + '...' : 'ОТСУТСТВУЕТ'}`);
+        console.log(`🔍 Секретный ключ (первые 20 символов): ${secretKey.substring(0, 20)}`);
+        try {
+            const context = {
+                username: username,
+                ip: req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'неизвестно'
+            };
+            const isValid = await verifyToken(hcaptchaToken, secretKey, context);
+            console.log(`🔍 Результат проверки капчи: ${isValid}`);
+            if (!isValid) {
+                return res.status(400).json({ error: 'Пожалуйста, подтвердите, что вы не робот' });
+            }
+        } catch (err) {
+            console.error('❌ Исключение при проверке капчи:', err.message);
+            return res.status(500).json({ error: 'Ошибка проверки капчи', details: err.message });
+        }
+    } else {
+        console.log('ℹ️ Капча отключена, проверка пропущена');
     }
 
     try {
@@ -618,7 +665,10 @@ router.post('/login', async (req, res) => {
         const token = generateToken(user.id);
         await logUserAction(user.id, 'login', null, req);
         res.json({ token, user: { id: user.id, username: user.username, email: user.email, phone: user.phone, role: user.role, is_blocked: user.is_blocked, avatar_url: user.avatar_url, city_id: user.city_id, whatsapp: user.whatsapp, telegram: user.telegram } });
-    } catch (err) { res.status(500).json({ error: 'Ошибка сервера' }); }
+    } catch (err) {
+        console.error('❌ Ошибка входа:', err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
 });
 
 // ========== ВОССТАНОВЛЕНИЕ ПАРОЛЯ ==========

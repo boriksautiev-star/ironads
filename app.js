@@ -10,27 +10,6 @@ const session = require('express-session');
 const helmet = require('helmet');
 const pool = require('./db/pool');
 
-// ===== ПОДКЛЮЧЕНИЕ REDIS =====
-const redis = require('redis');
-const RedisStore = require('connect-redis')(session);
-
-const redisClient = redis.createClient({
-    socket: {
-        host: process.env.REDIS_HOST || '127.0.0.1',
-        port: process.env.REDIS_PORT || 6379
-    },
-    password: process.env.REDIS_PASSWORD || undefined
-});
-
-redisClient.on('error', (err) => {
-    console.error('❌ Redis Client Error:', err);
-});
-
-redisClient.connect().catch(err => {
-    console.error('❌ Не удалось подключиться к Redis:', err.message);
-    console.warn('⚠️ Сессии будут использовать MemoryStore (временное решение)');
-});
-
 // ===== ИНИЦИАЛИЗАЦИЯ EMAIL-ТРАНСПОРТА =====
 const { initTransporter } = require('./services/email');
 initTransporter();
@@ -125,10 +104,10 @@ app.use(helmet({
                 "'unsafe-eval'",
                 "https://api-maps.yandex.ru",
                 "https://js.hcaptcha.com",
-                "https://yastatic.net"          // ДОБАВЛЕНО для Яндекс.Карт
+                "https://yastatic.net"
             ],
             scriptSrcAttr: [
-                "'unsafe-inline'"               // ДОБАВЛЕНО для inline-обработчиков (onclick и др.)
+                "'unsafe-inline'"
             ],
             styleSrc: [
                 "'self'",
@@ -144,18 +123,22 @@ app.use(helmet({
             imgSrc: [
                 "'self'",
                 "data:",
-                "https://api-maps.yandex.ru"
+                "https://api-maps.yandex.ru",
+                "https://yastatic.net"
             ],
             connectSrc: [
                 "'self'",
                 "https://api-maps.yandex.ru",
                 "https://js.hcaptcha.com",
                 "https://cdnjs.cloudflare.com",
-                "https://*.hcaptcha.com"        // ДОБАВЛЕНО для hCaptcha (логотипы, API)
+                "https://*.hcaptcha.com"
             ],
             frameSrc: [
                 "'self'",
-                "https://js.hcaptcha.com"
+                "https://js.hcaptcha.com",
+                "https://newassets.hcaptcha.com",
+                "https://vk.com",
+                "https://id.vk.com"
             ]
         }
     }
@@ -164,7 +147,7 @@ app.use(helmet({
 // ===== НАСТРОЙКА ДОВЕРИЯ ПРОКСИ =====
 app.set('trust proxy', false);
 
-// ===== CORS (разрешаем только ваш домен) =====
+// ===== CORS =====
 app.use(cors({
     origin: process.env.ALLOWED_ORIGIN ? [process.env.ALLOWED_ORIGIN] : '*',
     credentials: true,
@@ -179,34 +162,17 @@ app.use(express.urlencoded({ extended: true, limit: '500mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(passport.initialize());
 
-// ===== SESSION (RedisStore) =====
-let sessionStore;
-let useRedis = true;
-try {
-    sessionStore = new RedisStore({ client: redisClient });
-    console.log('✅ RedisStore для сессий инициализирован');
-} catch (err) {
-    console.error('❌ Ошибка создания RedisStore, используем MemoryStore:', err.message);
-    sessionStore = new session.MemoryStore();
-    useRedis = false;
-}
-
+// ===== SESSION (MemoryStore) =====
 app.use(session({
-    store: sessionStore,
     secret: process.env.SESSION_SECRET || 'fallback_secret_key_for_vk_oauth',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         maxAge: 7 * 24 * 60 * 60 * 1000
     }
 }));
-
-if (useRedis) {
-    console.log('✅ Сессии хранятся в Redis');
-} else {
-    console.warn('⚠️ Сессии хранятся в MemoryStore (Redis недоступен)');
-}
+console.log('✅ Сессии хранятся в MemoryStore');
 
 // ===== ОБРАБОТКА ОШИБОК РАЗРЫВА =====
 app.use((err, req, res, next) => {
@@ -236,6 +202,12 @@ app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth/forgot', forgotLimiter);
 app.use('/api/auth/reset-password', forgotLimiter);
 
+// ===== ГЛОБАЛЬНЫЙ ЛОГГЕР ЗАПРОСОВ =====
+app.use((req, res, next) => {
+    console.log(`📥 ${req.method} ${req.url}`);
+    next();
+});
+
 // ========== МАРШРУТЫ ==========
 app.use('/api/auth', authRoutes);
 app.use('/api/listings', listingsRoutes);
@@ -263,18 +235,29 @@ if (feedEnabled && feedRoutes) {
 // ========== ПУБЛИЧНЫЕ НАСТРОЙКИ ==========
 app.get('/api/public-settings', async (req, res) => {
     try {
+        const result = await pool.query('SELECT key, value FROM settings');
+        const settingsMap = {};
+        result.rows.forEach(row => {
+            settingsMap[row.key] = row.value;
+        });
+        const get = (key, defaultValue) => {
+            const val = settingsMap[key];
+            return val !== undefined && val !== null ? val : defaultValue;
+        };
         const settings = {
-            siteName: 'IronAds',
-            contactEmail: 'support@ironads.ru',
-            contactPhone: '+7 (123) 456-78-90',
-            registrationEnabled: true,
-            popularCities: ['Москва', 'Санкт-Петербург', 'Казань', 'Новосибирск', 'Екатеринбург'],
-            priceMin: 0,
-            priceMax: 100000000,
-            currency: 'RUB',
-            listingPrice: 0,
-            renewalPrice: 0,
-            autobumpPrice: 0,
+            siteName: get('site_name', 'IronAds'),
+            contactEmail: get('contact_email', 'support@ironads.ru'),
+            contactPhone: get('contact_phone', '+7 (123) 456-78-90'),
+            registrationEnabled: get('registration_enabled', 'true') === 'true',
+            popularCities: JSON.parse(get('popular_cities', '["Москва","Санкт-Петербург","Казань","Новосибирск","Екатеринбург"]')),
+            priceMin: parseFloat(get('price_min', 0)),
+            priceMax: parseFloat(get('price_max', 100000000)),
+            currency: get('currency', 'RUB'),
+            listingPrice: parseFloat(get('price_listing', 0)),
+            renewalPrice: parseFloat(get('price_renewal', 0)),
+            autobumpPrice: parseFloat(get('price_autobump', 0)),
+            hcaptcha_enabled: get('hcaptcha_enabled', 'false'),
+            hcaptcha_site_key: get('hcaptcha_site_key', '')
         };
         res.json(settings);
     } catch (err) {
@@ -328,10 +311,8 @@ app.get('*', (req, res) => {
 app.use((err, req, res, next) => {
     console.error(`❌ Ошибка в ${req.method} ${req.url}:`, err.message);
     if (err.stack) console.error(err.stack);
-
     const status = err.status || err.statusCode || 500;
     const message = err.message || 'Внутренняя ошибка сервера';
-
     res.status(status).json({
         success: false,
         error: {
@@ -371,7 +352,6 @@ pool.connect()
     .then(() => console.log('✅ PostgreSQL подключена'))
     .catch(err => console.error('❌ Ошибка подключения к БД:', err));
 
-// ===== CRON =====
 if (cron) {
     if (feedEnabled && updateFeed) {
         cron.schedule('0 */3 * * *', () => {

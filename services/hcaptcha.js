@@ -1,50 +1,55 @@
 const axios = require('axios');
-const { sendCaptchaErrorAlert } = require('./email');
 
 /**
  * Проверяет токен hCaptcha
- * @param {string} token - Токен от клиента
- * @param {string} secretKey - Секретный ключ
- * @param {object} context - Контекст для уведомлений { username, ip }
- * @returns {Promise<boolean>}
+ * @param {string} token - токен от виджета
+ * @param {string} secretKey - секретный ключ из БД
+ * @returns {Promise<boolean>} - true, если капча пройдена
  */
-async function verifyToken(token, secretKey, context = {}) {
+async function verifyToken(token, secretKey) {
+    // Очищаем от случайных пробелов в начале и конце
+    token = (token || '').trim();
+    secretKey = (secretKey || '').trim();
+
     if (!token) {
-        // Токен отсутствует – уведомляем администратора
-        await sendCaptchaErrorAlert(
-            context.username || 'неизвестно',
-            context.ip || 'неизвестно',
-            'Токен отсутствует'
-        );
+        console.error('❌ Токен капчи отсутствует');
         return false;
     }
-    try {
-        const response = await axios.post('https://hcaptcha.com/siteverify', null, {
-            params: {
-                secret: secretKey,
-                response: token,
-            },
-            timeout: 5000,
-        });
-        if (response.data.success === true) {
-            return true;
-        }
-        // Ошибка проверки – собираем коды ошибок
-        const errorCodes = response.data['error-codes'] || ['unknown_error'];
-        const errorMessage = errorCodes.join(', ');
-        await sendCaptchaErrorAlert(
-            context.username || 'неизвестно',
-            context.ip || 'неизвестно',
-            errorMessage
-        );
+    if (!secretKey) {
+        console.error('❌ Секретный ключ hCaptcha отсутствует');
         return false;
-    } catch (err) {
-        // Ошибка сети или таймаут
-        await sendCaptchaErrorAlert(
-            context.username || 'неизвестно',
-            context.ip || 'неизвестно',
-            `Network error: ${err.message}`
+    }
+
+    try {
+        console.log(`📤 Отправка токена в hCaptcha (${token.substring(0, 10)}...)`);
+        
+        // Отправляем данные как form-data (application/x-www-form-urlencoded)
+        const response = await axios.post('https://hcaptcha.com/siteverify', 
+            new URLSearchParams({
+                secret: secretKey,
+                response: token
+            }).toString(),
+            {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                timeout: 5000
+            }
         );
+
+        console.log('📥 Ответ hCaptcha:', JSON.stringify(response.data));
+
+        if (response.data.success === true) {
+            console.log('✅ Капча пройдена успешно');
+            return true;
+        } else {
+            const errorCodes = response.data['error-codes'] || [];
+            console.error('❌ Ошибка проверки капчи:', errorCodes.join(', '));
+            return false;
+        }
+    } catch (err) {
+        console.error('❌ Исключение при проверке капчи:', err.message);
+        if (err.response) {
+            console.error('Ответ hCaptcha с ошибкой:', err.response.data);
+        }
         return false;
     }
 }

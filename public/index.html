@@ -1001,5 +1001,51 @@
             console.log('🔒 Отступ зафиксирован: 150px (ПК) / 100px (моб.)');
         })();
     </script>
+
+    <!-- ===== ПЕРЕОПРЕДЕЛЕНИЕ ФУНКЦИЙ ДЛЯ ИНИЦИАЛИЗАЦИИ КАПЧИ ===== -->
+    <script>
+        (function() {
+            // Переопределяем showLoginModal и showRegisterModal
+            const origLogin = window.showLoginModal;
+            const origRegister = window.showRegisterModal;
+
+            window.showLoginModal = function() {
+                if (typeof origLogin === 'function') origLogin();
+                else {
+                    const modal = document.getElementById('loginModal');
+                    if (modal) modal.style.display = 'flex';
+                }
+                setTimeout(function() {
+                    if (typeof initLoginCaptcha === 'function') initLoginCaptcha();
+                }, 150);
+            };
+
+            window.showRegisterModal = function() {
+                if (typeof origRegister === 'function') origRegister();
+                else {
+                    const modal = document.getElementById('registerModal');
+                    if (modal) modal.style.display = 'flex';
+                }
+                setTimeout(function() {
+                    if (typeof initRegisterCaptcha === 'function') initRegisterCaptcha();
+                }, 150);
+            };
+
+            // Также переопределим showModal на всякий случай
+            const origShowModal = window.showModal;
+            window.showModal = function(id) {
+                if (typeof origShowModal === 'function') origShowModal(id);
+                else {
+                    const modal = document.getElementById(id);
+                    if (modal) modal.style.display = 'flex';
+                }
+                if (id === 'loginModal') {
+                    setTimeout(function() { if (typeof initLoginCaptcha === 'function') initLoginCaptcha(); }, 150);
+                } else if (id === 'registerModal') {
+                    setTimeout(function() { if (typeof initRegisterCaptcha === 'function') initRegisterCaptcha(); }, 150);
+                }
+            };
+        })();
+    </script>
 </body>
 </html>

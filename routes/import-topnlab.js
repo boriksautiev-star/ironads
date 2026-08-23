@@ -325,7 +325,7 @@ async function downloadImageWithRetry(url, filename, retries = 2) {
     return false;
 }
 
-// ===== ОБНОВЛЁННАЯ ФУНКЦИЯ ЗАГРУЗКИ ФОТО (С ТРАНЗАКЦИЕЙ) =====
+// ===== ФУНКЦИЯ ЗАГРУЗКИ ФОТО (С ТРАНЗАКЦИЕЙ) =====
 async function downloadPhotosInParallel(items, concurrency = 5) {
     for (const item of items) {
         const { externalId, images, listingId } = item;
@@ -333,7 +333,6 @@ async function downloadPhotosInParallel(items, concurrency = 5) {
         const limited = imageUrls.slice(0, 10);
         const downloaded = [];
 
-        // Скачиваем файлы
         for (let i = 0; i < limited.length; i++) {
             const url = limited[i];
             const filename = `${externalId}_${i}.jpg`;
@@ -344,21 +343,16 @@ async function downloadPhotosInParallel(items, concurrency = 5) {
         }
 
         if (downloaded.length === 0) {
-            continue; // нет фото – ничего не делаем
+            continue;
         }
 
-        // Используем транзакцию для атомарного обновления
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
-
-            // 1. Удаляем старые медиа для этого объявления
             await client.query('DELETE FROM listing_media WHERE listing_id = $1', [listingId]);
 
-            // 2. Вставляем новые, но проверяем, что такой file_path ещё не существует
             for (let i = 0; i < downloaded.length; i++) {
                 const filePath = `/uploads/topnlab/${downloaded[i].filename}`;
-                // Проверка на дубликат (на случай, если транзакция прервалась и остались старые)
                 const check = await client.query(
                     `SELECT id FROM listing_media WHERE listing_id = $1 AND file_path = $2`,
                     [listingId, filePath]
@@ -385,7 +379,7 @@ async function downloadPhotosInParallel(items, concurrency = 5) {
     }
 }
 
-// ===== ОСНОВНАЯ ФУНКЦИЯ ИМПОРТА (БЕЗ ИЗМЕНЕНИЙ) =====
+// ===== ОСНОВНАЯ ФУНКЦИЯ ИМПОРТА (ИСПРАВЛЕННАЯ) =====
 async function importTopnlab() {
     if (!await acquireLock()) {
         console.log('⏳ Импорт уже выполняется другим процессом, пропускаем');
@@ -668,7 +662,7 @@ async function importTopnlab() {
             }
         }
 
-        // ---- Массовая вставка новых ----
+        // ---- Массовая вставка новых (ИСПРАВЛЕНА) ----
         if (newOffers.length > 0) {
             const client = await pool.connect();
             try {
@@ -697,10 +691,14 @@ async function importTopnlab() {
                     o.showWhatsapp,
                     o.showTelegram,
                     o.extraFields,
+                    'active',              // status
+                    new Date(),            // created_at
+                    new Date()             // updated_at
                 ]);
 
+                // 25 параметров на запись
                 const placeholders = values.map((_, i) => 
-                    `($${i * 23 + 1}, $${i * 23 + 2}, $${i * 23 + 3}, $${i * 23 + 4}, $${i * 23 + 5}, $${i * 23 + 6}, $${i * 23 + 7}, $${i * 23 + 8}, $${i * 23 + 9}, $${i * 23 + 10}, $${i * 23 + 11}, $${i * 23 + 12}, $${i * 23 + 13}, $${i * 23 + 14}, $${i * 23 + 15}, $${i * 23 + 16}, $${i * 23 + 17}, $${i * 23 + 18}, $${i * 23 + 19}, $${i * 23 + 20}, $${i * 23 + 21}, $${i * 23 + 22}, $${i * 23 + 23})`
+                    `($${i * 25 + 1}, $${i * 25 + 2}, $${i * 25 + 3}, $${i * 25 + 4}, $${i * 25 + 5}, $${i * 25 + 6}, $${i * 25 + 7}, $${i * 25 + 8}, $${i * 25 + 9}, $${i * 25 + 10}, $${i * 25 + 11}, $${i * 25 + 12}, $${i * 25 + 13}, $${i * 25 + 14}, $${i * 25 + 15}, $${i * 25 + 16}, $${i * 25 + 17}, $${i * 25 + 18}, $${i * 25 + 19}, $${i * 25 + 20}, $${i * 25 + 21}, $${i * 25 + 22}, $${i * 25 + 23}, $${i * 25 + 24}, $${i * 25 + 25})`
                 ).join(',');
 
                 const flatValues = values.flat();
@@ -759,7 +757,7 @@ async function importTopnlab() {
             }
         }
 
-        // ---- Фоновая загрузка фото (уже с транзакциями) ----
+        // ---- Фоновая загрузка фото ----
         const photoTasks = [];
         for (const offer of [...newOffers, ...updateOffers]) {
             if (offer.listingId && offer.images && offer.images.length > 0) {
@@ -773,7 +771,6 @@ async function importTopnlab() {
 
         if (photoTasks.length > 0) {
             console.log(`📷 Начинаем фоновую загрузку фото для ${photoTasks.length} объявлений...`);
-            // Запускаем без await, чтобы не блокировать
             downloadPhotosInParallel(photoTasks, 5)
                 .then(() => console.log('✅ Фото загружены успешно'))
                 .catch(err => console.error('❌ Ошибка при загрузке фото:', err.message));
