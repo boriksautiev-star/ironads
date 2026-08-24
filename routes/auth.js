@@ -523,6 +523,174 @@ router.post('/unlink/yandex', auth, async (req, res) => {
     }
 });
 
+// ============================================================
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ OAuth (привязка/отвязка через API)
+// ============================================================
+
+/**
+ * Обменять код Яндекса на данные пользователя
+ */
+async function exchangeYandexCode(code) {
+    const params = new URLSearchParams();
+    params.append('grant_type', 'authorization_code');
+    params.append('code', code);
+    params.append('client_id', process.env.YANDEX_CLIENT_ID);
+    params.append('client_secret', process.env.YANDEX_CLIENT_SECRET);
+    const tokenResponse = await axios.post('https://oauth.yandex.ru/token', params.toString(), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
+    const accessToken = tokenResponse.data.access_token;
+    const profileResponse = await axios.get('https://login.yandex.ru/info', {
+        params: { format: 'json', with_email: true },
+        headers: { Authorization: `OAuth ${accessToken}` },
+    });
+    const profile = profileResponse.data;
+    return {
+        yandexId: profile.id,
+        email: profile.default_email || profile.email,
+        username: profile.display_name || profile.real_name || 'Пользователь Яндекса',
+    };
+}
+
+/**
+ * Обменять код ВКонтакте на данные пользователя
+ */
+async function exchangeVkCode(code) {
+    const tokenUrl = 'https://oauth.vk.com/access_token';
+    const tokenResponse = await axios.get(tokenUrl, {
+        params: {
+            client_id: process.env.VK_CLIENT_ID,
+            client_secret: process.env.VK_CLIENT_SECRET,
+            redirect_uri: process.env.VK_REDIRECT_URI || 'https://ironads.ru/auth/vk/callback',
+            code: code,
+        },
+    });
+    const { access_token, user_id, email } = tokenResponse.data;
+    const userInfoResponse = await axios.get('https://api.vk.com/method/users.get', {
+        params: {
+            user_ids: user_id,
+            fields: 'first_name,last_name',
+            access_token: access_token,
+            v: '5.131',
+        },
+    });
+    const vkUser = userInfoResponse.data.response[0];
+    const fullName = `${vkUser.first_name} ${vkUser.last_name}`.trim();
+    return {
+        vkId: user_id,
+        email: email || null,
+        username: fullName || 'Пользователь ВКонтакте',
+    };
+}
+
+// ============================================================
+// МАРШРУТЫ ДЛЯ ПРИВЯЗКИ/ОТВЯЗКИ ЧЕРЕЗ API (для мобильного приложения)
+// ============================================================
+
+/**
+ * Привязка Яндекса (через API)
+ * POST /auth/yandex/link
+ * Тело: { code: string }
+ */
+router.post('/yandex/link', auth, async (req, res) => {
+    const { code } = req.body;
+    if (!code) {
+        return res.status(400).json({ error: 'Не передан код авторизации' });
+    }
+
+    try {
+        const yandexData = await exchangeYandexCode(code);
+        const { yandexId, email, username } = yandexData;
+
+        // Проверяем, не привязан ли уже этот yandexId к другому пользователю
+        const existing = await pool.query('SELECT id FROM users WHERE yandex_id = $1 AND id != $2', [yandexId, req.userId]);
+        if (existing.rows.length > 0) {
+            return res.status(409).json({ error: 'Этот аккаунт Яндекса уже привязан к другому пользователю' });
+        }
+
+        // Обновляем запись пользователя
+        await pool.query(
+            'UPDATE users SET yandex_id = $1, username = COALESCE($2, username), email = COALESCE($3, email) WHERE id = $4',
+            [yandexId, username, email, req.userId]
+        );
+
+        // Получаем обновлённые данные пользователя для ответа
+        const userResult = await pool.query('SELECT id, username, email, phone, yandex_id, vk_id FROM users WHERE id = $1', [req.userId]);
+        await logUserAction(req.userId, 'link_yandex', { yandexId }, req);
+        res.json({ success: true, user: userResult.rows[0] });
+    } catch (error) {
+        console.error('Ошибка привязки Яндекса:', error);
+        res.status(500).json({ error: 'Не удалось привязать Яндекс' });
+    }
+});
+
+/**
+ * Привязка ВКонтакте (через API)
+ * POST /auth/vk/link
+ * Тело: { code: string }
+ */
+router.post('/vk/link', auth, async (req, res) => {
+    const { code } = req.body;
+    if (!code) {
+        return res.status(400).json({ error: 'Не передан код авторизации' });
+    }
+
+    try {
+        const vkData = await exchangeVkCode(code);
+        const { vkId, email, username } = vkData;
+
+        // Проверяем уникальность vkId
+        const existing = await pool.query('SELECT id FROM users WHERE vk_id = $1 AND id != $2', [vkId, req.userId]);
+        if (existing.rows.length > 0) {
+            return res.status(409).json({ error: 'Этот аккаунт ВКонтакте уже привязан к другому пользователю' });
+        }
+
+        await pool.query(
+            'UPDATE users SET vk_id = $1, username = COALESCE($2, username), email = COALESCE($3, email) WHERE id = $4',
+            [vkId, username, email, req.userId]
+        );
+
+        const userResult = await pool.query('SELECT id, username, email, phone, yandex_id, vk_id FROM users WHERE id = $1', [req.userId]);
+        await logUserAction(req.userId, 'link_vk', { vkId }, req);
+        res.json({ success: true, user: userResult.rows[0] });
+    } catch (error) {
+        console.error('Ошибка привязки ВКонтакте:', error);
+        res.status(500).json({ error: 'Не удалось привязать ВКонтакте' });
+    }
+});
+
+/**
+ * Отвязка Яндекса (через API)
+ * DELETE /auth/yandex/unlink
+ */
+router.delete('/yandex/unlink', auth, async (req, res) => {
+    try {
+        await pool.query('UPDATE users SET yandex_id = NULL WHERE id = $1', [req.userId]);
+        const userResult = await pool.query('SELECT id, username, email, phone, yandex_id, vk_id FROM users WHERE id = $1', [req.userId]);
+        await logUserAction(req.userId, 'unlink_yandex', null, req);
+        res.json({ success: true, user: userResult.rows[0] });
+    } catch (error) {
+        console.error('Ошибка отвязки Яндекса:', error);
+        res.status(500).json({ error: 'Не удалось отвязать Яндекс' });
+    }
+});
+
+/**
+ * Отвязка ВКонтакте (через API)
+ * DELETE /auth/vk/unlink
+ */
+router.delete('/vk/unlink', auth, async (req, res) => {
+    try {
+        await pool.query('UPDATE users SET vk_id = NULL WHERE id = $1', [req.userId]);
+        const userResult = await pool.query('SELECT id, username, email, phone, yandex_id, vk_id FROM users WHERE id = $1', [req.userId]);
+        await logUserAction(req.userId, 'unlink_vk', null, req);
+        res.json({ success: true, user: userResult.rows[0] });
+    } catch (error) {
+        console.error('Ошибка отвязки ВКонтакте:', error);
+        res.status(500).json({ error: 'Не удалось отвязать ВКонтакте' });
+    }
+});
+
 // ========== ИЗМЕНЕНИЕ ИМЕНИ ==========
 router.put('/username', auth, async (req, res) => {
     let { newUsername } = req.body;

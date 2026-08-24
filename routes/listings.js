@@ -436,15 +436,26 @@ router.get('/filter', async (req, res) => {
     }
 });
 
+// ===== ИЗМЕНЁННЫЙ МАРШРУТ GET / — добавлено поле first_photo =====
 router.get('/', async (req, res) => {
     try {
         const result = await pool.query(`
-            SELECT l.*, u.username, u.phone as user_phone, u.whatsapp as user_whatsapp, u.telegram as user_telegram,
+            SELECT l.*,
+                   u.username,
+                   u.phone as user_phone,
+                   u.whatsapp as user_whatsapp,
+                   u.telegram as user_telegram,
                    (EXTRACT(EPOCH FROM NOW() - u.last_seen) < 300) as is_online,
-                   c.name as category_name, c.icon as category_icon,
+                   c.name as category_name,
+                   c.icon as category_icon,
                    cit.name as city_name,
                    ST_X(l.coordinates::geometry) as lng,
-                   ST_Y(l.coordinates::geometry) as lat
+                   ST_Y(l.coordinates::geometry) as lat,
+                   (SELECT file_path
+                    FROM listing_media
+                    WHERE listing_id = l.id
+                    ORDER BY CASE WHEN is_main THEN 0 ELSE 1 END, file_order
+                    LIMIT 1) as first_photo   -- +++ ДОБАВЛЕНО поле с путём к первому фото
             FROM listings l
             JOIN users u ON l.user_id = u.id
             LEFT JOIN categories c ON l.category_id = c.id
@@ -471,6 +482,7 @@ router.get('/', async (req, res) => {
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
+// ===== КОНЕЦ ИЗМЕНЕНИЙ =====
 
 router.get('/my', auth, async (req, res) => {
     try {
@@ -878,16 +890,25 @@ router.put('/media/:mediaId/main', auth, async (req, res) => {
     }
 });
 
+// ========== МАРШРУТЫ ДЛЯ ИЗБРАННОГО (С ВАЛИДАЦИЕЙ) ==========
+
 router.post('/favorites/toggle', auth, async (req, res) => {
     const { listing_id } = req.body;
     const userId = req.userId;
+
+    // Валидация: проверяем, что listing_id — число
+    const listingId = parseInt(listing_id);
+if (isNaN(listingId)) {
+    return res.status(400).json({ error: 'Неверный ID объявления' });
+}
+
     try {
-        const exists = await pool.query('SELECT id FROM favorites WHERE user_id = $1 AND listing_id = $2', [userId, listing_id]);
+        const exists = await pool.query('SELECT id FROM favorites WHERE user_id = $1 AND listing_id = $2', [userId, listingId]);
         if (exists.rows.length > 0) {
-            await pool.query('DELETE FROM favorites WHERE user_id = $1 AND listing_id = $2', [userId, listing_id]);
+            await pool.query('DELETE FROM favorites WHERE user_id = $1 AND listing_id = $2', [userId, listingId]);
             res.json({ favorited: false });
         } else {
-            await pool.query('INSERT INTO favorites (user_id, listing_id) VALUES ($1, $2)', [userId, listing_id]);
+            await pool.query('INSERT INTO favorites (user_id, listing_id) VALUES ($1, $2)', [userId, listingId]);
             res.json({ favorited: true });
         }
     } catch (err) {
@@ -930,7 +951,14 @@ router.get('/favorites/my', auth, async (req, res) => {
 
 router.get('/favorites/check/:listingId', auth, async (req, res) => {
     const userId = req.userId;
-    const listingId = req.params.listingId;
+    const listingIdParam = req.params.listingId;
+
+    // Валидация: проверяем, что listingId — число
+    const listingId = parseInt(listingIdParam);
+    if (isNaN(listingId)) {
+        return res.status(400).json({ error: 'Неверный ID объявления' });
+    }
+
     try {
         const result = await pool.query('SELECT id FROM favorites WHERE user_id = $1 AND listing_id = $2', [userId, listingId]);
         res.json({ favorited: result.rows.length > 0 });
@@ -939,6 +967,8 @@ router.get('/favorites/check/:listingId', auth, async (req, res) => {
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
+
+// ========== ОСТАЛЬНЫЕ МАРШРУТЫ (БЕЗ ИЗМЕНЕНИЙ) ==========
 
 router.post('/:id/view', auth, async (req, res) => {
     const userId = req.userId;

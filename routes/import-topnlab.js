@@ -379,7 +379,7 @@ async function downloadPhotosInParallel(items, concurrency = 5) {
     }
 }
 
-// ===== ОСНОВНАЯ ФУНКЦИЯ ИМПОРТА (ИСПРАВЛЕННАЯ) =====
+// ===== ОСНОВНАЯ ФУНКЦИЯ ИМПОРТА (С ВРЕМЕННЫМ ОТКЛЮЧЕНИЕМ АРХИВАЦИИ) =====
 async function importTopnlab() {
     if (!await acquireLock()) {
         console.log('⏳ Импорт уже выполняется другим процессом, пропускаем');
@@ -662,7 +662,7 @@ async function importTopnlab() {
             }
         }
 
-        // ---- Массовая вставка новых (ИСПРАВЛЕНА) ----
+        // ---- Массовая вставка новых ----
         if (newOffers.length > 0) {
             const client = await pool.connect();
             try {
@@ -731,6 +731,10 @@ async function importTopnlab() {
             }
         }
 
+        // ============================================================
+        // ⚠️ АРХИВАЦИЯ ВРЕМЕННО ОТКЛЮЧЕНА (до выяснения причины с АН "Семья")
+        // ============================================================
+        /*
         // ---- Архивация ----
         if (externalIds.length > 0) {
             const placeholders = externalIds.map((_, i) => `$${i+1}`).join(',');
@@ -756,6 +760,8 @@ async function importTopnlab() {
                 console.log(`📦 Заархивировано ${result.rowCount} объявлений (фид пуст)`);
             }
         }
+        */
+        console.log('ℹ️ АРХИВАЦИЯ ОТКЛЮЧЕНА (временная мера). Ни одно объявление не будет заархивировано.');
 
         // ---- Фоновая загрузка фото ----
         const photoTasks = [];
