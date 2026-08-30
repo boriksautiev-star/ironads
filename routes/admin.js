@@ -244,7 +244,7 @@ router.post('/categories/:id/restore', auth, isAdmin, async (req, res) => {
     } catch (err) { res.status(500).json({ error: 'Ошибка сервера' }); }
 });
 
-// ========== ПОЛЬЗОВАТЕЛИ (ИСПРАВЛЕНО: ДОБАВЛЕНЫ is_partner, partner_plan_id) ==========
+// ========== ПОЛЬЗОВАТЕЛИ ==========
 router.get('/users', auth, isAdmin, async (req, res) => {
     const { page = 1, limit = 20, search = '', role = '', blocked = '', showDeleted = 'false' } = req.query;
     const offset = (page - 1) * limit;
@@ -275,6 +275,38 @@ router.put('/users/:id/role', auth, isAdmin, async (req, res) => {
         res.json({ message: 'Роль обновлена' });
     } catch(err) { res.status(500).json({ error: 'Ошибка сервера' }); }
 });
+
+// ===== НОВЫЙ МАРШРУТ ДЛЯ УПРАВЛЕНИЯ СТАТУСОМ ПАРТНЁРА =====
+router.put('/users/:id/partner', auth, isAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { is_partner, partner_plan_id } = req.body;
+
+    if (typeof is_partner !== 'boolean') {
+        return res.status(400).json({ error: 'Поле is_partner должно быть boolean' });
+    }
+
+    try {
+        await pool.query(
+            'UPDATE users SET is_partner = $1, partner_plan_id = $2, updated_at = NOW() WHERE id = $3',
+            [is_partner, partner_plan_id || null, id]
+        );
+        await logAdminAction(
+            req.userId,
+            is_partner ? 'set_partner' : 'remove_partner',
+            'user',
+            id,
+            { is_partner, partner_plan_id }
+        );
+        res.json({
+            message: is_partner ? 'Пользователь назначен партнёром' : 'Статус партнёра снят',
+            is_partner
+        });
+    } catch (err) {
+        console.error('Ошибка обновления статуса партнёра:', err);
+        res.status(500).json({ error: 'Ошибка сервера при обновлении статуса партнёра' });
+    }
+});
+// ========================================================
 
 router.put('/users/:id/block', auth, isAdmin, async (req, res) => {
     const { id } = req.params;
@@ -548,7 +580,6 @@ router.put('/settings/:key', auth, isAdmin, async (req, res) => {
 });
 
 // ========== ПОДДЕРЖКА ==========
-// ИСПРАВЛЕННЫЙ МАРШРУТ — считает только открытые и in_progress тикеты
 router.get('/support/unread-count', auth, isAdmin, async (req, res) => {
     try {
         const result = await pool.query(`
@@ -803,7 +834,6 @@ router.get('/subscriptions', auth, isAdmin, async (req, res) => {
     });
 });
 
-// ========== РЕДАКТИРОВАНИЕ ПОДПИСКИ (ТОЛЬКО admin_created) ==========
 router.put('/subscriptions/:id', auth, isAdmin, async (req, res) => {
     const { id } = req.params;
     const { endDate } = req.body;
@@ -841,7 +871,6 @@ router.put('/subscriptions/:id', auth, isAdmin, async (req, res) => {
     }
 });
 
-// ========== УДАЛЕНИЕ ПОДПИСКИ (ТОЛЬКО admin_created) ==========
 router.delete('/subscriptions/:id', auth, isAdmin, async (req, res) => {
     const { id } = req.params;
 

@@ -4,6 +4,7 @@ const { auth } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const pushService = require('../services/pushService');
 const router = express.Router();
 
 // Настройка multer для медиафайлов
@@ -43,7 +44,7 @@ async function getSupportUserId() {
     return newSupport.rows[0].id;
 }
 
-// Получить все активные чаты пользователя (для обычных пользователей исключаем чаты поддержки)
+// Получить все активные чаты пользователя
 router.get('/', auth, async (req, res) => {
     const userId = req.userId;
     try {
@@ -77,7 +78,7 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
-// Получить архивные чаты (аналогично)
+// Получить архивные чаты
 router.get('/archived', auth, async (req, res) => {
     const userId = req.userId;
     try {
@@ -111,7 +112,7 @@ router.get('/archived', auth, async (req, res) => {
     }
 });
 
-// Получить информацию о чате (администратор может видеть любой)
+// Получить информацию о чате
 router.get('/:chatId', auth, async (req, res) => {
     const userId = req.userId;
     const chatId = req.params.chatId;
@@ -151,7 +152,7 @@ router.get('/:chatId', auth, async (req, res) => {
     }
 });
 
-// Получить сообщения чата (администратор может читать любой)
+// Получить сообщения чата
 router.get('/:chatId/messages', auth, async (req, res) => {
     const userId = req.userId;
     const chatId = req.params.chatId;
@@ -187,7 +188,7 @@ router.get('/:chatId/messages', auth, async (req, res) => {
     }
 });
 
-// Архивация, восстановление, удаление (без изменений)
+// Архивация, восстановление, удаление
 router.post('/:chatId/archive', auth, async (req, res) => {
     const userId = req.userId;
     const chatId = req.params.chatId;
@@ -243,29 +244,58 @@ router.delete('/:chatId', auth, async (req, res) => {
     }
 });
 
-// Создать чат (обычный)
+// ========== СОЗДАНИЕ ЧАТА (С ПОДРОБНЫМИ ЛОГАМИ) ==========
 router.post('/create', auth, async (req, res) => {
     const { listing_id } = req.body;
     const buyerId = req.userId;
+    console.log(`🔍 Создание чата: listing_id=${listing_id}, buyerId=${buyerId}`);
     try {
-        if (!listing_id) return res.status(400).json({ error: 'Не указано объявление' });
+        if (!listing_id) {
+            console.log('❌ listing_id не указан');
+            return res.status(400).json({ error: 'Не указано объявление' });
+        }
         const listing = await pool.query('SELECT user_id FROM listings WHERE id = $1', [listing_id]);
-        if (listing.rows.length === 0) return res.status(404).json({ error: 'Объявление не найдено' });
+        if (listing.rows.length === 0) {
+            console.log(`❌ Объявление ${listing_id} не найдено`);
+            return res.status(404).json({ error: 'Объявление не найдено' });
+        }
         const sellerId = listing.rows[0].user_id;
-        const sellerCheck = await pool.query('SELECT id FROM users WHERE id = $1 AND deleted_at IS NULL', [sellerId]);
-        if (sellerCheck.rows.length === 0) return res.status(404).json({ error: 'Продавец недоступен' });
-        if (buyerId === sellerId) return res.status(400).json({ error: 'Нельзя начать чат с самим собой' });
-        let chat = await pool.query('SELECT * FROM chats WHERE listing_id = $1 AND buyer_id = $2 AND seller_id = $3', [listing_id, buyerId, sellerId]);
+        console.log(`👤 Продавец: ${sellerId}`);
+        if (buyerId === sellerId) {
+            console.log('❌ Попытка создать чат с самим собой');
+            return res.status(400).json({ error: 'Нельзя начать чат с самим собой' });
+        }
+
+        // Проверяем существующий чат (любой статус)
+        let chat = await pool.query(
+            'SELECT * FROM chats WHERE listing_id = $1 AND buyer_id = $2 AND seller_id = $3',
+            [listing_id, buyerId, sellerId]
+        );
+        console.log(`🔎 Найдено чатов: ${chat.rows.length}`);
         if (chat.rows.length === 0) {
-            const newChat = await pool.query(`INSERT INTO chats (listing_id, buyer_id, seller_id, created_at, updated_at, status_buyer, status_seller)
-                VALUES ($1, $2, $3, NOW(), NOW(), 'active', 'active') RETURNING *`, [listing_id, buyerId, sellerId]);
+            console.log('🆕 Создаём новый чат');
+            const newChat = await pool.query(`
+                INSERT INTO chats (listing_id, buyer_id, seller_id, created_at, updated_at, status_buyer, status_seller)
+                VALUES ($1, $2, $3, NOW(), NOW(), 'active', 'active')
+                RETURNING *
+            `, [listing_id, buyerId, sellerId]);
             chat = newChat;
+            console.log(`✅ Новый чат создан с ID ${chat.rows[0].id}`);
         } else {
-            await pool.query(`UPDATE chats SET status_buyer = 'active', status_seller = 'active', updated_at = NOW() WHERE id = $1`, [chat.rows[0].id]);
+            console.log(`♻️ Обновляем существующий чат ID ${chat.rows[0].id}`);
+            await pool.query(`
+                UPDATE chats 
+                SET status_buyer = 'active', status_seller = 'active', updated_at = NOW() 
+                WHERE id = $1
+            `, [chat.rows[0].id]);
+            // Перезапрашиваем данные, чтобы вернуть обновлённый объект
+            const updated = await pool.query('SELECT * FROM chats WHERE id = $1', [chat.rows[0].id]);
+            chat = updated;
+            console.log(`✅ Чат обновлён, возвращаем ID ${chat.rows[0].id}`);
         }
         res.json(chat.rows[0]);
     } catch (err) {
-        console.error(err);
+        console.error('❌ Ошибка создания чата:', err);
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
@@ -296,7 +326,7 @@ router.post('/support/create', auth, async (req, res) => {
     }
 });
 
-// Отправить сообщение (администратор может писать в любой чат)
+// ========== ОСНОВНОЙ МАРШРУТ ОТПРАВКИ СООБЩЕНИЯ ==========
 router.post('/:chatId/messages', auth, async (req, res) => {
     const userId = req.userId;
     const chatId = req.params.chatId;
@@ -323,6 +353,34 @@ router.post('/:chatId/messages', auth, async (req, res) => {
             INSERT INTO messages (chat_id, sender_id, message, reply_to_id, created_at, status, is_read)
             VALUES ($1, $2, $3, $4, NOW(), 'sent', false) RETURNING *
         `, [chatId, userId, message, replyToId || null]);
+        const messageId = result.rows[0].id;
+        const messageText = result.rows[0].message;
+
+        // Отправка push
+        const recipientId = (chat.buyer_id === userId) ? chat.seller_id : chat.buyer_id;
+        console.log(`🔔 Определён получатель: ${recipientId}, отправитель: ${userId}`);
+        if (recipientId) {
+            const senderRes = await pool.query('SELECT username FROM users WHERE id = $1', [userId]);
+            const senderName = senderRes.rows[0]?.username || 'Пользователь';
+            console.log(`📨 Отправка push для user ${recipientId} от ${senderName}`);
+            try {
+                await pushService.sendToUser(recipientId, {
+                    title: `Новое сообщение от ${senderName}`,
+                    body: messageText.length > 100 ? messageText.slice(0, 100) + '…' : messageText,
+                    data: {
+                        chatId: chatId,
+                        messageId: messageId,
+                        senderId: userId,
+                    },
+                });
+                console.log(`✅ Push успешно отправлен (функция завершена)`);
+            } catch (err) {
+                console.error(`❌ Ошибка при вызове pushService.sendToUser:`, err);
+            }
+        } else {
+            console.log(`⚠️ Получатель не определён (отправитель = получатель?)`);
+        }
+
         const messageWithSender = await pool.query(`
             SELECT m.*, u.username as sender_name,
                    json_build_object('id', m2.id, 'message', m2.message, 'sender_name', u2.username) as reply_to
@@ -331,7 +389,7 @@ router.post('/:chatId/messages', auth, async (req, res) => {
             LEFT JOIN messages m2 ON m.reply_to_id = m2.id
             LEFT JOIN users u2 ON m2.sender_id = u2.id
             WHERE m.id = $1
-        `, [result.rows[0].id]);
+        `, [messageId]);
         res.json(messageWithSender.rows[0]);
     } catch (err) {
         console.error(err);
@@ -339,7 +397,7 @@ router.post('/:chatId/messages', auth, async (req, res) => {
     }
 });
 
-// Отправить медиафайл (администратор может отправлять в любой чат)
+// Отправить медиафайл
 router.post('/:chatId/media', auth, mediaUpload.single('file'), async (req, res) => {
     const userId = req.userId;
     const chatId = req.params.chatId;
@@ -466,6 +524,29 @@ router.get('/unread/count', auth, async (req, res) => {
         res.json({ count: parseInt(result.rows[0].count) });
     } catch (err) {
         console.error(err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+// Отметить прочитанные
+router.post('/:chatId/read', auth, async (req, res) => {
+    const userId = req.userId;
+    const chatId = req.params.chatId;
+    try {
+        const chat = await pool.query(
+            'SELECT id FROM chats WHERE id = $1 AND (buyer_id = $2 OR seller_id = $2)',
+            [chatId, userId]
+        );
+        if (chat.rows.length === 0) {
+            return res.status(403).json({ error: 'Нет доступа к этому чату' });
+        }
+        await pool.query(
+            'UPDATE messages SET is_read = true WHERE chat_id = $1 AND sender_id != $2 AND is_read = false',
+            [chatId, userId]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Ошибка отметки прочитанных:', err);
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });

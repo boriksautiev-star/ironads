@@ -275,4 +275,51 @@ router.post('/:userId/complaint', auth, async (req, res) => {
     }
 });
 
+// ==================== НОВЫЕ МАРШРУТЫ ДЛЯ PUSH-ТОКЕНОВ ====================
+
+// Регистрация push-токена (сохраняем в БД)
+router.post('/push-token', auth, async (req, res) => {
+    try {
+        const { token, device_os } = req.body;
+        if (!token) {
+            return res.status(400).json({ error: 'Token is required' });
+        }
+
+        // Upsert: если токен уже существует, обновляем user_id и device_os
+        await pool.query(
+            `INSERT INTO push_tokens (user_id, token, device_os)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (token) 
+             DO UPDATE SET user_id = $1, device_os = $3, updated_at = NOW()`,
+            [req.userId, token, device_os || null]
+        );
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error saving push token:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Удаление push-токена (при выходе или отписке)
+router.delete('/push-token', auth, async (req, res) => {
+    try {
+        const { token } = req.body;
+        if (token) {
+            // Удаляем конкретный токен только если он принадлежит текущему пользователю
+            await pool.query(
+                'DELETE FROM push_tokens WHERE token = $1 AND user_id = $2',
+                [token, req.userId]
+            );
+        } else {
+            // Удаляем все токены пользователя
+            await pool.query('DELETE FROM push_tokens WHERE user_id = $1', [req.userId]);
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error deleting push token:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 module.exports = router;

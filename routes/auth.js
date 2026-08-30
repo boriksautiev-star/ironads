@@ -173,7 +173,8 @@ router.get('/yandex/callback', async (req, res) => {
                 updates.push(`email = $${idx++}`);
                 params.push(email);
             }
-            if (username && user.rows[0].username !== username) {
+            // Обновляем username только если текущее имя пустое
+            if (username && (!user.rows[0].username || user.rows[0].username.trim() === '')) {
                 updates.push(`username = $${idx++}`);
                 params.push(username);
             }
@@ -196,7 +197,7 @@ router.get('/yandex/callback', async (req, res) => {
     }
 });
 
-// ========== VK ID OAUTH (С ИСПРАВЛЕНИЯМИ) ==========
+// ========== VK ID OAUTH ==========
 (async function ensureVkIdColumn() {
     try {
         const check = await pool.query(`
@@ -238,7 +239,6 @@ router.get('/vk', (req, res) => {
         const codeChallenge = generateCodeChallenge(codeVerifier);
         
         req.session.vk_code_verifier = codeVerifier;
-        // Гарантируем сохранение сессии перед редиректом
         req.session.save(err => {
             if (err) {
                 console.error('❌ Ошибка сохранения сессии VK:', err);
@@ -396,7 +396,8 @@ router.get('/vk/callback', async (req, res) => {
                 updates.push(`avatar_url = $${idx++}`);
                 params.push(avatar);
             }
-            if (username && user.rows[0].username !== username) {
+            // Обновляем username только если текущее имя пустое
+            if (username && (!user.rows[0].username || user.rows[0].username.trim() === '')) {
                 const existingUsername = await pool.query('SELECT id FROM users WHERE username = $1 AND vk_id != $2', [username, String(userId)]);
                 if (existingUsername.rows.length === 0) {
                     updates.push(`username = $${idx++}`);
@@ -416,7 +417,6 @@ router.get('/vk/callback', async (req, res) => {
         const jwtToken = generateToken(user.rows[0].id);
         await logUserAction(user.rows[0].id, 'login', { via: 'vk_id' }, req);
         
-        // Очищаем code_verifier из сессии
         req.session.vk_code_verifier = null;
         req.session.save(err => {
             if (err) console.error('❌ Ошибка очистки сессии VK:', err);
@@ -602,19 +602,28 @@ router.post('/yandex/link', auth, async (req, res) => {
         const yandexData = await exchangeYandexCode(code);
         const { yandexId, email, username } = yandexData;
 
-        // Проверяем, не привязан ли уже этот yandexId к другому пользователю
         const existing = await pool.query('SELECT id FROM users WHERE yandex_id = $1 AND id != $2', [yandexId, req.userId]);
         if (existing.rows.length > 0) {
             return res.status(409).json({ error: 'Этот аккаунт Яндекса уже привязан к другому пользователю' });
         }
 
-        // Обновляем запись пользователя
-        await pool.query(
-            'UPDATE users SET yandex_id = $1, username = COALESCE($2, username), email = COALESCE($3, email) WHERE id = $4',
-            [yandexId, username, email, req.userId]
-        );
+        const currentUser = await pool.query('SELECT username FROM users WHERE id = $1', [req.userId]);
+        const currentUsername = currentUser.rows[0]?.username;
 
-        // Получаем обновлённые данные пользователя для ответа
+        let updateQuery = 'UPDATE users SET yandex_id = $1, email = COALESCE($2, email)';
+        const params = [yandexId, email];
+        let paramIndex = 3;
+
+        if (!currentUsername || currentUsername.trim() === '') {
+            updateQuery += `, username = $${paramIndex++}`;
+            params.push(username);
+        }
+
+        updateQuery += ` WHERE id = $${paramIndex}`;
+        params.push(req.userId);
+
+        await pool.query(updateQuery, params);
+
         const userResult = await pool.query('SELECT id, username, email, phone, yandex_id, vk_id FROM users WHERE id = $1', [req.userId]);
         await logUserAction(req.userId, 'link_yandex', { yandexId }, req);
         res.json({ success: true, user: userResult.rows[0] });
@@ -639,16 +648,27 @@ router.post('/vk/link', auth, async (req, res) => {
         const vkData = await exchangeVkCode(code);
         const { vkId, email, username } = vkData;
 
-        // Проверяем уникальность vkId
         const existing = await pool.query('SELECT id FROM users WHERE vk_id = $1 AND id != $2', [vkId, req.userId]);
         if (existing.rows.length > 0) {
             return res.status(409).json({ error: 'Этот аккаунт ВКонтакте уже привязан к другому пользователю' });
         }
 
-        await pool.query(
-            'UPDATE users SET vk_id = $1, username = COALESCE($2, username), email = COALESCE($3, email) WHERE id = $4',
-            [vkId, username, email, req.userId]
-        );
+        const currentUser = await pool.query('SELECT username FROM users WHERE id = $1', [req.userId]);
+        const currentUsername = currentUser.rows[0]?.username;
+
+        let updateQuery = 'UPDATE users SET vk_id = $1, email = COALESCE($2, email)';
+        const params = [vkId, email];
+        let paramIndex = 3;
+
+        if (!currentUsername || currentUsername.trim() === '') {
+            updateQuery += `, username = $${paramIndex++}`;
+            params.push(username);
+        }
+
+        updateQuery += ` WHERE id = $${paramIndex}`;
+        params.push(req.userId);
+
+        await pool.query(updateQuery, params);
 
         const userResult = await pool.query('SELECT id, username, email, phone, yandex_id, vk_id FROM users WHERE id = $1', [req.userId]);
         await logUserAction(req.userId, 'link_vk', { vkId }, req);
@@ -789,7 +809,7 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// ========== ВХОД (С РАСШИРЕННЫМ ЛОГИРОВАНИЕМ) ==========
+// ========== ВХОД ==========
 router.post('/login', async (req, res) => {
     console.log('📥 Получен запрос /login, body:', JSON.stringify(req.body));
 
@@ -903,13 +923,24 @@ router.post('/reset-password', async (req, res) => {
     }
 });
 
-// ========== ТЕКУЩИЙ ПОЛЬЗОВАТЕЛЬ ==========
+// ========== ТЕКУЩИЙ ПОЛЬЗОВАТЕЛЬ (исправлено – добавлены is_partner, partner_plan_id) ==========
 router.get('/me', auth, async (req, res) => {
     try {
-        const result = await pool.query('SELECT id, username, email, phone, role, is_blocked, created_at, avatar_url, city_id, whatsapp, telegram, vk_id, yandex_id FROM users WHERE id = $1', [req.userId]);
-        if (result.rows.length === 0) return res.status(404).json({ error: 'Пользователь не найден' });
+        const result = await pool.query(`
+            SELECT id, username, email, phone, role, is_blocked, created_at, avatar_url, city_id,
+                   whatsapp, telegram, vk_id, yandex_id,
+                   is_partner, partner_plan_id
+            FROM users
+            WHERE id = $1
+        `, [req.userId]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Пользователь не найден' });
+        }
         res.json(result.rows[0]);
-    } catch (err) { res.status(500).json({ error: 'Ошибка сервера' }); }
+    } catch (err) {
+        console.error('Ошибка получения профиля:', err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
 });
 
 // ========== ОБНОВЛЕНИЕ ПРОФИЛЯ ==========

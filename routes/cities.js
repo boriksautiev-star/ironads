@@ -2,7 +2,7 @@ const express = require('express');
 const pool = require('../db/pool');
 const router = express.Router();
 
-// Получить города (с фильтрацией)
+// ===== 1. Получить города с фильтрацией =====
 router.get('/', async (req, res) => {
     const { search, popular, region_id, limit = 100 } = req.query;
     let query = `
@@ -28,7 +28,7 @@ router.get('/', async (req, res) => {
     }
     query += ` ORDER BY c.is_popular DESC, c.sort_order, c.name LIMIT $${idx++}`;
     params.push(parseInt(limit));
-    
+
     try {
         const result = await pool.query(query, params);
         res.json(result.rows);
@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Получить город по ID
+// ===== 2. Получить город по ID =====
 router.get('/:id', async (req, res) => {
     try {
         const result = await pool.query(`
@@ -50,20 +50,58 @@ router.get('/:id', async (req, res) => {
         if (result.rows.length === 0) return res.status(404).json({ error: 'Город не найден' });
         res.json(result.rows[0]);
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
 
-// Получить все регионы
+// ===== 3. Получить все регионы =====
 router.get('/regions/all', async (req, res) => {
     try {
         const result = await pool.query('SELECT id, name FROM regions ORDER BY sort_order, name');
         res.json(result.rows);
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
-// Получить данные для страницы города по slug
+
+// ===== 4. (НОВОЕ) Получить города по ID региона =====
+router.get('/by-region/:regionId', async (req, res) => {
+    const { regionId } = req.params;
+    try {
+        const result = await pool.query(`
+            SELECT c.id, c.name, c.is_popular, c.sort_order, 
+                   r.id as region_id, r.name as region_name
+            FROM cities c
+            LEFT JOIN regions r ON c.region_id = r.id
+            WHERE c.region_id = $1
+            ORDER BY c.is_popular DESC, c.sort_order, c.name
+        `, [regionId]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+// ===== 5. (НОВОЕ) Получить все города (на всякий случай) =====
+router.get('/all', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT c.id, c.name, c.region_id, r.name as region_name
+            FROM cities c
+            LEFT JOIN regions r ON c.region_id = r.id
+            ORDER BY c.name
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+// ===== 6. Получить данные для страницы города по slug =====
 router.get('/slug/:slug', async (req, res) => {
     const { slug } = req.params;
     try {

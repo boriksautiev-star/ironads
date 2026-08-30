@@ -87,124 +87,33 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
             transition: all 0.2s;
         }
-        body.dark-theme .subscription-package {
-            background: #1e293b;
-            border-color: #3b82f6;
-        }
-        .subscription-package.expired {
-            border-left-color: #9ca3af;
-            opacity: 0.7;
-        }
-        .subscription-package .header {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.5rem 1rem;
-        }
-        .subscription-package .label {
-            font-weight: 600;
-            color: #1f2937;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
+        body.dark-theme .subscription-package { background: #1e293b; border-color: #3b82f6; }
+        .subscription-package.expired { border-left-color: #9ca3af; opacity: 0.7; }
+        .subscription-package .header { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; }
+        .subscription-package .label { font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.4rem; }
         body.dark-theme .subscription-package .label { color: #e2e8f0; }
-        .subscription-package .badge-status {
-            font-size: 0.7rem;
-            font-weight: 600;
-            padding: 0.2rem 0.7rem;
-            border-radius: 2rem;
-            background: #10b981;
-            color: white;
-        }
-        .subscription-package .badge-status.expired {
-            background: #9ca3af;
-        }
-        .subscription-package .badge-status.near {
-            background: #f59e0b;
-        }
-        .subscription-package .date-range {
-            font-size: 0.75rem;
-            color: #6b7280;
-        }
+        .subscription-package .badge-status { font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.7rem; border-radius: 2rem; background: #10b981; color: white; }
+        .subscription-package .badge-status.expired { background: #9ca3af; }
+        .subscription-package .badge-status.near { background: #f59e0b; }
+        .subscription-package .date-range { font-size: 0.75rem; color: #6b7280; }
         body.dark-theme .subscription-package .date-range { color: #94a3b8; }
-        .subscription-package .slot-info {
-            font-size: 0.8rem;
-            color: #6b7280;
-            margin-left: auto;
-        }
+        .subscription-package .slot-info { font-size: 0.8rem; color: #6b7280; margin-left: auto; }
         body.dark-theme .subscription-package .slot-info { color: #94a3b8; }
-        .subscription-package .progress-container {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-top: 0.5rem;
-            width: 100%;
-        }
-        .subscription-package .progress-track {
-            flex: 1;
-            height: 6px;
-            background: #e5e7eb;
-            border-radius: 3px;
-            overflow: hidden;
-        }
+        .subscription-package .progress-container { display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; width: 100%; }
+        .subscription-package .progress-track { flex: 1; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
         body.dark-theme .subscription-package .progress-track { background: #334155; }
-        .subscription-package .progress-bar {
-            height: 100%;
-            background: #667eea;
-            border-radius: 3px;
-            transition: width 0.3s;
-        }
+        .subscription-package .progress-bar { height: 100%; background: #667eea; border-radius: 3px; transition: width 0.3s; }
         body.dark-theme .subscription-package .progress-bar { background: #3b82f6; }
-        .subscription-package .progress-label {
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: #1f2937;
-            white-space: nowrap;
-        }
+        .subscription-package .progress-label { font-size: 0.75rem; font-weight: 500; color: #1f2937; white-space: nowrap; }
         body.dark-theme .subscription-package .progress-label { color: #e2e8f0; }
-        .subscription-package .actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            margin-top: 0.5rem;
-        }
+        .subscription-package .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
         .subscription-package .actions .btn-sm { padding: 0.25rem 0.8rem; font-size: 0.75rem; }
-        .subscription-package .listing-tokens {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
-            margin-top: 0.5rem;
-        }
-        .subscription-package .listing-token {
-            background: #f3f4f6;
-            padding: 0.15rem 0.6rem 0.15rem 0.8rem;
-            border-radius: 2rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            font-size: 0.75rem;
-            color: #1f2937;
-        }
-        body.dark-theme .subscription-package .listing-token {
-            background: #2d3a4e;
-            color: #e2e8f0;
-        }
-        .subscription-package .listing-token .remove-token {
-            background: none;
-            border: none;
-            color: #ef4444;
-            cursor: pointer;
-            font-size: 0.8rem;
-            line-height: 1;
-            padding: 0 2px;
-        }
+        .subscription-package .listing-tokens { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+        .subscription-package .listing-token { background: #f3f4f6; padding: 0.15rem 0.6rem 0.15rem 0.8rem; border-radius: 2rem; display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: #1f2937; }
+        body.dark-theme .subscription-package .listing-token { background: #2d3a4e; color: #e2e8f0; }
+        .subscription-package .listing-token .remove-token { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.8rem; line-height: 1; padding: 0 2px; }
         .subscription-package .listing-token .remove-token:hover { color: #dc2626; }
-        .subscription-package .empty-token {
-            font-size: 0.75rem;
-            color: #9ca3af;
-            font-style: italic;
-        }
+        .subscription-package .empty-token { font-size: 0.75rem; color: #9ca3af; font-style: italic; }
         .subscription-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1001; justify-content: center; align-items: center; }
         .modal-content { background: white; border-radius: 1.5rem; padding: 1.5rem; width: 95%; max-width: 750px; max-height: 85vh; overflow-y: auto; }
@@ -800,6 +709,7 @@
         let isPartner = false;
         let currentUserData = null;
 
+        // ========== ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ ==========
         async function loadUserData() {
             try {
                 const resp = await fetch(`${API_URL}/users/${currentUserId}`, {
@@ -969,7 +879,7 @@
             } catch(e) { showNotification('Ошибка соединения', 'error'); }
         }
 
-        // ========== ПОДПИСКИ (С РАЗДЕЛЕНИЕМ) ==========
+        // ========== ПОДПИСКИ ==========
         async function loadSubscriptionStatus() {
             try {
                 if (!currentUserData) {
@@ -1029,7 +939,6 @@
                     filteredAutobumpPackages = autobumpPackages.filter(pkg => pkg.plan_id !== null);
                 }
 
-                // ===== ИСПРАВЛЕННАЯ ФУНКЦИЯ renderPackage (разделение для партнёров) =====
                 const renderPackage = (pkg, type) => {
                     const used = pkg.listing_ids ? pkg.listing_ids.length : 0;
                     const max = pkg.max_slots || 0;
@@ -1256,46 +1165,49 @@
             }
         }
 
-        // ===== ПОКУПКА ТАРИФА ДЛЯ ПАРТНЁРА =====
-        async function showPartnerPlansModal() {
-            const token = localStorage.getItem('token');
-            try {
-                const res = await fetch('/api/partner/plans', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (!res.ok) throw new Error('Не удалось загрузить тарифы');
-                const plans = await res.json();
+        // ===================== ИСПРАВЛЕННАЯ ЛОГИКА ТАРИФОВ =====================
 
-                const container = document.getElementById('partnerPlansList');
-                if (plans.length === 0) {
-                    container.innerHTML = '<p>Нет доступных тарифов</p>';
-                } else {
-                    let html = '';
-                    for (const plan of plans) {
-                        html += `
-                            <div class="plan-card">
-                                <h4>${escapeHtml(plan.name)}</h4>
-                                <p>Лимит: ${plan.max_listings} объявлений</p>
-                                <p>Продление: ${plan.price_renewal} ₽ / ${plan.period_days} дней</p>
-                                <p>Автопилот: ${plan.price_autobump} ₽</p>
-                                <button class="btn-primary buy-plan-btn" data-planid="${plan.id}">Купить</button>
-                            </div>
-                        `;
-                    }
-                    container.innerHTML = html;
-                    document.querySelectorAll('.buy-plan-btn').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            const planId = this.dataset.planid;
-                            buyPartnerPlan(planId);
-                        });
-                    });
+        // === ПОКАЗ МОДАЛКИ С ТАРИФАМИ (ОБЩАЯ ДЛЯ ПАРТНЁРОВ И ОБЫЧНЫХ) ===
+        function renderPlansModal(plans, title) {
+            const container = document.getElementById('partnerPlansList');
+            const modalTitle = document.querySelector('#buyPartnerPlanModal h3');
+            if (modalTitle) modalTitle.textContent = title;
+
+            if (!plans || plans.length === 0) {
+                container.innerHTML = '<p>Нет доступных тарифов</p>';
+            } else {
+                let html = '';
+                for (const plan of plans) {
+                    const price = plan.price !== undefined ? plan.price : 0;
+                    const duration = plan.duration || plan.period_days || '—';
+                    const slots = plan.max_slots || plan.slots || '—';
+                    const planName = plan.name || 'Тариф';
+                    html += `
+                        <div class="plan-card">
+                            <h4>${escapeHtml(planName)}</h4>
+                            <p>💰 Цена: ${price} ₽</p>
+                            <p>📅 Период: ${duration} дней</p>
+                            <p>📦 Слотов: ${slots}</p>
+                            <button class="btn-primary buy-plan-btn" data-planid="${plan.id}">Купить</button>
+                        </div>
+                    `;
                 }
-                showModal('buyPartnerPlanModal');
-            } catch (err) {
-                alert('Ошибка: ' + err.message);
+                container.innerHTML = html;
+                document.querySelectorAll('.buy-plan-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const planId = this.dataset.planid;
+                        if (isPartner) {
+                            buyPartnerPlan(planId);
+                        } else {
+                            buyRegularPlan(planId);
+                        }
+                    });
+                });
             }
+            showModal('buyPartnerPlanModal');
         }
 
+        // === ПОКУПКА ПАРТНЁРСКОГО ТАРИФА ===
         function buyPartnerPlan(planId) {
             const token = localStorage.getItem('token');
             fetch('/api/payments/create', {
@@ -1325,7 +1237,84 @@
             .catch(err => alert('Ошибка: ' + err.message));
         }
 
-        // ===== УПРАВЛЕНИЕ СОСТАВОМ =====
+        // === ПОКУПКА ОБЫЧНОГО ТАРИФА ===
+        async function buyRegularPlan(planId) {
+            const token = localStorage.getItem('token');
+            try {
+                const resp = await fetch('/api/subscriptions/purchase', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ planId })
+                });
+                const data = await resp.json();
+                if (resp.ok) {
+                    alert('Подписка приобретена!');
+                    closeModal('buyPartnerPlanModal');
+                    loadSubscriptionStatus();
+                } else {
+                    alert(data.error || 'Ошибка покупки');
+                }
+            } catch (err) {
+                alert('Ошибка: ' + err.message);
+            }
+        }
+
+        // === ОСНОВНАЯ ФУНКЦИЯ ПОКАЗА ТАРИФОВ (ПАРТНЁРСКИХ ИЛИ ОБЫЧНЫХ) ===
+        async function showPartnerPlansModal() {
+            // 1️⃣ Обновляем статус партнёра
+            await loadSubscriptionStatus();
+
+            const token = localStorage.getItem('token');
+            let url, title;
+
+            if (isPartner) {
+                url = '/api/partner/plans';
+                title = '🤝 Партнёрские тарифы';
+            } else {
+                url = '/api/subscriptions/plans';
+                title = '📋 Выберите тариф';
+            }
+
+            try {
+                const res = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                // Если партнёрский запрос вернул 403 – переключаемся на обычные тарифы
+                if (res.status === 403 && isPartner) {
+                    isPartner = false;
+                    const res2 = await fetch('/api/subscriptions/plans', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (!res2.ok) throw new Error('Не удалось загрузить тарифы');
+                    const plans = await res2.json();
+                    renderPlansModal(plans, '📋 Выберите тариф');
+                    return;
+                }
+
+                if (!res.ok) throw new Error('Не удалось загрузить тарифы');
+                const plans = await res.json();
+                renderPlansModal(plans, title);
+            } catch (err) {
+                // В случае ошибки – пытаемся открыть обычные тарифы
+                try {
+                    const resFallback = await fetch('/api/subscriptions/plans', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (resFallback.ok) {
+                        const plans = await resFallback.json();
+                        renderPlansModal(plans, '📋 Выберите тариф');
+                        return;
+                    }
+                } catch (e) {}
+                alert('Ошибка: ' + err.message);
+            }
+        }
+
+        // ========== УПРАВЛЕНИЕ СОСТАВОМ ==========
         let currentManageSubId = null;
         let currentManageType = null;
 
@@ -1410,7 +1399,7 @@
             } catch(e) { showNotification('Ошибка соединения', 'error'); }
         }
 
-        // ===== МОДАЛЬНОЕ ОКНО ВЫБОРА (с проверкой ID) =====
+        // ===== МОДАЛЬНОЕ ОКНО ВЫБОРА =====
         let currentSelectListings = [];
         let currentViewMode = 'list';
 
@@ -1565,7 +1554,7 @@
             renderSelectListings();
         });
 
-        // ===== ИСПРАВЛЕННАЯ ФУНКЦИЯ showListingSelector (с правильным путём) =====
+        // ===== ФУНКЦИЯ showListingSelector =====
         async function showListingSelector(type, mode = 'purchase', subscriptionId = null) {
             selectedPackageType = type;
             const modal = document.getElementById('selectListingsModal');
@@ -1733,7 +1722,7 @@
             } catch(e) { showNotification('Ошибка загрузки данных', 'error'); }
         }
 
-        // ========== ОБЪЯВЛЕНИЯ (без изменений) ==========
+        // ========== ОБЪЯВЛЕНИЯ ==========
         function renderMyListingsByMode() {
             const viewMode = window.listingViewMode || 'grid-large';
             const isGrid = viewMode !== 'list';
@@ -2297,7 +2286,7 @@
         function goBackInProfile() {
             if (document.referrer && document.referrer !== window.location.href) window.history.back();
             else window.location.href = '/';
-        }
+        }        
 
         // ========== ИНИЦИАЛИЗАЦИЯ ==========
         (async function init() {

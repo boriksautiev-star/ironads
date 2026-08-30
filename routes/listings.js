@@ -7,6 +7,7 @@ const pool = require('../db/pool');
 const { auth } = require('../middleware/auth');
 const { logUserAction } = require('../utils/audit');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 
 // Настройка multer для загрузки файлов
 const storage = multer.diskStorage({
@@ -156,7 +157,7 @@ router.get('/:id/views', async (req, res) => {
     }
 });
 
-// ========== ПРИВАТНАЯ СТАТИСТИКА (ТОЛЬКО ДЛЯ ВЛАДЕЛЬЦА) ==========
+// ========== ПРИВАТНАЯ СТАТИСТИКА ==========
 router.get('/:id/stats', auth, async (req, res) => {
     const listingId = req.params.id;
     const userId = req.userId;
@@ -170,7 +171,6 @@ router.get('/:id/stats', auth, async (req, res) => {
             return res.status(403).json({ error: 'Нет доступа к статистике этого объявления' });
         }
 
-        // 1. Просмотры
         const viewsTotal = await pool.query(
             'SELECT COUNT(*) FROM view_history WHERE listing_id = $1',
             [listingId]
@@ -194,7 +194,6 @@ router.get('/:id/stats', auth, async (req, res) => {
             [listingId]
         );
 
-        // 2. Контакты (с разделением на show/copy)
         const contacts = await pool.query(
             `SELECT contact_type, action, COUNT(*) as count
              FROM contact_requests
@@ -218,13 +217,11 @@ router.get('/:id/stats', auth, async (req, res) => {
             }
         });
 
-        // 3. Избранное
         const favoritesCount = await pool.query(
             'SELECT COUNT(*) FROM favorites WHERE listing_id = $1',
             [listingId]
         );
 
-        // 4. Сообщения (если есть таблица)
         let messagesCount = 0;
         try {
             const messagesRes = await pool.query(
@@ -253,8 +250,7 @@ router.get('/:id/stats', auth, async (req, res) => {
     }
 });
 
-// ========== ОСТАЛЬНЫЕ МАРШРУТЫ (БЕЗ ИЗМЕНЕНИЙ) ==========
-
+// ========== МАРШРУТ FILTER ==========
 router.get('/filter', async (req, res) => {
     const {
         category_id,
@@ -271,6 +267,16 @@ router.get('/filter', async (req, res) => {
         page = 1,
         limit = 12
     } = req.query;
+
+    let userId = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            userId = decoded.userId;
+        } catch (e) { /* игнорируем */ }
+    }
 
     let categoryIds = [];
     if (category_id && category_id !== 'all') {
@@ -306,7 +312,8 @@ router.get('/filter', async (req, res) => {
                 FROM listing_media m
                 WHERE m.listing_id = l.id
                 ORDER BY CASE WHEN m.is_main THEN 0 ELSE 1 END, m.file_order
-                LIMIT 1) as first_media
+                LIMIT 1) as first_media,
+               ${userId ? `EXISTS (SELECT 1 FROM favorites WHERE user_id = ${userId} AND listing_id = l.id) as is_favorite` : 'false as is_favorite'}
         FROM listings l
         JOIN users u ON l.user_id = u.id
         LEFT JOIN categories c ON l.category_id = c.id
@@ -436,7 +443,7 @@ router.get('/filter', async (req, res) => {
     }
 });
 
-// ===== ИЗМЕНЁННЫЙ МАРШРУТ GET / — добавлено поле first_photo =====
+// ===== МАРШРУТ GET / =====
 router.get('/', async (req, res) => {
     try {
         const result = await pool.query(`
@@ -455,7 +462,7 @@ router.get('/', async (req, res) => {
                     FROM listing_media
                     WHERE listing_id = l.id
                     ORDER BY CASE WHEN is_main THEN 0 ELSE 1 END, file_order
-                    LIMIT 1) as first_photo   -- +++ ДОБАВЛЕНО поле с путём к первому фото
+                    LIMIT 1) as first_photo
             FROM listings l
             JOIN users u ON l.user_id = u.id
             LEFT JOIN categories c ON l.category_id = c.id
@@ -482,12 +489,69 @@ router.get('/', async (req, res) => {
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
-// ===== КОНЕЦ ИЗМЕНЕНИЙ =====
 
+// ===== МАРШРУТ /my (исправлен – активные объявления без archived) =====
 router.get('/my', auth, async (req, res) => {
     try {
-        const result = await pool.query(`
-            SELECT l.*, c.name as category_name, c.icon as category_icon,
+        const userId = req.userId;
+        const { page = 1, limit, search, type, status, category_id } = req.query;
+
+        // Если limit не передан – возвращаем все объявления (без пагинации)
+        const hasPagination = limit !== undefined && limit !== null && limit !== '';
+        const limitValue = hasPagination ? parseInt(limit) : null;
+        const offsetValue = hasPagination ? (parseInt(page) - 1) * limitValue : null;
+
+        const conditions = ['l.user_id = $1'];
+        const values = [userId];
+        let paramIndex = 2;
+
+        // Поиск по названию ИЛИ описанию
+        if (search) {
+            conditions.push(`(l.title ILIKE $${paramIndex} OR l.description ILIKE $${paramIndex + 1})`);
+            values.push(`%${search}%`, `%${search}%`);
+            paramIndex += 2;
+        }
+
+        // Фильтр по типу
+        if (type && type !== 'all') {
+            conditions.push(`l.type = $${paramIndex}`);
+            values.push(type);
+            paramIndex++;
+        }
+
+        // Фильтр по статусу (переданный параметр)
+        if (status === 'active') {
+            conditions.push(`(l.status = 'active' OR l.status IS NULL)`);
+        } else if (status === 'archived') {
+            conditions.push(`l.status = 'archived'`);
+        } else {
+            // По умолчанию – не показываем архивные
+            conditions.push(`l.status != 'archived'`);
+        }
+
+        // Фильтр по категории
+        if (category_id) {
+            conditions.push(`l.category_id = $${paramIndex}`);
+            values.push(parseInt(category_id));
+            paramIndex++;
+        }
+
+        // Также показываем только неудалённые
+        conditions.push(`l.deleted_at IS NULL`);
+
+        const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+        const countQuery = `
+            SELECT COUNT(*) FROM listings l
+            ${whereClause}
+        `;
+        const countResult = await pool.query(countQuery, values);
+        const total = parseInt(countResult.rows[0].count);
+
+        let dataQuery = `
+            SELECT l.*,
+                   c.name as category_name,
+                   c.icon as category_icon,
                    cit.name as city_name,
                    b.last_bump_at, b.bump_count,
                    ST_X(l.coordinates::geometry) as lng,
@@ -501,21 +565,30 @@ router.get('/my', auth, async (req, res) => {
             LEFT JOIN categories c ON l.category_id = c.id
             LEFT JOIN cities cit ON l.city_id = cit.id
             LEFT JOIN listing_bumps b ON l.id = b.listing_id
-            WHERE l.user_id = $1
-              AND (l.status = 'active' OR l.status IS NULL)
-              AND l.deleted_at IS NULL
+            ${whereClause}
             ORDER BY l.updated_at DESC
-        `, [req.userId]);
-        const userProfile = await pool.query('SELECT phone, whatsapp, telegram FROM users WHERE id = $1', [req.userId]);
+        `;
+
+        if (hasPagination) {
+            dataQuery += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+            values.push(limitValue, offsetValue);
+        }
+
+        const result = await pool.query(dataQuery, values);
+
+        const userProfile = await pool.query('SELECT phone, whatsapp, telegram FROM users WHERE id = $1', [userId]);
         const user = userProfile.rows[0] || {};
+
         const listings = result.rows.map(row => fillContactsFromProfile(row, user));
+
         res.json(listings);
     } catch (err) {
-        console.error(err);
+        console.error('❌ Ошибка получения объявлений пользователя:', err);
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
 
+// ===== МАРШРУТ /my/archived =====
 router.get('/my/archived', auth, async (req, res) => {
     try {
         const result = await pool.query(`
@@ -539,6 +612,7 @@ router.get('/my/archived', auth, async (req, res) => {
     }
 });
 
+// ===== МАРШРУТ GET /:id =====
 router.get('/:id', async (req, res) => {
     try {
         let isModerator = false;
@@ -546,7 +620,6 @@ router.get('/:id', async (req, res) => {
         if (authHeader && authHeader.startsWith('Bearer ')) {
             try {
                 const token = authHeader.split(' ')[1];
-                const jwt = require('jsonwebtoken');
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
                 const userId = decoded.userId;
                 const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
@@ -604,6 +677,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+// ===== МАРШРУТ POST / (создание) =====
 router.post('/', auth, upload.array('media', 12), async (req, res) => {
     console.log('📥 POST /listings - начало обработки');
     const { 
@@ -707,6 +781,7 @@ router.post('/', auth, upload.array('media', 12), async (req, res) => {
     }
 }, multerErrorHandler);
 
+// ===== МАРШРУТ POST /:id/archive =====
 router.post('/:id/archive', auth, async (req, res) => {
     const userId = req.userId;
     const listingId = req.params.id;
@@ -723,6 +798,7 @@ router.post('/:id/archive', auth, async (req, res) => {
     }
 });
 
+// ===== МАРШРУТ POST /:id/restore =====
 router.post('/:id/restore', auth, async (req, res) => {
     const userId = req.userId;
     const listingId = req.params.id;
@@ -739,6 +815,7 @@ router.post('/:id/restore', auth, async (req, res) => {
     }
 });
 
+// ===== МАРШРУТ PUT /:id (обновление) =====
 router.put('/:id', auth, (req, res, next) => {
     upload.array('media', 10)(req, res, (err) => {
         if (err) {
@@ -844,6 +921,7 @@ router.put('/:id', auth, (req, res, next) => {
     }
 });
 
+// ===== МАРШРУТ DELETE /media/:mediaId =====
 router.delete('/media/:mediaId', auth, async (req, res) => {
     const mediaId = req.params.mediaId;
     const userId = req.userId;
@@ -867,6 +945,7 @@ router.delete('/media/:mediaId', auth, async (req, res) => {
     }
 });
 
+// ===== МАРШРУТ PUT /media/:mediaId/main =====
 router.put('/media/:mediaId/main', auth, async (req, res) => {
     const mediaId = req.params.mediaId;
     const userId = req.userId;
@@ -890,18 +969,14 @@ router.put('/media/:mediaId/main', auth, async (req, res) => {
     }
 });
 
-// ========== МАРШРУТЫ ДЛЯ ИЗБРАННОГО (С ВАЛИДАЦИЕЙ) ==========
-
+// ========== МАРШРУТЫ ДЛЯ ИЗБРАННОГО ==========
 router.post('/favorites/toggle', auth, async (req, res) => {
     const { listing_id } = req.body;
     const userId = req.userId;
-
-    // Валидация: проверяем, что listing_id — число
     const listingId = parseInt(listing_id);
-if (isNaN(listingId)) {
-    return res.status(400).json({ error: 'Неверный ID объявления' });
-}
-
+    if (isNaN(listingId)) {
+        return res.status(400).json({ error: 'Неверный ID объявления' });
+    }
     try {
         const exists = await pool.query('SELECT id FROM favorites WHERE user_id = $1 AND listing_id = $2', [userId, listingId]);
         if (exists.rows.length > 0) {
@@ -951,14 +1026,10 @@ router.get('/favorites/my', auth, async (req, res) => {
 
 router.get('/favorites/check/:listingId', auth, async (req, res) => {
     const userId = req.userId;
-    const listingIdParam = req.params.listingId;
-
-    // Валидация: проверяем, что listingId — число
-    const listingId = parseInt(listingIdParam);
+    const listingId = parseInt(req.params.listingId);
     if (isNaN(listingId)) {
         return res.status(400).json({ error: 'Неверный ID объявления' });
     }
-
     try {
         const result = await pool.query('SELECT id FROM favorites WHERE user_id = $1 AND listing_id = $2', [userId, listingId]);
         res.json({ favorited: result.rows.length > 0 });
@@ -968,8 +1039,7 @@ router.get('/favorites/check/:listingId', auth, async (req, res) => {
     }
 });
 
-// ========== ОСТАЛЬНЫЕ МАРШРУТЫ (БЕЗ ИЗМЕНЕНИЙ) ==========
-
+// ========== ИСТОРИЯ ПРОСМОТРОВ ==========
 router.post('/:id/view', auth, async (req, res) => {
     const userId = req.userId;
     const listingId = req.params.id;
@@ -1049,6 +1119,7 @@ router.delete('/history/clear', auth, async (req, res) => {
     }
 });
 
+// ========== ЖАЛОБЫ ==========
 router.post('/:id/complaint', auth, async (req, res) => {
     const complainantId = req.userId;
     const listingId = req.params.id;
@@ -1071,6 +1142,7 @@ router.post('/:id/complaint', auth, async (req, res) => {
     }
 });
 
+// ========== УДАЛЕНИЕ НАВСЕГДА ==========
 router.delete('/my/:id/permanent', auth, async (req, res) => {
     const userId = req.userId;
     const listingId = req.params.id;
@@ -1110,6 +1182,7 @@ router.delete('/my/:id/permanent', auth, async (req, res) => {
     }
 });
 
+// ========== ПОДНЯТИЕ (BUMP) ==========
 router.post('/:id/bump', auth, async (req, res) => {
     const listingId = req.params.id;
     const userId = req.userId;
@@ -1170,8 +1243,7 @@ router.post('/:id/bump', auth, async (req, res) => {
     }
 });
 
-// ========== МАРШРУТЫ ДЛЯ КОНТАКТОВ (С ПОДДЕРЖКОЙ ACTION) ==========
-
+// ========== КОНТАКТЫ ==========
 router.get('/:id/contacts', auth, async (req, res) => {
     const listingId = req.params.id;
     const userId = req.userId;
