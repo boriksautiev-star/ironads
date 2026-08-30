@@ -133,7 +133,7 @@ router.post('/purchase', auth, async (req, res) => {
         const planMap = {
             1: { type: 'listing', priceKey: 'price_listing', periodKey: 'price_listing_period', slots: 5 },
             2: { type: 'renewal', priceKey: 'price_renewal', periodKey: 'price_renewal_period', slots: 5 },
-            3: { type: 'autobump', priceKey: 'price_autobump', periodKey: 'price_autobump_period', slots: 0 }
+            3: { type: 'autobump', priceKey: 'price_autobump', periodKey: 'price_autobump_period', slots: 5 }
         };
 
         let planInfo = planMap[planId];

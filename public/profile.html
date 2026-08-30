@@ -501,7 +501,7 @@
         </div>
     </div>
 
-    <!-- ===== ОБНОВЛЁННАЯ МОДАЛКА ВЫБОРА ===== -->
+    <!-- ===== МОДАЛКА ВЫБОРА ===== -->
     <div id="selectListingsModal" class="modal">
         <div class="modal-content">
             <h3 id="selectListingsTitle">Выберите объявления для пакета</h3>
@@ -550,6 +550,9 @@
     <script src="https://js.hcaptcha.com/1/api.js?hl=ru" async defer></script>
     <script src="/js/common.js"></script>
     <script>
+        // ========== ЧАСТЬ 1 ЗАКАНЧИВАЕТСЯ ЗДЕСЬ ==========
+                // ========== ЧАСТЬ 2 (JavaScript: вспомогательные функции, загрузка данных, подписки) ==========
+
         // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
         function initMapForModal(containerId, latInputId, lngInputId, searchInputId, searchBtnId, clearBtnId, geoBtnId, suggestListId) {
             if (typeof ymaps === 'undefined') {
@@ -708,6 +711,7 @@
 
         let isPartner = false;
         let currentUserData = null;
+        window.activeListingPackages = []; // глобально для проверки автопилота
 
         // ========== ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ ==========
         async function loadUserData() {
@@ -879,7 +883,7 @@
             } catch(e) { showNotification('Ошибка соединения', 'error'); }
         }
 
-        // ========== ПОДПИСКИ ==========
+        // ========== ПОДПИСКИ (ОБНОВЛЁННАЯ ВЕРСИЯ) ==========
         async function loadSubscriptionStatus() {
             try {
                 if (!currentUserData) {
@@ -938,6 +942,9 @@
                     filteredListingPackages = listingPackages.filter(pkg => pkg.plan_id !== null);
                     filteredAutobumpPackages = autobumpPackages.filter(pkg => pkg.plan_id !== null);
                 }
+
+                // Сохраняем активные пакеты продления для проверки автопилота
+                window.activeListingPackages = filteredListingPackages;
 
                 const renderPackage = (pkg, type) => {
                     const used = pkg.listing_ids ? pkg.listing_ids.length : 0;
@@ -1013,6 +1020,7 @@
                                 <button class="btn-secondary btn-sm toggle-package" data-type="${type}" data-id="${pkg.id}" data-max="${max}" data-mode="${isPartner ? 'manage' : 'view'}">📋 Управлять</button>
                                 ${!isPartner ? `<button class="btn-primary btn-sm renew-package" data-id="${pkg.id}" data-type="${type}">🔄 Продлить</button>` : ''}
                                 ${pkg.listing_ids && pkg.listing_ids.length ? `<button class="btn-danger-sm clear-package" data-id="${pkg.id}" data-type="${type}">Очистить все</button>` : ''}
+                                ${isActive ? `<button class="btn-danger-sm cancel-package" data-id="${pkg.id}" data-type="${type}">❌ Отменить</button>` : ''}
                             </div>
                         </div>
                     `;
@@ -1115,6 +1123,19 @@
                     };
                 });
 
+                // ========== ОБРАБОТЧИК ДЛЯ ОТМЕНЫ ==========
+                document.querySelectorAll('.cancel-package').forEach(btn => {
+                    btn.onclick = async function() {
+                        const packageId = this.dataset.id;
+                        if (!packageId) {
+                            showNotification('Ошибка: ID пакета не найден', 'error');
+                            return;
+                        }
+                        if (!confirm('Вы уверены, что хотите отменить эту подписку? Это действие необратимо.')) return;
+                        await cancelSubscription(packageId);
+                    };
+                });
+
                 for (const pkg of filteredListingPackages) {
                     const listId = `listing-package-${pkg.id}`;
                     if (expandedPackages[listId]) {
@@ -1140,34 +1161,42 @@
             }
         }
 
-        function renderSubscriptionButtons(isPartnerUser) {
-            const container = document.getElementById('subscriptionActions');
-            if (!container) return;
-            console.log('🔹 renderSubscriptionButtons called with isPartnerUser =', isPartnerUser);
-            if (isPartnerUser) {
-                container.innerHTML = `
-                    <button class="btn-primary" id="buyPartnerPlanBtn">➕ Купить тариф</button>
-                `;
-                document.getElementById('buyPartnerPlanBtn')?.addEventListener('click', function() {
-                    showPartnerPlansModal();
+        // ========== ЧАСТЬ 2 ЗАКАНЧИВАЕТСЯ ЗДЕСЬ ==========
+                // ========== ЧАСТЬ 3 (JavaScript: остальные функции — отмена, покупка, управление, объявления, инициализация) ==========
+
+        // ========== ОТМЕНА ПОДПИСКИ ==========
+        async function cancelSubscription(subscriptionId) {
+            try {
+                const resp = await fetch(`${API_URL}/subscriptions/${subscriptionId}/cancel`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
                 });
-            } else {
-                container.innerHTML = `
-                    <button class="btn-primary" id="buyExtraRenewBtn">➕ Купить ещё пакет продления</button>
-                    <button class="btn-primary" id="buyExtraAutobumpBtn">➕ Купить ещё пакет автопилота</button>
-                `;
-                document.getElementById('buyExtraRenewBtn')?.addEventListener('click', function() {
-                    showListingSelector('renewal', 'purchase', null);
-                });
-                document.getElementById('buyExtraAutobumpBtn')?.addEventListener('click', function() {
-                    showListingSelector('autobump', 'purchase', null);
-                });
+                const data = await resp.json();
+                if (resp.ok) {
+                    showNotification('Подписка успешно отменена', 'success');
+                    await loadSubscriptionStatus();
+                } else {
+                    showNotification(data.error || 'Ошибка отмены подписки', 'error');
+                }
+            } catch (e) {
+                showNotification('Ошибка соединения при отмене подписки', 'error');
+                console.error(e);
             }
         }
 
-        // ===================== ИСПРАВЛЕННАЯ ЛОГИКА ТАРИФОВ =====================
+        // ========== ФУНКЦИЯ РЕНДЕРИНГА КНОПОК (одна для всех) ==========
+        function renderSubscriptionButtons(isPartnerUser) {
+            const container = document.getElementById('subscriptionActions');
+            if (!container) return;
+            container.innerHTML = `
+                <button class="btn-primary" id="buyPlanBtn">➕ Купить тариф</button>
+            `;
+            document.getElementById('buyPlanBtn')?.addEventListener('click', function() {
+                showPartnerPlansModal();
+            });
+        }
 
-        // === ПОКАЗ МОДАЛКИ С ТАРИФАМИ (ОБЩАЯ ДЛЯ ПАРТНЁРОВ И ОБЫЧНЫХ) ===
+        // ===== МОДАЛКА ТАРИФОВ (все тарифы покупаются через buyRegularPlan или buyPartnerPlan) =====
         function renderPlansModal(plans, title) {
             const container = document.getElementById('partnerPlansList');
             const modalTitle = document.querySelector('#buyPartnerPlanModal h3');
@@ -1195,7 +1224,7 @@
                 container.innerHTML = html;
                 document.querySelectorAll('.buy-plan-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
-                        const planId = this.dataset.planid;
+                        const planId = parseInt(this.dataset.planid);
                         if (isPartner) {
                             buyPartnerPlan(planId);
                         } else {
@@ -1207,7 +1236,7 @@
             showModal('buyPartnerPlanModal');
         }
 
-        // === ПОКУПКА ПАРТНЁРСКОГО ТАРИФА ===
+        // ===== ПОКУПКА ПАРТНЁРСКОГО ТАРИФА =====
         function buyPartnerPlan(planId) {
             const token = localStorage.getItem('token');
             fetch('/api/payments/create', {
@@ -1237,7 +1266,7 @@
             .catch(err => alert('Ошибка: ' + err.message));
         }
 
-        // === ПОКУПКА ОБЫЧНОГО ТАРИФА ===
+        // ===== ПОКУПКА ОБЫЧНОГО ТАРИФА (включая автопилот) =====
         async function buyRegularPlan(planId) {
             const token = localStorage.getItem('token');
             try {
@@ -1262,11 +1291,8 @@
             }
         }
 
-        // === ОСНОВНАЯ ФУНКЦИЯ ПОКАЗА ТАРИФОВ (ПАРТНЁРСКИХ ИЛИ ОБЫЧНЫХ) ===
+        // ===== ПОКАЗ ТАРИФОВ =====
         async function showPartnerPlansModal() {
-            // 1️⃣ Обновляем статус партнёра
-            await loadSubscriptionStatus();
-
             const token = localStorage.getItem('token');
             let url, title;
 
@@ -1283,7 +1309,6 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                // Если партнёрский запрос вернул 403 – переключаемся на обычные тарифы
                 if (res.status === 403 && isPartner) {
                     isPartner = false;
                     const res2 = await fetch('/api/subscriptions/plans', {
@@ -1299,7 +1324,6 @@
                 const plans = await res.json();
                 renderPlansModal(plans, title);
             } catch (err) {
-                // В случае ошибки – пытаемся открыть обычные тарифы
                 try {
                     const resFallback = await fetch('/api/subscriptions/plans', {
                         headers: { 'Authorization': `Bearer ${token}` }
@@ -1317,6 +1341,7 @@
         // ========== УПРАВЛЕНИЕ СОСТАВОМ ==========
         let currentManageSubId = null;
         let currentManageType = null;
+        let currentPackageListingIds = []; // массив ID объявлений, которые уже в пакете
 
         async function openManageSubscription(subId, type) {
             if (!subId || isNaN(subId) || subId === 'null' || subId === 'undefined') {
@@ -1333,13 +1358,15 @@
             confirmBtn.textContent = '💾 Сохранить состав';
         }
 
+        // ===== ЗАГРУЗКА СПИСКА ОБЪЯВЛЕНИЙ В ПАКЕТЕ (исправлен путь и обработка ответа) =====
         async function loadPackageList(type, subscriptionId, maxSlots, container) {
             try {
                 const listingsResp = await fetch(`${API_URL}/listings/my`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
                 const allListings = await listingsResp.json();
-                const packageResp = await fetch(`${API_URL}/payments/subscriptions/${subscriptionId}/listings`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
+                const packageResp = await fetch(`${API_URL}/subscriptions/${subscriptionId}/listings`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
+                // Сервер возвращает массив объявлений напрямую
                 const packageData = await packageResp.json();
-                const currentIds = packageData.map(l => l.id);
+                const currentIds = Array.isArray(packageData) ? packageData.map(l => l.id) : [];
 
                 let html = `<div class="slot-info" style="width:100%; margin-bottom:0.5rem;">Занято слотов: ${currentIds.length} из ${maxSlots}</div>`;
                 if (allListings.length === 0) {
@@ -1364,10 +1391,11 @@
             }
         }
 
+        // ===== ДОБАВЛЕНИЕ/УДАЛЕНИЕ ОБЪЯВЛЕНИЯ В ПАКЕТЕ (исправлены пути) =====
         async function toggleListingInPackage(subscriptionId, listingId, add, type) {
             try {
                 if (add) {
-                    const resp = await fetch(`${API_URL}/payments/subscriptions/${subscriptionId}/listings`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ listingId }) });
+                    const resp = await fetch(`${API_URL}/subscriptions/${subscriptionId}/listings`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ listingId }) });
                     if (!resp.ok) {
                         const err = await resp.json();
                         showNotification(err.error || 'Ошибка добавления', 'error');
@@ -1376,7 +1404,7 @@
                         return;
                     }
                 } else {
-                    const resp = await fetch(`${API_URL}/payments/subscriptions/${subscriptionId}/listings/${listingId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${currentToken}` } });
+                    const resp = await fetch(`${API_URL}/subscriptions/${subscriptionId}/listings/${listingId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${currentToken}` } });
                     if (!resp.ok) {
                         const err = await resp.json();
                         showNotification(err.error || 'Ошибка удаления', 'error');
@@ -1554,7 +1582,81 @@
             renderSelectListings();
         });
 
-        // ===== ФУНКЦИЯ showListingSelector =====
+        // ===== ОБРАБОТЧИК ПОДТВЕРЖДЕНИЯ (исправлен для управления составом) =====
+        document.getElementById('confirmSelectListings').addEventListener('click', async function() {
+            const modal = document.getElementById('selectListingsModal');
+            const mode = modal.dataset.mode || 'purchase';
+            const packageId = modal.dataset.packageId;
+            const type = modal.dataset.packageType;
+
+            if (selectedIds.length === 0) {
+                alert('Выберите хотя бы одно объявление');
+                return;
+            }
+
+            if (mode === 'manage' && packageId) {
+                // Управление составом – отправляем POST/DELETE для каждого изменения
+                const currentIds = currentPackageListingIds || [];
+                const newIds = selectedIds;
+
+                // Найти ID, которые нужно добавить (есть в new, нет в current)
+                const toAdd = newIds.filter(id => !currentIds.includes(id));
+                // Найти ID, которые нужно удалить (есть в current, нет в new)
+                const toRemove = currentIds.filter(id => !newIds.includes(id));
+
+                if (toAdd.length === 0 && toRemove.length === 0) {
+                    showNotification('Состав не изменился', 'success');
+                    closeModal('selectListingsModal');
+                    return;
+                }
+
+                try {
+                    // Добавляем
+                    for (const id of toAdd) {
+                        const resp = await fetch(`${API_URL}/subscriptions/${packageId}/listings`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${currentToken}`
+                            },
+                            body: JSON.stringify({ listingId: id })
+                        });
+                        if (!resp.ok) {
+                            const err = await resp.json();
+                            throw new Error(err.error || 'Ошибка добавления объявления');
+                        }
+                    }
+                    // Удаляем
+                    for (const id of toRemove) {
+                        const resp = await fetch(`${API_URL}/subscriptions/${packageId}/listings/${id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${currentToken}`
+                            }
+                        });
+                        if (!resp.ok) {
+                            const err = await resp.json();
+                            throw new Error(err.error || 'Ошибка удаления объявления');
+                        }
+                    }
+
+                    showNotification('Состав обновлён', 'success');
+                    closeModal('selectListingsModal');
+                    await loadSubscriptionStatus();
+                } catch (e) {
+                    alert('Ошибка при обновлении состава: ' + e.message);
+                }
+                return;
+            }
+
+            // Обычная покупка (для не-управления)
+            if (!type) { alert('Ошибка: не указан тип пакета'); return; }
+            if (selectedIds.length > 5) { alert('Можно выбрать не более 5 объявлений'); return; }
+            closeModal('selectListingsModal');
+            await initiatePayment(type, selectedIds);
+        });
+
+        // ===== ПОКАЗАТЬ СЕЛЕКТОР ДЛЯ ПОКУПКИ ИЛИ УПРАВЛЕНИЯ =====
         async function showListingSelector(type, mode = 'purchase', subscriptionId = null) {
             selectedPackageType = type;
             const modal = document.getElementById('selectListingsModal');
@@ -1595,7 +1697,7 @@
                 let listings = await resp.json();
 
                 if (mode === 'manage' && subscriptionId) {
-                    const subResp = await fetch(`${API_URL}/payments/subscriptions/${subscriptionId}/listings?limit=1000`, {
+                    const subResp = await fetch(`${API_URL}/subscriptions/${subscriptionId}/listings?limit=1000`, {
                         headers: { 'Authorization': `Bearer ${currentToken}` }
                     });
                     if (!subResp.ok) {
@@ -1603,20 +1705,31 @@
                         console.error('Ошибка загрузки подписки:', subResp.status, errText);
                         currentSelectListings = listings.map(l => ({ ...l, in_package: false }));
                         selectedIds = [];
+                        currentPackageListingIds = [];
                     } else {
+                        // Сервер возвращает массив объявлений напрямую
                         const subData = await subResp.json();
-                        if (subData.listings && Array.isArray(subData.listings)) {
-                            currentSelectListings = subData.listings;
-                            selectedIds = currentSelectListings.filter(l => l.in_package).map(l => l.id);
+                        if (Array.isArray(subData)) {
+                            // subData – это массив объявлений, уже в пакете
+                            const packageListingIds = subData.map(l => l.id);
+                            currentPackageListingIds = packageListingIds;
+                            // Отмечаем их как in_package
+                            currentSelectListings = listings.map(l => ({
+                                ...l,
+                                in_package: packageListingIds.includes(l.id)
+                            }));
+                            selectedIds = packageListingIds.slice(); // копируем
                         } else {
-                            console.error('Ответ не содержит listings:', subData);
+                            console.error('Ответ не является массивом:', subData);
                             currentSelectListings = listings.map(l => ({ ...l, in_package: false }));
                             selectedIds = [];
+                            currentPackageListingIds = [];
                         }
                     }
                 } else {
                     currentSelectListings = listings.map(l => ({ ...l, in_package: false }));
                     selectedIds = [];
+                    currentPackageListingIds = [];
                 }
 
                 selectListingsFiltered = currentSelectListings;
@@ -1638,48 +1751,7 @@
             }
         }
 
-        document.getElementById('confirmSelectListings').addEventListener('click', async function() {
-            const modal = document.getElementById('selectListingsModal');
-            const mode = modal.dataset.mode || 'purchase';
-            const packageId = modal.dataset.packageId;
-            const type = modal.dataset.packageType;
-
-            if (selectedIds.length === 0) {
-                alert('Выберите хотя бы одно объявление');
-                return;
-            }
-
-            if (mode === 'manage' && packageId) {
-                const token = localStorage.getItem('token');
-                try {
-                    const resp = await fetch(`${API_URL}/payments/subscriptions/${packageId}/listings`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({ listingIds: selectedIds })
-                    });
-                    const data = await resp.json();
-                    if (resp.ok) {
-                        showNotification(data.message || 'Состав обновлён', 'success');
-                        closeModal('selectListingsModal');
-                        await loadSubscriptionStatus();
-                    } else {
-                        alert('Ошибка: ' + data.error);
-                    }
-                } catch(e) {
-                    alert('Ошибка соединения');
-                }
-                return;
-            }
-
-            if (!type) { alert('Ошибка: не указан тип пакета'); return; }
-            if (selectedIds.length > 5) { alert('Можно выбрать не более 5 объявлений'); return; }
-            closeModal('selectListingsModal');
-            await initiatePayment(type, selectedIds);
-        });
-
+        // ===== ПРОДЛЕНИЕ ПАКЕТА =====
         async function renewPackage(packageId, listingIds) {
             try {
                 const resp = await fetch(`${API_URL}/payments/subscriptions/${packageId}/renew`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ listingIds }) });
@@ -1689,6 +1761,7 @@
             } catch(e) { showNotification('Ошибка соединения', 'error'); }
         }
 
+        // ===== ИНИЦИАЦИЯ ПЛАТЕЖА =====
         async function initiatePayment(type, listingIds) {
             try {
                 const resp = await fetch(`${API_URL}/payments/create`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ subscriptionType: type, listingIds }) });
@@ -1699,18 +1772,20 @@
             } catch(e) { console.error('Ошибка в initiatePayment:', e); showNotification('Ошибка соединения', 'error'); }
         }
 
+        // ===== ПОКАЗ МОДАЛКИ ДЛЯ ПРОДЛЕНИЯ (исправлен путь) =====
         async function showRenewModal(packageId, type) {
             try {
-                const resp = await fetch(`${API_URL}/payments/subscriptions/${packageId}/listings`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
+                const resp = await fetch(`${API_URL}/subscriptions/${packageId}/listings`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
                 if (!resp.ok) { alert('Ошибка загрузки состава пакета'); return; }
                 const currentListings = await resp.json();
-                const currentIds = currentListings.map(l => l.id);
+                const currentIds = Array.isArray(currentListings) ? currentListings.map(l => l.id) : [];
                 const allListingsResp = await fetch(`${API_URL}/listings/my`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
                 if (!allListingsResp.ok) { alert('Ошибка загрузки объявлений'); return; }
                 const allListings = await allListingsResp.json();
                 currentSelectListings = allListings;
                 selectListingsFiltered = allListings;
                 selectedIds = currentIds;
+                currentPackageListingIds = currentIds;
                 selectListingsPage = 1;
                 document.getElementById('selectedCount').textContent = `Выбрано: ${selectedIds.length}`;
                 renderSelectListings();
@@ -2286,7 +2361,7 @@
         function goBackInProfile() {
             if (document.referrer && document.referrer !== window.location.href) window.history.back();
             else window.location.href = '/';
-        }        
+        }
 
         // ========== ИНИЦИАЛИЗАЦИЯ ==========
         (async function init() {
