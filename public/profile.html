@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Профиль пользователя - IronAds</title>
+    <title>Профиль v2 - IronAds</title>
     <meta name="description" content="Профиль пользователя на IronAds. Объявления, рейтинг и контакты.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="manifest" href="/manifest.json">
@@ -165,16 +165,78 @@
             cursor: pointer;
             font-size: 0.9rem;
         }
+        /* ===== ПЕРЕПИСАННЫЙ CHECKBOX ДЛЯ IOS ===== */
         .modal-grid .listing-checkbox {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.3rem 0;
+            gap: 0.75rem;
+            padding: 0.5rem 0.4rem;
             border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 48px;
         }
         body.dark-theme .modal-grid .listing-checkbox { border-bottom-color: #334155; }
-        .modal-grid .listing-checkbox label { flex: 1; font-size: 0.85rem; cursor: pointer; }
-        .modal-grid .listing-checkbox input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #667eea; }
+        .modal-grid .listing-checkbox:active {
+            background: #f0f4ff;
+        }
+        body.dark-theme .modal-grid .listing-checkbox:active {
+            background: #1e3a5f;
+        }
+        .modal-grid .listing-checkbox.selected {
+            background: #eef2ff;
+        }
+        body.dark-theme .modal-grid .listing-checkbox.selected {
+            background: #1e3a5f;
+        }
+        .modal-grid .listing-checkbox .checkbox-visual {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: white;
+            transition: all 0.15s;
+        }
+        body.dark-theme .modal-grid .listing-checkbox .checkbox-visual {
+            background: #1e293b;
+            border-color: #475569;
+        }
+        .modal-grid .listing-checkbox.selected .checkbox-visual {
+            background: #667eea;
+            border-color: #667eea;
+        }
+        .modal-grid .listing-checkbox .checkbox-visual::after {
+            content: '✓';
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            display: none;
+        }
+        .modal-grid .listing-checkbox.selected .checkbox-visual::after {
+            display: block;
+        }
+        .modal-grid .listing-checkbox .checkbox-label-text {
+            flex: 1;
+            font-size: 0.85rem;
+            color: #1f2937;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        body.dark-theme .modal-grid .listing-checkbox .checkbox-label-text {
+            color: #e2e8f0;
+        }
+        /* Скрываем нативный чекбокс, но оставляем для доступности */
+        .modal-grid .listing-checkbox input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            width: 0;
+            height: 0;
+        }
         .modal-grid .search-box { width: 100%; padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 0.75rem; font-size: 0.85rem; margin-bottom: 0.5rem; }
         body.dark-theme .modal-grid .search-box { background: #0f172a; border-color: #334155; color: #f1f5f9; }
         .modal-grid .quick-actions { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
@@ -373,6 +435,18 @@
                 height: 100px;
             }
         }
+
+        /* ===== ФИКСЫ ДЛЯ iOS SAFARI ===== */
+        .modal, .modal-content, .listing-checkbox, .modal-card-item {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+        @media (max-width: 768px) {
+            .modal {
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+            }
+        }
     </style>
     <link rel="stylesheet" href="/dark-theme.css">
 </head>
@@ -550,9 +624,6 @@
     <script src="https://js.hcaptcha.com/1/api.js?hl=ru" async defer></script>
     <script src="/js/common.js"></script>
     <script>
-        // ========== ЧАСТЬ 1 ЗАКАНЧИВАЕТСЯ ЗДЕСЬ ==========
-                // ========== ЧАСТЬ 2 (JavaScript: вспомогательные функции, загрузка данных, подписки) ==========
-
         // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
         function initMapForModal(containerId, latInputId, lngInputId, searchInputId, searchBtnId, clearBtnId, geoBtnId, suggestListId) {
             if (typeof ymaps === 'undefined') {
@@ -711,7 +782,7 @@
 
         let isPartner = false;
         let currentUserData = null;
-        window.activeListingPackages = []; // глобально для проверки автопилота
+        window.activeListingPackages = [];
 
         // ========== ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ ==========
         async function loadUserData() {
@@ -883,12 +954,10 @@
             } catch(e) { showNotification('Ошибка соединения', 'error'); }
         }
 
-        // ========== ПОДПИСКИ (ОБНОВЛЁННАЯ ВЕРСИЯ) ==========
+        // ========== ПОДПИСКИ ==========
         async function loadSubscriptionStatus() {
             try {
-                if (!currentUserData) {
-                    await loadUserData();
-                }
+                if (!currentUserData) { await loadUserData(); }
 
                 const resp = await fetch(`${API_URL}/payments/status`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
                 if (!resp.ok) throw new Error();
@@ -896,20 +965,10 @@
 
                 let partnerFromSubs = false;
                 if (data.listing && Array.isArray(data.listing)) {
-                    for (const pkg of data.listing) {
-                        if (pkg.plan_name || pkg.max_slots > 5) {
-                            partnerFromSubs = true;
-                            break;
-                        }
-                    }
+                    for (const pkg of data.listing) { if (pkg.plan_name || pkg.max_slots > 5) { partnerFromSubs = true; break; } }
                 }
                 if (!partnerFromSubs && data.autobump && Array.isArray(data.autobump)) {
-                    for (const pkg of data.autobump) {
-                        if (pkg.plan_name || pkg.max_slots > 5) {
-                            partnerFromSubs = true;
-                            break;
-                        }
-                    }
+                    for (const pkg of data.autobump) { if (pkg.plan_name || pkg.max_slots > 5) { partnerFromSubs = true; break; } }
                 }
 
                 isPartner = currentUserData?.is_partner || partnerFromSubs || false;
@@ -935,7 +994,6 @@
                 const listingPackages = Array.isArray(data.listing) ? data.listing : (data.listing ? [data.listing] : []);
                 const autobumpPackages = Array.isArray(data.autobump) ? data.autobump : (data.autobump ? [data.autobump] : []);
 
-                // Фильтр для партнёров
                 let filteredListingPackages = listingPackages;
                 let filteredAutobumpPackages = autobumpPackages;
                 if (isPartner) {
@@ -943,7 +1001,6 @@
                     filteredAutobumpPackages = autobumpPackages.filter(pkg => pkg.plan_id !== null);
                 }
 
-                // Сохраняем активные пакеты продления для проверки автопилота
                 window.activeListingPackages = filteredListingPackages;
 
                 const renderPackage = (pkg, type) => {
@@ -952,21 +1009,9 @@
                     const percent = max > 0 ? Math.round((used / max) * 100) : 0;
 
                     let startDate = 'сейчас';
-                    if (pkg.start_date) {
-                        try {
-                            startDate = new Date(pkg.start_date).toLocaleDateString();
-                        } catch (e) {
-                            startDate = 'неизвестно';
-                        }
-                    }
+                    if (pkg.start_date) { try { startDate = new Date(pkg.start_date).toLocaleDateString(); } catch (e) { startDate = 'неизвестно'; } }
                     let endDate = 'неизвестно';
-                    if (pkg.end_date) {
-                        try {
-                            endDate = new Date(pkg.end_date).toLocaleDateString();
-                        } catch (e) {
-                            endDate = 'неизвестно';
-                        }
-                    }
+                    if (pkg.end_date) { try { endDate = new Date(pkg.end_date).toLocaleDateString(); } catch (e) { endDate = 'неизвестно'; } }
 
                     const listId = `${type}-package-${pkg.id}`;
                     const isActive = new Date(pkg.end_date) > new Date();
@@ -978,20 +1023,12 @@
 
                     if (isPartner) {
                         if (type === 'autobump') {
-                            if (pkg.plan_name) {
-                                label = `🤖 Автопилот (${pkg.plan_name})`;
-                            } else {
-                                label = `🤖 Автопилот (включён)`;
-                            }
+                            if (pkg.plan_name) { label = `🤖 Автопилот (${pkg.plan_name})`; }
+                            else { label = `🤖 Автопилот (включён)`; }
                             icon = '🤖';
                         } else {
-                            if (pkg.plan_name) {
-                                label = `⭐ ${pkg.plan_name}`;
-                                icon = '🏷️';
-                            } else {
-                                label = `📋 Тариф на ${max} объявлений`;
-                                icon = '📋';
-                            }
+                            if (pkg.plan_name) { label = `⭐ ${pkg.plan_name}`; icon = '🏷️'; }
+                            else { label = `📋 Тариф на ${max} объявлений`; icon = '📋'; }
                         }
                     }
 
@@ -1040,7 +1077,6 @@
 
                 document.getElementById('subscriptionStatus').innerHTML = html;
 
-                // ===== ОБРАБОТЧИКИ =====
                 document.querySelectorAll('.toggle-package').forEach(btn => {
                     btn.onclick = async function() {
                         const type = this.dataset.type;
@@ -1048,11 +1084,7 @@
                         const maxSlots = parseInt(this.dataset.max) || 0;
                         const mode = this.dataset.mode || 'view';
 
-                        if (!id || isNaN(id)) {
-                            console.error('❌ Неверный ID подписки:', id);
-                            showNotification('Ошибка: неверный ID подписки', 'error');
-                            return;
-                        }
+                        if (!id || isNaN(id)) { console.error('❌ Неверный ID подписки:', id); showNotification('Ошибка: неверный ID подписки', 'error'); return; }
 
                         if (mode === 'manage') {
                             await openManageSubscription(id, type);
@@ -1082,55 +1114,34 @@
                         if (!confirm(`Удалить объявление #${listingId} из пакета?`)) return;
                         try {
                             const resp = await fetch(`${API_URL}/payments/subscriptions/${packageId}/listings/${listingId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${currentToken}` } });
-                            if (resp.ok) {
-                                showNotification('Объявление удалено из пакета', 'success');
-                                await loadSubscriptionStatus();
-                            } else {
-                                const err = await resp.json();
-                                showNotification(err.error || 'Ошибка', 'error');
-                            }
+                            if (resp.ok) { showNotification('Объявление удалено из пакета', 'success'); await loadSubscriptionStatus(); }
+                            else { const err = await resp.json(); showNotification(err.error || 'Ошибка', 'error'); }
                         } catch(e) { showNotification('Ошибка соединения', 'error'); }
                     };
                 });
 
                 document.querySelectorAll('.renew-package').forEach(btn => {
-                    btn.onclick = function() {
-                        const packageId = this.dataset.id;
-                        const type = this.dataset.type;
-                        showRenewModal(packageId, type);
-                    };
+                    btn.onclick = function() { const packageId = this.dataset.id; const type = this.dataset.type; showRenewModal(packageId, type); };
                 });
 
                 document.querySelectorAll('.clear-package').forEach(btn => {
                     btn.onclick = async function() {
                         const packageId = this.dataset.id;
                         const type = this.dataset.type;
-                        if (!packageId) {
-                            showNotification('Ошибка: ID пакета не найден', 'error');
-                            return;
-                        }
+                        if (!packageId) { showNotification('Ошибка: ID пакета не найден', 'error'); return; }
                         if (!confirm(`Удалить все объявления из пакета #${packageId}?`)) return;
                         try {
                             const resp = await fetch(`${API_URL}/payments/subscriptions/${packageId}/listings/clear`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${currentToken}` } });
-                            if (resp.ok) {
-                                showNotification('Все объявления удалены из пакета', 'success');
-                                await loadSubscriptionStatus();
-                            } else {
-                                const err = await resp.json();
-                                showNotification(err.error || 'Ошибка', 'error');
-                            }
+                            if (resp.ok) { showNotification('Все объявления удалены из пакета', 'success'); await loadSubscriptionStatus(); }
+                            else { const err = await resp.json(); showNotification(err.error || 'Ошибка', 'error'); }
                         } catch(e) { showNotification('Ошибка соединения', 'error'); }
                     };
                 });
 
-                // ========== ОБРАБОТЧИК ДЛЯ ОТМЕНЫ ==========
                 document.querySelectorAll('.cancel-package').forEach(btn => {
                     btn.onclick = async function() {
                         const packageId = this.dataset.id;
-                        if (!packageId) {
-                            showNotification('Ошибка: ID пакета не найден', 'error');
-                            return;
-                        }
+                        if (!packageId) { showNotification('Ошибка: ID пакета не найден', 'error'); return; }
                         if (!confirm('Вы уверены, что хотите отменить эту подписку? Это действие необратимо.')) return;
                         await cancelSubscription(packageId);
                     };
@@ -1140,18 +1151,14 @@
                     const listId = `listing-package-${pkg.id}`;
                     if (expandedPackages[listId]) {
                         const container = document.getElementById(listId);
-                        if (container && !container.innerHTML.trim()) {
-                            await loadPackageList('listing', pkg.id, pkg.max_slots || 0, container);
-                        }
+                        if (container && !container.innerHTML.trim()) { await loadPackageList('listing', pkg.id, pkg.max_slots || 0, container); }
                     }
                 }
                 for (const pkg of filteredAutobumpPackages) {
                     const listId = `autobump-package-${pkg.id}`;
                     if (expandedPackages[listId]) {
                         const container = document.getElementById(listId);
-                        if (container && !container.innerHTML.trim()) {
-                            await loadPackageList('autobump', pkg.id, pkg.max_slots || 0, container);
-                        }
+                        if (container && !container.innerHTML.trim()) { await loadPackageList('autobump', pkg.id, pkg.max_slots || 0, container); }
                     }
                 }
 
@@ -1161,42 +1168,22 @@
             }
         }
 
-        // ========== ЧАСТЬ 2 ЗАКАНЧИВАЕТСЯ ЗДЕСЬ ==========
-                // ========== ЧАСТЬ 3 (JavaScript: остальные функции — отмена, покупка, управление, объявления, инициализация) ==========
-
-        // ========== ОТМЕНА ПОДПИСКИ ==========
         async function cancelSubscription(subscriptionId) {
             try {
-                const resp = await fetch(`${API_URL}/subscriptions/${subscriptionId}/cancel`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${currentToken}` }
-                });
+                const resp = await fetch(`${API_URL}/subscriptions/${subscriptionId}/cancel`, { method: 'POST', headers: { 'Authorization': `Bearer ${currentToken}` } });
                 const data = await resp.json();
-                if (resp.ok) {
-                    showNotification('Подписка успешно отменена', 'success');
-                    await loadSubscriptionStatus();
-                } else {
-                    showNotification(data.error || 'Ошибка отмены подписки', 'error');
-                }
-            } catch (e) {
-                showNotification('Ошибка соединения при отмене подписки', 'error');
-                console.error(e);
-            }
+                if (resp.ok) { showNotification('Подписка успешно отменена', 'success'); await loadSubscriptionStatus(); }
+                else { showNotification(data.error || 'Ошибка отмены подписки', 'error'); }
+            } catch (e) { showNotification('Ошибка соединения при отмене подписки', 'error'); console.error(e); }
         }
 
-        // ========== ФУНКЦИЯ РЕНДЕРИНГА КНОПОК (одна для всех) ==========
         function renderSubscriptionButtons(isPartnerUser) {
             const container = document.getElementById('subscriptionActions');
             if (!container) return;
-            container.innerHTML = `
-                <button class="btn-primary" id="buyPlanBtn">➕ Купить тариф</button>
-            `;
-            document.getElementById('buyPlanBtn')?.addEventListener('click', function() {
-                showPartnerPlansModal();
-            });
+            container.innerHTML = `<button class="btn-primary" id="buyPlanBtn">➕ Купить тариф</button>`;
+            document.getElementById('buyPlanBtn')?.addEventListener('click', function() { showPartnerPlansModal(); });
         }
 
-        // ===== МОДАЛКА ТАРИФОВ (все тарифы покупаются через buyRegularPlan или buyPartnerPlan) =====
         function renderPlansModal(plans, title) {
             const container = document.getElementById('partnerPlansList');
             const modalTitle = document.querySelector('#buyPartnerPlanModal h3');
@@ -1225,95 +1212,56 @@
                 document.querySelectorAll('.buy-plan-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const planId = parseInt(this.dataset.planid);
-                        if (isPartner) {
-                            buyPartnerPlan(planId);
-                        } else {
-                            buyRegularPlan(planId);
-                        }
+                        if (isPartner) { buyPartnerPlan(planId); } else { buyRegularPlan(planId); }
                     });
                 });
             }
             showModal('buyPartnerPlanModal');
         }
 
-        // ===== ПОКУПКА ПАРТНЁРСКОГО ТАРИФА =====
         function buyPartnerPlan(planId) {
             const token = localStorage.getItem('token');
             fetch('/api/payments/create', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    subscriptionType: 'renewal',
-                    listingIds: [],
-                    planId: planId
-                })
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ subscriptionType: 'renewal', listingIds: [], planId: planId })
             })
             .then(res => res.json())
             .then(data => {
-                if (data.free) {
-                    alert('Подписка активирована бесплатно!');
-                    closeModal('buyPartnerPlanModal');
-                    loadSubscriptionStatus();
-                } else if (data.confirmationUrl) {
-                    window.location.href = data.confirmationUrl;
-                } else {
-                    alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
-                }
+                if (data.free) { alert('Подписка активирована бесплатно!'); closeModal('buyPartnerPlanModal'); loadSubscriptionStatus(); }
+                else if (data.confirmationUrl) { window.location.href = data.confirmationUrl; }
+                else { alert('Ошибка: ' + (data.error || 'Неизвестная ошибка')); }
             })
             .catch(err => alert('Ошибка: ' + err.message));
         }
 
-        // ===== ПОКУПКА ОБЫЧНОГО ТАРИФА (включая автопилот) =====
         async function buyRegularPlan(planId) {
             const token = localStorage.getItem('token');
             try {
                 const resp = await fetch('/api/subscriptions/purchase', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ planId })
                 });
                 const data = await resp.json();
-                if (resp.ok) {
-                    alert('Подписка приобретена!');
-                    closeModal('buyPartnerPlanModal');
-                    loadSubscriptionStatus();
-                } else {
-                    alert(data.error || 'Ошибка покупки');
-                }
-            } catch (err) {
-                alert('Ошибка: ' + err.message);
-            }
+                if (resp.ok) { alert('Подписка приобретена!'); closeModal('buyPartnerPlanModal'); loadSubscriptionStatus(); }
+                else { alert(data.error || 'Ошибка покупки'); }
+            } catch (err) { alert('Ошибка: ' + err.message); }
         }
 
-        // ===== ПОКАЗ ТАРИФОВ =====
         async function showPartnerPlansModal() {
             const token = localStorage.getItem('token');
             let url, title;
 
-            if (isPartner) {
-                url = '/api/partner/plans';
-                title = '🤝 Партнёрские тарифы';
-            } else {
-                url = '/api/subscriptions/plans';
-                title = '📋 Выберите тариф';
-            }
+            if (isPartner) { url = '/api/partner/plans'; title = '🤝 Партнёрские тарифы'; }
+            else { url = '/api/subscriptions/plans'; title = '📋 Выберите тариф'; }
 
             try {
-                const res = await fetch(url, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
 
                 if (res.status === 403 && isPartner) {
                     isPartner = false;
-                    const res2 = await fetch('/api/subscriptions/plans', {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
+                    const res2 = await fetch('/api/subscriptions/plans', { headers: { 'Authorization': `Bearer ${token}` } });
                     if (!res2.ok) throw new Error('Не удалось загрузить тарифы');
                     const plans = await res2.json();
                     renderPlansModal(plans, '📋 Выберите тариф');
@@ -1325,23 +1273,16 @@
                 renderPlansModal(plans, title);
             } catch (err) {
                 try {
-                    const resFallback = await fetch('/api/subscriptions/plans', {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    if (resFallback.ok) {
-                        const plans = await resFallback.json();
-                        renderPlansModal(plans, '📋 Выберите тариф');
-                        return;
-                    }
+                    const resFallback = await fetch('/api/subscriptions/plans', { headers: { 'Authorization': `Bearer ${token}` } });
+                    if (resFallback.ok) { const plans = await resFallback.json(); renderPlansModal(plans, '📋 Выберите тариф'); return; }
                 } catch (e) {}
                 alert('Ошибка: ' + err.message);
             }
         }
 
-        // ========== УПРАВЛЕНИЕ СОСТАВОМ ==========
         let currentManageSubId = null;
         let currentManageType = null;
-        let currentPackageListingIds = []; // массив ID объявлений, которые уже в пакете
+        let currentPackageListingIds = [];
 
         async function openManageSubscription(subId, type) {
             if (!subId || isNaN(subId) || subId === 'null' || subId === 'undefined') {
@@ -1358,13 +1299,11 @@
             confirmBtn.textContent = '💾 Сохранить состав';
         }
 
-        // ===== ЗАГРУЗКА СПИСКА ОБЪЯВЛЕНИЙ В ПАКЕТЕ (исправлен путь и обработка ответа) =====
         async function loadPackageList(type, subscriptionId, maxSlots, container) {
             try {
                 const listingsResp = await fetch(`${API_URL}/listings/my`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
                 const allListings = await listingsResp.json();
                 const packageResp = await fetch(`${API_URL}/subscriptions/${subscriptionId}/listings`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
-                // Сервер возвращает массив объявлений напрямую
                 const packageData = await packageResp.json();
                 const currentIds = Array.isArray(packageData) ? packageData.map(l => l.id) : [];
 
@@ -1391,27 +1330,14 @@
             }
         }
 
-        // ===== ДОБАВЛЕНИЕ/УДАЛЕНИЕ ОБЪЯВЛЕНИЯ В ПАКЕТЕ (исправлены пути) =====
         async function toggleListingInPackage(subscriptionId, listingId, add, type) {
             try {
                 if (add) {
                     const resp = await fetch(`${API_URL}/subscriptions/${subscriptionId}/listings`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ listingId }) });
-                    if (!resp.ok) {
-                        const err = await resp.json();
-                        showNotification(err.error || 'Ошибка добавления', 'error');
-                        const cb = document.getElementById(`pkg_${type}_${subscriptionId}_${listingId}`);
-                        if (cb) cb.checked = false;
-                        return;
-                    }
+                    if (!resp.ok) { const err = await resp.json(); showNotification(err.error || 'Ошибка добавления', 'error'); const cb = document.getElementById(`pkg_${type}_${subscriptionId}_${listingId}`); if (cb) cb.checked = false; return; }
                 } else {
                     const resp = await fetch(`${API_URL}/subscriptions/${subscriptionId}/listings/${listingId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${currentToken}` } });
-                    if (!resp.ok) {
-                        const err = await resp.json();
-                        showNotification(err.error || 'Ошибка удаления', 'error');
-                        const cb = document.getElementById(`pkg_${type}_${subscriptionId}_${listingId}`);
-                        if (cb) cb.checked = true;
-                        return;
-                    }
+                    if (!resp.ok) { const err = await resp.json(); showNotification(err.error || 'Ошибка удаления', 'error'); const cb = document.getElementById(`pkg_${type}_${subscriptionId}_${listingId}`); if (cb) cb.checked = true; return; }
                 }
                 showNotification('Состав пакета обновлён', 'success');
                 await loadSubscriptionStatus();
@@ -1427,10 +1353,10 @@
             } catch(e) { showNotification('Ошибка соединения', 'error'); }
         }
 
-        // ===== МОДАЛЬНОЕ ОКНО ВЫБОРА =====
         let currentSelectListings = [];
         let currentViewMode = 'list';
 
+        // ===== РАДИКАЛЬНО ПЕРЕПИСАННАЯ ФУНКЦИЯ =====
         function renderSelectListings() {
             const container = document.getElementById('selectListingsContainer');
             const pagination = document.getElementById('selectListingsPagination');
@@ -1451,6 +1377,7 @@
             const useCards = (currentViewMode === 'cards');
 
             if (useCards) {
+                // ===== РЕЖИМ КАРТОЧЕК =====
                 let html = '<div class="modal-card-grid">';
                 for (const l of pageItems) {
                     const selected = selectedIds.includes(l.id);
@@ -1474,51 +1401,64 @@
                 html += '</div>';
                 container.innerHTML = html;
 
-                container.querySelectorAll('.modal-card-item').forEach(el => {
-                    el.addEventListener('click', function() {
-                        const id = parseInt(this.dataset.id);
-                        const idx = selectedIds.indexOf(id);
-                        if (idx === -1) {
-                            if (selectedIds.length >= 5) {
-                                showNotification('Можно выбрать не более 5 объявлений', 'error');
-                                return;
-                            }
-                            selectedIds.push(id);
-                        } else {
-                            selectedIds.splice(idx, 1);
+                // Клик по карточке через делегирование — БЕЗ пересоздания DOM
+                container.onclick = function(e) {
+                    const card = e.target.closest('.modal-card-item');
+                    if (!card) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const id = parseInt(card.dataset.id);
+                    const isSelected = selectedIds.includes(id);
+                    if (isSelected) {
+                        selectedIds = selectedIds.filter(x => x !== id);
+                        card.classList.remove('selected');
+                    } else {
+                        if (selectedIds.length >= 5) {
+                            showNotification('Можно выбрать не более 5 объявлений', 'error');
+                            return;
                         }
-                        renderSelectListings();
-                        updateSelectedList();
-                        document.getElementById('selectedCount').textContent = `Выбрано: ${selectedIds.length}`;
-                    });
-                });
-
+                        selectedIds.push(id);
+                        card.classList.add('selected');
+                    }
+                    updateSelectedList();
+                    document.getElementById('selectedCount').textContent = `Выбрано: ${selectedIds.length}`;
+                };
             } else {
+                // ===== РЕЖИМ СПИСКА (переписан полностью) =====
                 let html = '';
                 for (const l of pageItems) {
-                    const checked = selectedIds.includes(l.id);
+                    const selected = selectedIds.includes(l.id);
                     html += `
-                        <div class="listing-checkbox">
-                            <input type="checkbox" class="select-listing-cb" value="${l.id}" ${checked ? 'checked' : ''}>
-                            <label for="sel_${l.id}">${escapeHtml(l.title)} (${l.price} ₽)</label>
+                        <div class="listing-checkbox ${selected ? 'selected' : ''}" data-id="${l.id}">
+                            <div class="checkbox-visual"></div>
+                            <div class="checkbox-label-text">${escapeHtml(l.title)} (${l.price.toLocaleString()} ₽)</div>
                         </div>
                     `;
                 }
                 container.innerHTML = html;
 
-                document.querySelectorAll('.select-listing-cb').forEach(cb => {
-                    cb.onchange = function() {
-                        const val = parseInt(this.value);
-                        if (this.checked) {
-                            if (selectedIds.length >= 5) { showNotification('Можно выбрать не более 5 объявлений', 'error'); this.checked = false; return; }
-                            if (!selectedIds.includes(val)) selectedIds.push(val);
-                        } else {
-                            selectedIds = selectedIds.filter(id => id !== val);
+                // Делегирование: один обработчик на весь контейнер — работает на iOS
+                container.onclick = function(e) {
+                    const row = e.target.closest('.listing-checkbox');
+                    if (!row) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const id = parseInt(row.dataset.id);
+                    const isSelected = selectedIds.includes(id);
+                    if (isSelected) {
+                        selectedIds = selectedIds.filter(x => x !== id);
+                        row.classList.remove('selected');
+                    } else {
+                        if (selectedIds.length >= 5) {
+                            showNotification('Можно выбрать не более 5 объявлений', 'error');
+                            return;
                         }
-                        updateSelectedList();
-                        document.getElementById('selectedCount').textContent = `Выбрано: ${selectedIds.length}`;
-                    };
-                });
+                        selectedIds.push(id);
+                        row.classList.add('selected');
+                    }
+                    updateSelectedList();
+                    document.getElementById('selectedCount').textContent = `Выбрано: ${selectedIds.length}`;
+                };
             }
 
             if (totalPages > 1) {
@@ -1549,10 +1489,11 @@
                 btn.onclick = function() {
                     const id = parseInt(this.dataset.id);
                     selectedIds = selectedIds.filter(sid => sid !== id);
-                    updateSelectedList();
-                    document.querySelectorAll('.select-listing-cb').forEach(cb => {
-                        if (parseInt(cb.value) === id) cb.checked = false;
+                    // Обновляем UI без полной перерисовки
+                    document.querySelectorAll('.listing-checkbox, .modal-card-item').forEach(el => {
+                        if (parseInt(el.dataset.id) === id) el.classList.remove('selected');
                     });
+                    updateSelectedList();
                     document.getElementById('selectedCount').textContent = `Выбрано: ${selectedIds.length}`;
                 };
             });
@@ -1575,33 +1516,27 @@
             const toAdd = available.slice(0, 5 - selectedIds.length);
             toAdd.forEach(l => { if (!selectedIds.includes(l.id)) selectedIds.push(l.id); });
             renderSelectListings();
+            updateSelectedList();
         });
 
         document.getElementById('clearAllSelected').addEventListener('click', function() {
             selectedIds = [];
             renderSelectListings();
+            updateSelectedList();
         });
 
-        // ===== ОБРАБОТЧИК ПОДТВЕРЖДЕНИЯ (исправлен для управления составом) =====
         document.getElementById('confirmSelectListings').addEventListener('click', async function() {
             const modal = document.getElementById('selectListingsModal');
             const mode = modal.dataset.mode || 'purchase';
             const packageId = modal.dataset.packageId;
             const type = modal.dataset.packageType;
 
-            if (selectedIds.length === 0) {
-                alert('Выберите хотя бы одно объявление');
-                return;
-            }
+            if (selectedIds.length === 0) { alert('Выберите хотя бы одно объявление'); return; }
 
             if (mode === 'manage' && packageId) {
-                // Управление составом – отправляем POST/DELETE для каждого изменения
                 const currentIds = currentPackageListingIds || [];
                 const newIds = selectedIds;
-
-                // Найти ID, которые нужно добавить (есть в new, нет в current)
                 const toAdd = newIds.filter(id => !currentIds.includes(id));
-                // Найти ID, которые нужно удалить (есть в current, нет в new)
                 const toRemove = currentIds.filter(id => !newIds.includes(id));
 
                 if (toAdd.length === 0 && toRemove.length === 0) {
@@ -1611,33 +1546,20 @@
                 }
 
                 try {
-                    // Добавляем
                     for (const id of toAdd) {
                         const resp = await fetch(`${API_URL}/subscriptions/${packageId}/listings`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${currentToken}`
-                            },
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
                             body: JSON.stringify({ listingId: id })
                         });
-                        if (!resp.ok) {
-                            const err = await resp.json();
-                            throw new Error(err.error || 'Ошибка добавления объявления');
-                        }
+                        if (!resp.ok) { const err = await resp.json(); throw new Error(err.error || 'Ошибка добавления объявления'); }
                     }
-                    // Удаляем
                     for (const id of toRemove) {
                         const resp = await fetch(`${API_URL}/subscriptions/${packageId}/listings/${id}`, {
                             method: 'DELETE',
-                            headers: {
-                                'Authorization': `Bearer ${currentToken}`
-                            }
+                            headers: { 'Authorization': `Bearer ${currentToken}` }
                         });
-                        if (!resp.ok) {
-                            const err = await resp.json();
-                            throw new Error(err.error || 'Ошибка удаления объявления');
-                        }
+                        if (!resp.ok) { const err = await resp.json(); throw new Error(err.error || 'Ошибка удаления объявления'); }
                     }
 
                     showNotification('Состав обновлён', 'success');
@@ -1649,14 +1571,12 @@
                 return;
             }
 
-            // Обычная покупка (для не-управления)
             if (!type) { alert('Ошибка: не указан тип пакета'); return; }
             if (selectedIds.length > 5) { alert('Можно выбрать не более 5 объявлений'); return; }
             closeModal('selectListingsModal');
             await initiatePayment(type, selectedIds);
         });
 
-        // ===== ПОКАЗАТЬ СЕЛЕКТОР ДЛЯ ПОКУПКИ ИЛИ УПРАВЛЕНИЯ =====
         async function showListingSelector(type, mode = 'purchase', subscriptionId = null) {
             selectedPackageType = type;
             const modal = document.getElementById('selectListingsModal');
@@ -1676,18 +1596,13 @@
             modal.dataset.packageId = subscriptionId || '';
             modal.dataset.packageType = type;
 
-            if (isPartner && mode === 'manage') {
-                currentViewMode = 'cards';
-            } else {
-                currentViewMode = 'list';
-            }
+            if (isPartner && mode === 'manage') { currentViewMode = 'cards'; }
+            else { currentViewMode = 'list'; }
 
             const viewToggle = document.querySelector('.view-toggle');
             if (viewToggle) {
                 viewToggle.style.display = 'flex';
-                viewToggle.querySelectorAll('button').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.view === currentViewMode);
-                });
+                viewToggle.querySelectorAll('button').forEach(btn => { btn.classList.toggle('active', btn.dataset.view === currentViewMode); });
             }
 
             try {
@@ -1697,9 +1612,7 @@
                 let listings = await resp.json();
 
                 if (mode === 'manage' && subscriptionId) {
-                    const subResp = await fetch(`${API_URL}/subscriptions/${subscriptionId}/listings?limit=1000`, {
-                        headers: { 'Authorization': `Bearer ${currentToken}` }
-                    });
+                    const subResp = await fetch(`${API_URL}/subscriptions/${subscriptionId}/listings?limit=1000`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
                     if (!subResp.ok) {
                         const errText = await subResp.text();
                         console.error('Ошибка загрузки подписки:', subResp.status, errText);
@@ -1707,18 +1620,12 @@
                         selectedIds = [];
                         currentPackageListingIds = [];
                     } else {
-                        // Сервер возвращает массив объявлений напрямую
                         const subData = await subResp.json();
                         if (Array.isArray(subData)) {
-                            // subData – это массив объявлений, уже в пакете
                             const packageListingIds = subData.map(l => l.id);
                             currentPackageListingIds = packageListingIds;
-                            // Отмечаем их как in_package
-                            currentSelectListings = listings.map(l => ({
-                                ...l,
-                                in_package: packageListingIds.includes(l.id)
-                            }));
-                            selectedIds = packageListingIds.slice(); // копируем
+                            currentSelectListings = listings.map(l => ({ ...l, in_package: packageListingIds.includes(l.id) }));
+                            selectedIds = packageListingIds.slice();
                         } else {
                             console.error('Ответ не является массивом:', subData);
                             currentSelectListings = listings.map(l => ({ ...l, in_package: false }));
@@ -1733,7 +1640,6 @@
                 }
 
                 selectListingsFiltered = currentSelectListings;
-
                 selectListingsPage = 1;
                 document.getElementById('selectedCount').textContent = `Выбрано: ${selectedIds.length}`;
                 if (mode === 'manage') {
@@ -1744,6 +1650,7 @@
                     document.getElementById('confirmSelectListings').textContent = '✅ Подтвердить';
                 }
                 renderSelectListings();
+                updateSelectedList();
                 showModal('selectListingsModal');
             } catch(e) {
                 console.error('Ошибка в showListingSelector:', e);
@@ -1751,7 +1658,6 @@
             }
         }
 
-        // ===== ПРОДЛЕНИЕ ПАКЕТА =====
         async function renewPackage(packageId, listingIds) {
             try {
                 const resp = await fetch(`${API_URL}/payments/subscriptions/${packageId}/renew`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ listingIds }) });
@@ -1761,7 +1667,6 @@
             } catch(e) { showNotification('Ошибка соединения', 'error'); }
         }
 
-        // ===== ИНИЦИАЦИЯ ПЛАТЕЖА =====
         async function initiatePayment(type, listingIds) {
             try {
                 const resp = await fetch(`${API_URL}/payments/create`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ subscriptionType: type, listingIds }) });
@@ -1772,7 +1677,6 @@
             } catch(e) { console.error('Ошибка в initiatePayment:', e); showNotification('Ошибка соединения', 'error'); }
         }
 
-        // ===== ПОКАЗ МОДАЛКИ ДЛЯ ПРОДЛЕНИЯ (исправлен путь) =====
         async function showRenewModal(packageId, type) {
             try {
                 const resp = await fetch(`${API_URL}/subscriptions/${packageId}/listings`, { headers: { 'Authorization': `Bearer ${currentToken}` } });
@@ -1789,6 +1693,7 @@
                 selectListingsPage = 1;
                 document.getElementById('selectedCount').textContent = `Выбрано: ${selectedIds.length}`;
                 renderSelectListings();
+                updateSelectedList();
                 const modal = document.getElementById('selectListingsModal');
                 modal.dataset.packageId = packageId;
                 modal.dataset.packageType = type;
@@ -2163,7 +2068,6 @@
             } catch(e) { showNotification('Ошибка соединения', 'error'); }
         }
 
-        // ========== РЕДАКТИРОВАНИЕ ==========
         async function openEditModal(listingId) {
             try {
                 const resp = await fetch(`${API_URL}/listings/${listingId}`);
@@ -2206,13 +2110,8 @@
                     }
                 }
                 showModal('editModal');
-                setTimeout(() => {
-                    initMapForModal('editMap', 'editLat', 'editLng', 'editMapSearch', 'editMapSearchBtn', 'editMapClearBtn', 'editMapGeoBtn', 'editSuggestList');
-                }, 300);
-            } catch(e) {
-                console.error('Ошибка загрузки редактирования:', e);
-                showNotification('Ошибка загрузки: ' + e.message, 'error');
-            }
+                setTimeout(() => { initMapForModal('editMap', 'editLat', 'editLng', 'editMapSearch', 'editMapSearchBtn', 'editMapClearBtn', 'editMapGeoBtn', 'editSuggestList'); }, 300);
+            } catch(e) { console.error('Ошибка загрузки редактирования:', e); showNotification('Ошибка загрузки: ' + e.message, 'error'); }
         }
 
         function renderEditMediaList() {
@@ -2325,7 +2224,6 @@
             finally { submitBtn.disabled = false; submitBtn.classList.remove('btn-loading'); submitBtn.textContent = originalText; }
         }
 
-        // ========== ПОДНЯТИЕ ==========
         function getBumpButtonHtml(listing) {
             if (!listing.last_bump_at) return `<button class="btn-bump-listing" data-id="${listing.id}">🚀 Поднять</button>`;
             const lastBump = new Date(listing.last_bump_at);
@@ -2504,6 +2402,562 @@
             else if (currentTab === 'fav') loadFavoritesInProfile();
             else if (currentTab === 'archive') loadArchivedListings();
         };
+
+        // ===== ОБРАБОТЧИКИ ДЛЯ ПЕРЕКЛЮЧАТЕЛЯ ВИДА В МОДАЛКЕ =====
+        document.querySelectorAll('.view-toggle button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentViewMode = this.dataset.view;
+                renderSelectListings();
+            });
+        });
     </script>
+<!-- ===== ФИКС: ВСЕГДА ОТКРЫВАЕМ МОДАЛКУ УПРАВЛЕНИЯ ===== -->
+<style>
+#selectListingsModal[style*="flex"] {
+    display: flex !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0,0,0,0.6) !important;
+    z-index: 99999 !important;
+    justify-content: center !important;
+    align-items: center !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+#selectListingsModal[style*="flex"] .modal-content {
+    background: #fff !important;
+    border-radius: 1.5rem !important;
+    padding: 1.5rem !important;
+    width: 95% !important;
+    max-width: 750px !important;
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+    position: relative !important;
+}
+.listing-checkbox {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    padding: 0.75rem 0.5rem !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent !important;
+    min-height: 48px !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+}
+.listing-checkbox.selected {
+    background: #eef2ff !important;
+}
+.checkbox-visual {
+    width: 24px !important;
+    height: 24px !important;
+    border: 2px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    background: #fff !important;
+}
+.listing-checkbox.selected .checkbox-visual {
+    background: #667eea !important;
+    border-color: #667eea !important;
+}
+.listing-checkbox.selected .checkbox-visual::after {
+    content: '✓' !important;
+    color: #fff !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+}
+.checkbox-label-text {
+    flex: 1 !important;
+    font-size: 0.9rem !important;
+    color: #1f2937 !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+}
+</style>
+
+<script>
+(function() {
+    console.log('🔧 ФИКС управления пакетами v2 загружается...');
+    
+    // Перехватываем клики по "Управлять" на фазе перехвата (capture)
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.toggle-package');
+        if (!btn) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        
+        const type = btn.dataset.type;
+        const id = btn.dataset.id;
+        
+        console.log('🔧 Перехвачен клик по "Управлять" для подписки', id, 'тип', type);
+        
+        if (!id || isNaN(parseInt(id))) {
+            alert('Ошибка: неверный ID подписки');
+            return;
+        }
+        
+        openManageModalDirectly(type, id);
+    }, true);
+    
+    async function openManageModalDirectly(type, subscriptionId) {
+        const API_URL = '/api';
+        const currentToken = localStorage.getItem('token');
+        if (!currentToken) { alert('Требуется авторизация'); return; }
+        
+        console.log('🔧 Открываем модалку для подписки', subscriptionId);
+        
+        const modal = document.getElementById('selectListingsModal');
+        modal.style.display = 'flex';
+        document.getElementById('selectListingsTitle').textContent = '✏️ Управление составом пакета';
+        
+        const container = document.getElementById('selectListingsContainer');
+        container.innerHTML = '<p style="text-align:center;padding:20px;">Загрузка...</p>';
+        
+        try {
+            const [allResp, subResp] = await Promise.all([
+                fetch(`${API_URL}/listings/my`, { headers: { 'Authorization': `Bearer ${currentToken}` } }),
+                fetch(`${API_URL}/subscriptions/${subscriptionId}/listings`, { headers: { 'Authorization': `Bearer ${currentToken}` } })
+            ]);
+            
+            const allListings = await allResp.json();
+            const subData = await subResp.json();
+            const currentIds = Array.isArray(subData) ? subData.map(l => l.id) : [];
+            
+            console.log('🔧 Загружено объявлений:', allListings.length, 'в пакете:', currentIds.length);
+            
+            if (!allListings.length) {
+                container.innerHTML = '<p style="text-align:center;padding:20px;color:#999;">У вас пока нет объявлений</p>';
+                return;
+            }
+            
+            let html = '';
+            for (const l of allListings) {
+                const selected = currentIds.includes(l.id);
+                const title = (l.title || 'Без названия').replace(/[&<>]/g, function(m) {
+                    if (m === '&') return '&amp;';
+                    if (m === '<') return '&lt;';
+                    if (m === '>') return '&gt;';
+                    return m;
+                });
+                html += `
+                    <div class="listing-checkbox${selected ? ' selected' : ''}" data-id="${l.id}">
+                        <div class="checkbox-visual"></div>
+                        <div class="checkbox-label-text">${title} (${(l.price || 0).toLocaleString()} ₽)</div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+            
+            // Делегированный обработчик кликов
+            container.onclick = function(e) {
+                const row = e.target.closest('.listing-checkbox');
+                if (!row) return;
+                e.preventDefault();
+                e.stopPropagation();
+                row.classList.toggle('selected');
+                
+                const selectedCount = container.querySelectorAll('.listing-checkbox.selected').length;
+                const countEl = document.getElementById('selectedCount');
+                if (countEl) countEl.textContent = 'Выбрано: ' + selectedCount;
+            };
+            
+            // Обновляем счётчик
+            const countEl = document.getElementById('selectedCount');
+            if (countEl) countEl.textContent = 'Выбрано: ' + currentIds.length;
+            
+            // ===== ГЛАВНОЕ ИСПРАВЛЕНИЕ: КЛОНИРУЕМ КНОПКУ, ЧТОБЫ СНЯТЬ СТАРЫЕ ОБРАБОТЧИКИ =====
+            const oldConfirmBtn = document.getElementById('confirmSelectListings');
+            const newConfirmBtn = oldConfirmBtn.cloneNode(true);
+            oldConfirmBtn.parentNode.replaceChild(newConfirmBtn, oldConfirmBtn);
+            newConfirmBtn.textContent = '💾 Сохранить состав';
+            
+            // Теперь у кнопки ТОЛЬКО наш обработчик
+            newConfirmBtn.onclick = async function() {
+                const selectedIds = [];
+                container.querySelectorAll('.listing-checkbox.selected').forEach(el => {
+                    selectedIds.push(parseInt(el.dataset.id));
+                });
+                
+                console.log('🔧 Сохраняем состав:', selectedIds);
+                
+                const toAdd = selectedIds.filter(id => !currentIds.includes(id));
+                const toRemove = currentIds.filter(id => !selectedIds.includes(id));
+                
+                console.log('🔧 Добавить:', toAdd, 'Удалить:', toRemove);
+                
+                if (toAdd.length === 0 && toRemove.length === 0) {
+                    alert('Состав не изменился');
+                    modal.style.display = 'none';
+                    return;
+                }
+                
+                let successCount = 0;
+                let errorCount = 0;
+                
+                try {
+                    for (const id of toAdd) {
+                        const resp = await fetch(`${API_URL}/subscriptions/${subscriptionId}/listings`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
+                            body: JSON.stringify({ listingId: id })
+                        });
+                        if (resp.ok) successCount++; else errorCount++;
+                    }
+                    for (const id of toRemove) {
+                        const resp = await fetch(`${API_URL}/subscriptions/${subscriptionId}/listings/${id}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${currentToken}` }
+                        });
+                        if (resp.ok) successCount++; else errorCount++;
+                    }
+                    
+                    if (errorCount > 0) {
+                        alert(`Частичный успех: обновлено ${successCount}, ошибок ${errorCount}`);
+                    } else {
+                        alert(`✅ Состав обновлён (${successCount} изменений)`);
+                    }
+                    modal.style.display = 'none';
+                    location.reload();
+                } catch (err) {
+                    alert('Ошибка: ' + err.message);
+                }
+            };
+            
+        } catch (err) {
+            console.error('❌ Ошибка загрузки:', err);
+            container.innerHTML = '<p style="text-align:center;padding:20px;color:red;">Ошибка загрузки: ' + err.message + '</p>';
+        }
+    }
+    
+    console.log('🔧 ФИКС управления пакетами v2 готов');
+})();
+</script>
+<!-- ===== ФИКС ДЛЯ iOS: ОБХОД КЭША + КАСТОМНЫЙ ALERT ===== -->
+<script>
+(function() {
+    console.log('🔧 iOS-патч v3 загружается...');
+    
+    // ===== 1. ОБХОД КЭША iOS SAFARI =====
+    const originalFetch = window.fetch;
+    window.fetch = function(url, options = {}) {
+        if (typeof url === 'string') {
+            const criticalEndpoints = [
+                '/api/payments/status',
+                '/api/payments/create',
+                '/api/subscriptions/plans',
+                '/api/subscriptions/my',
+                '/api/subscriptions/purchase',
+                '/api/partner/plans',
+                '/api/listings/my'
+            ];
+            const needsBust = criticalEndpoints.some(ep => url.includes(ep));
+            if (needsBust) {
+                const method = (options.method || 'GET').toUpperCase();
+                if (method === 'GET') {
+                    const separator = url.includes('?') ? '&' : '?';
+                    url = url + separator + '_t=' + Date.now();
+                }
+                options.headers = Object.assign({}, options.headers, {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache'
+                });
+                if (method === 'GET') options.cache = 'no-store';
+                console.log('🔧 Fetch:', method, url);
+            }
+        }
+        return originalFetch(url, options);
+    };
+    
+    // ===== 2. КАСТОМНЫЙ ТОСТ ВМЕСТО ALERT =====
+    window._origAlert = window.alert;
+    window.alert = function(msg) {
+        console.log('ALERT:', msg);
+        const n = document.getElementById('notification');
+        if (!n) { window._origAlert(msg); return; }
+        const isError = /ошибк|error|не удал|запрещ|недопуст|неверн|пуст/i.test(msg);
+        n.textContent = msg;
+        n.className = 'notification ' + (isError ? 'error' : 'success');
+        n.style.display = 'block';
+        n.style.zIndex = '99999';
+        setTimeout(() => { n.style.display = 'none'; }, 4000);
+    };
+    
+    // ===== 3. ФИКС КНОПКИ "КУПИТЬ ТАРИФ" =====
+    const patchBuyButtons = () => {
+        document.querySelectorAll('.buy-plan-btn').forEach(btn => {
+            if (btn._iosPatchedV3) return;
+            btn._iosPatchedV3 = true;
+            
+            btn.onclick = async function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const planId = parseInt(this.dataset.planid);
+                const token = localStorage.getItem('token');
+                
+                if (!planId || isNaN(planId)) { alert('Ошибка: неверный ID тарифа'); return; }
+                
+                this.disabled = true;
+                const origText = this.textContent;
+                this.textContent = '⏳ Покупка...';
+                
+                try {
+                    const isPartner = (typeof window.isPartner !== 'undefined' && window.isPartner) || false;
+                    let url, body;
+                    
+                    if (isPartner) {
+                        url = '/api/payments/create';
+                        body = { subscriptionType: 'renewal', listingIds: [], planId: planId };
+                    } else {
+                        url = '/api/subscriptions/purchase';
+                        body = { planId: planId };
+                    }
+                    
+                    const resp = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify(body)
+                    });
+                    
+                    const data = await resp.json();
+                    console.log('🔧 Ответ сервера:', resp.status, data);
+                    
+                    if (resp.ok) {
+                        alert('✅ Подписка приобретена! Обновляем...');
+                        document.getElementById('buyPartnerPlanModal').style.display = 'none';
+                        setTimeout(() => { window.location.reload(); }, 1200);
+                    } else {
+                        alert('Ошибка: ' + (data.error || 'неизвестно'));
+                        this.disabled = false;
+                        this.textContent = origText;
+                    }
+                } catch (err) {
+                    console.error('🔧 Ошибка покупки:', err);
+                    alert('Ошибка сети: ' + err.message);
+                    this.disabled = false;
+                    this.textContent = origText;
+                }
+            };
+        });
+    };
+    
+    patchBuyButtons();
+    new MutationObserver(patchBuyButtons).observe(document.body, { childList: true, subtree: true });
+    
+    // ===== 4. ДИАГНОСТИКА ЧЕРЕЗ ?debug=1 =====
+    if (window.location.search.includes('debug=1')) {
+        window._showSubscriptionsRaw = async function() {
+            const token = localStorage.getItem('token');
+            const resp = await fetch('/api/payments/status', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await resp.json();
+            window._origAlert('RAW RESPONSE:\n\n' + JSON.stringify(data, null, 2));
+        };
+        
+        const btn = document.createElement('button');
+        btn.textContent = '🔍 Показать подписки (debug)';
+        btn.style.cssText = 'position:fixed;bottom:10px;right:10px;z-index:99999;padding:10px 16px;background:#ef4444;color:#fff;border:none;border-radius:8px;font-weight:bold;';
+        btn.onclick = window._showSubscriptionsRaw;
+        document.body.appendChild(btn);
+    }
+    
+    console.log('🔧 iOS-патч v3 готов');
+})();
+</script>
+<!-- ===== ФИКС: подписки не исчезают при накоплении слотов ===== -->
+<script>
+(function() {
+    console.log('🔧 Патч v4: убираем ошибочный фильтр isPartner');
+    
+    const wait = setInterval(() => {
+        if (typeof window.loadSubscriptionStatus === 'function' && !window._fixedLoadSubV4) {
+            window._fixedLoadSubV4 = true;
+            clearInterval(wait);
+            
+            window.loadSubscriptionStatus = async function() {
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) return;
+                    
+                    let userData = null;
+                    try {
+                        const uj = localStorage.getItem('user');
+                        if (uj) userData = JSON.parse(uj);
+                    } catch(e) {}
+                    
+                    const resp = await fetch('/api/payments/status?_t=' + Date.now(), {
+                        headers: { 'Authorization': 'Bearer ' + token, 'Cache-Control': 'no-cache' }
+                    });
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                    const data = await resp.json();
+                    
+                    // ❗ ВАЖНО: определяем партнёра ТОЛЬКО по данным из user
+                    // НЕ используем max_slots > 5 — это была ошибка!
+                    const isPartner = (userData && userData.is_partner === true);
+                    
+                    console.log('🔧 isPartner =', isPartner, '(источник: user.is_partner)');
+                    
+                    const listingPackages = Array.isArray(data.listing) ? data.listing : (data.listing ? [data.listing] : []);
+                    const autobumpPackages = Array.isArray(data.autobump) ? data.autobump : (data.autobump ? [data.autobump] : []);
+                    
+                    // Сохраняем для возможного использования
+                    window.activeListingPackages = listingPackages;
+                    
+                    // ❗ БЕЗ ФИЛЬТРА — показываем ВСЁ
+                    let html = '';
+                    
+                    const renderPackage = (pkg, type) => {
+                        const used = pkg.listing_ids ? pkg.listing_ids.length : 0;
+                        const max = pkg.max_slots || 0;
+                        const percent = max > 0 ? Math.round((used / max) * 100) : 0;
+                        
+                        let startDate = 'сейчас', endDate = 'неизвестно';
+                        if (pkg.start_date) try { startDate = new Date(pkg.start_date).toLocaleDateString(); } catch(e) {}
+                        if (pkg.end_date) try { endDate = new Date(pkg.end_date).toLocaleDateString(); } catch(e) {}
+                        
+                        const listId = type + '-package-' + pkg.id;
+                        const isActive = new Date(pkg.end_date) > new Date();
+                        const isNear = isActive && (new Date(pkg.end_date) - new Date()) < 3*24*60*60*1000;
+                        const badgeStatus = isActive ? (isNear ? 'near' : 'active') : 'expired';
+                        
+                        let label = type === 'listing' ? '📦 Продление' : '🤖 Автопилот';
+                        let icon = type === 'listing' ? '📦' : '🤖';
+                        
+                        if (type === 'autobump') {
+                            label = pkg.plan_name ? ('🤖 Автопилот (' + pkg.plan_name + ')') : '🤖 Автопилот';
+                            icon = '🤖';
+                        } else {
+                            if (pkg.plan_name) { label = '⭐ ' + pkg.plan_name; icon = '🏷️'; }
+                            else { label = '📋 Тариф на ' + max + ' объявлений'; icon = '📋'; }
+                        }
+                        
+                        const tokenHtml = pkg.listing_ids && pkg.listing_ids.length
+                            ? pkg.listing_ids.filter(id => id !== null).map(id =>
+                                '<span class="listing-token" data-id="' + id + '">#' + id +
+                                ' <button class="remove-token" data-pkg="' + pkg.id + '" data-type="' + type + '" data-id="' + id + '" title="Удалить из пакета">✕</button></span>'
+                              ).join('')
+                            : '<span class="empty-token">Нет объявлений</span>';
+                        
+                        return '<div class="subscription-package ' + (!isActive ? 'expired' : '') + '" id="package-' + pkg.id + '">' +
+                            '<div class="header">' +
+                                '<span class="label">' + icon + ' ' + label + '</span>' +
+                                '<span class="badge-status ' + badgeStatus + '">' + (isActive ? (isNear ? '🟡 Скоро истекает' : '🟢 Активна') : '🔴 Истекла') + '</span>' +
+                                '<span class="date-range">' + startDate + ' – ' + endDate + '</span>' +
+                                '<span class="slot-info">' + used + ' из ' + max + ' слотов</span>' +
+                            '</div>' +
+                            '<div class="progress-container">' +
+                                '<div class="progress-track"><div class="progress-bar" style="width:' + percent + '%;"></div></div>' +
+                                '<span class="progress-label">' + percent + '%</span>' +
+                            '</div>' +
+                            '<div class="listing-tokens" id="' + listId + '">' + tokenHtml + '</div>' +
+                            '<div class="actions">' +
+                                '<button class="btn-secondary btn-sm toggle-package" data-type="' + type + '" data-id="' + pkg.id + '" data-max="' + max + '" data-mode="' + (isPartner ? 'manage' : 'view') + '">📋 Управлять</button>' +
+                                (!isPartner ? '<button class="btn-primary btn-sm renew-package" data-id="' + pkg.id + '" data-type="' + type + '">🔄 Продлить</button>' : '') +
+                                (pkg.listing_ids && pkg.listing_ids.length ? '<button class="btn-danger-sm clear-package" data-id="' + pkg.id + '" data-type="' + type + '">Очистить все</button>' : '') +
+                                (isActive ? '<button class="btn-danger-sm cancel-package" data-id="' + pkg.id + '" data-type="' + type + '">❌ Отменить</button>' : '') +
+                            '</div>' +
+                        '</div>';
+                    };
+                    
+                    if (data.trial) {
+                        html += '<div class="subscription-package"><div class="header">' +
+                            '<span class="label">🔓 Пробный период</span>' +
+                            '<span class="badge-status">Активен до ' + new Date(data.trial.expires_at).toLocaleDateString() + '</span>' +
+                            '</div></div>';
+                    }
+                    
+                    // ❗ Рендерим ВСЕ пакеты БЕЗ фильтрации
+                    if (listingPackages.length) {
+                        listingPackages.forEach(pkg => { html += renderPackage(pkg, 'listing'); });
+                    } else {
+                        html += '<div class="subscription-package"><span class="label">📦 Пакеты продления</span><span class="empty-token">нет активных</span></div>';
+                    }
+                    
+                    if (autobumpPackages.length) {
+                        autobumpPackages.forEach(pkg => { html += renderPackage(pkg, 'autobump'); });
+                    } else {
+                        html += '<div class="subscription-package"><span class="label">🤖 Автопилот</span><span class="empty-token">нет активных</span></div>';
+                    }
+                    
+                    document.getElementById('subscriptionStatus').innerHTML = html;
+                    
+                    // Кнопка "Купить тариф"
+                    const actContainer = document.getElementById('subscriptionActions');
+                    if (actContainer) {
+                        actContainer.innerHTML = '<button class="btn-primary" id="buyPlanBtn">➕ Купить тариф</button>';
+                        const bp = document.getElementById('buyPlanBtn');
+                        if (bp) bp.onclick = function() {
+                            if (typeof window.showPartnerPlansModal === 'function') window.showPartnerPlansModal();
+                        };
+                    }
+                    
+                    // Удаление токена
+                    document.querySelectorAll('.remove-token').forEach(btn => {
+                        btn.onclick = async function(e) {
+                            e.stopPropagation();
+                            const packageId = this.dataset.pkg;
+                            const listingId = this.dataset.id;
+                            if (!confirm('Удалить объявление #' + listingId + ' из пакета?')) return;
+                            try {
+                                const r = await fetch('/api/payments/subscriptions/' + packageId + '/listings/' + listingId, {
+                                    method: 'DELETE',
+                                    headers: { 'Authorization': 'Bearer ' + token }
+                                });
+                                if (r.ok) { alert('Удалено'); await window.loadSubscriptionStatus(); }
+                                else alert('Ошибка');
+                            } catch(e) { alert('Ошибка сети'); }
+                        };
+                    });
+                    
+                    // Отмена подписки
+                    document.querySelectorAll('.cancel-package').forEach(btn => {
+                        btn.onclick = async function() {
+                            const packageId = this.dataset.id;
+                            if (!confirm('Отменить подписку?')) return;
+                            const r = await fetch('/api/subscriptions/' + packageId + '/cancel', {
+                                method: 'POST',
+                                headers: { 'Authorization': 'Bearer ' + token }
+                            });
+                            if (r.ok) { alert('Отменено'); await window.loadSubscriptionStatus(); }
+                            else alert('Ошибка');
+                        };
+                    });
+                    
+                    // Продление
+                    document.querySelectorAll('.renew-package').forEach(btn => {
+                        btn.onclick = function() {
+                            const packageId = this.dataset.id;
+                            const type = this.dataset.type;
+                            if (typeof window.showRenewModal === 'function') window.showRenewModal(packageId, type);
+                        };
+                    });
+                    
+                    console.log('🔧 Показано пакетов БЕЗ фильтрации:', listingPackages.length, 'продлений +', autobumpPackages.length, 'автоподпиток');
+                    
+                } catch(e) {
+                    console.error('🔧 Ошибка loadSubscriptionStatus:', e);
+                    const el = document.getElementById('subscriptionStatus');
+                    if (el) el.innerHTML = '<div class="subscription-package"><span class="label">❌ Ошибка загрузки: ' + e.message + '</span></div>';
+                }
+            };
+            
+            // Запускаем исправленную версию сразу
+            setTimeout(() => window.loadSubscriptionStatus(), 100);
+        }
+    }, 100);
+})();
+</script>
 </body>
 </html>

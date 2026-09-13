@@ -159,7 +159,21 @@ app.use(cors({
 app.use(cookieParser());
 app.use(express.json({ limit: '500mb' }));
 app.use(express.urlencoded({ extended: true, limit: '500mb' }));
+
+// ===== СТАТИЧЕСКИЕ ФАЙЛЫ =====
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ===== ДОПОЛНИТЕЛЬНАЯ НАСТРОЙКА ДЛЯ APK =====
+// Устанавливаем правильные заголовки для APK-файлов, чтобы они скачивались, а не открывались
+app.use('/downloads', express.static(path.join(__dirname, 'public/downloads'), {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.apk')) {
+            res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+            res.setHeader('Content-Disposition', 'attachment; filename="IronAds.apk"');
+        }
+    }
+}));
+
 app.use(passport.initialize());
 
 // ===== SESSION (MemoryStore) =====
