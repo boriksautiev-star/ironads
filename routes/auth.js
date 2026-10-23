@@ -238,16 +238,14 @@ router.get('/vk', (req, res) => {
         const codeVerifier = generateCodeVerifier();
         const codeChallenge = generateCodeChallenge(codeVerifier);
         
-        req.session.vk_code_verifier = codeVerifier;
-        req.session.save(err => {
-            if (err) {
-                console.error('❌ Ошибка сохранения сессии VK:', err);
-                return res.status(500).send('Ошибка инициализации входа через ВКонтакте');
-            }
-            const authUrl = `https://id.vk.com/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
-            console.log('🔄 VK OAuth: редирект на', authUrl);
-            res.redirect(authUrl);
-        });
+        // Сохраняем code_verifier в Map, используя state как ключ
+        const state = crypto.randomBytes(16).toString('hex');
+        storeCodeVerifier(state, codeVerifier);
+        console.log('🔑 Сохраняем code_verifier для state:', state);
+        
+        const authUrl = `https://id.vk.com/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&code_challenge=${codeChallenge}&code_challenge_method=S256&state=${state}`;
+        console.log('🔄 VK OAuth: редирект на', authUrl);
+        res.redirect(authUrl);
     } catch (err) {
         console.error('❌ Ошибка в /auth/vk:', err);
         res.status(500).send('Ошибка инициализации входа через ВКонтакте');
@@ -277,10 +275,14 @@ router.get('/vk/callback', async (req, res) => {
                 return res.status(400).send('Код верификации истёк или не найден. Попробуйте снова.');
             }
         } else {
-            codeVerifier = req.session.vk_code_verifier;
+            // Берем codeVerifier из нашего хранилища по state
+            if (!state) {
+                return res.status(400).json({ error: 'Отсутствует параметр state' });
+            }
+            codeVerifier = getCodeVerifier(state);
             if (!codeVerifier) {
-                console.error('❌ code_verifier отсутствует в сессии!');
-                return res.status(400).json({ error: 'Отсутствует code_verifier. Попробуйте снова.' });
+                console.error('❌ code_verifier отсутствует или истек!');
+                return res.status(400).json({ error: 'Код верификации истёк или не найден. Попробуйте снова.' });
             }
         }
         

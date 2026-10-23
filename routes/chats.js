@@ -6,6 +6,82 @@ const path = require('path');
 const fs = require('fs');
 const pushService = require('../services/pushService');
 const router = express.Router();
+router.get('/archived', auth, async (req, res) => {
+    const userId = req.userId;
+    try {
+        const userRoleRes = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
+        const role = userRoleRes.rows[0]?.role;
+        const isStaff = (role === 'admin' || role === 'moderator');
+        let query = `
+            SELECT c.*, 
+                   l.title as listing_title,
+                   u_seller.username as seller_name,
+                   u_buyer.username as buyer_name,
+                   (SELECT COUNT(*) FROM messages m WHERE m.chat_id = c.id AND m.sender_id != $1 AND m.is_read = false) as unread_count,
+                   (EXTRACT(EPOCH FROM NOW() - 
+                       CASE WHEN c.seller_id = $1 THEN u_buyer.last_seen ELSE u_seller.last_seen END) < 300) as other_is_online
+            FROM chats c
+            LEFT JOIN listings l ON c.listing_id = l.id
+            JOIN users u_seller ON c.seller_id = u_seller.id AND u_seller.deleted_at IS NULL
+            JOIN users u_buyer ON c.buyer_id = u_buyer.id AND u_buyer.deleted_at IS NULL
+            WHERE (c.buyer_id = $1 AND c.status_buyer = 'archived') 
+               OR (c.seller_id = $1 AND c.status_seller = 'archived')
+        `;
+        if (!isStaff) {
+            query += ` AND c.listing_id IS NOT NULL`;
+        }
+        query += ` ORDER BY c.updated_at DESC`;
+        const result = await pool.query(query, [userId]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+router.get('/unread/count', auth, async (req, res) => {
+    const userId = req.userId;
+    try {
+        const userRoleRes = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
+        const role = userRoleRes.rows[0]?.role;
+        const isStaff = (role === 'admin' || role === 'moderator');
+        let query = `
+            SELECT COUNT(*) as count
+            FROM messages m JOIN chats c ON m.chat_id = c.id
+            WHERE ((c.buyer_id = $1 AND c.status_buyer = 'active') OR (c.seller_id = $1 AND c.status_seller = 'active'))
+            AND m.sender_id != $1 AND m.is_read = false
+        `;
+        if (!isStaff) {
+            query += ` AND c.listing_id IS NOT NULL`;
+        }
+        const result = await pool.query(query, [userId]);
+        res.json({ count: parseInt(result.rows[0].count) });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+router.get('/unread-count', auth, async (req, res) => {
+    const userId = req.userId;
+    try {
+        const userRoleRes = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
+        const role = userRoleRes.rows[0]?.role;
+        const isStaff = (role === 'admin' || role === 'moderator');
+        let query = `
+            SELECT COUNT(*) as count
+            FROM messages m JOIN chats c ON m.chat_id = c.id
+            WHERE ((c.buyer_id = $1 AND c.status_buyer = 'active') OR (c.seller_id = $1 AND c.status_seller = 'active'))
+            AND m.sender_id != $1 AND m.is_read = false
+        `;
+        if (!isStaff) {
+            query += ` AND c.listing_id IS NOT NULL`;
+        }
+        const result = await pool.query(query, [userId]);
+        res.json({ count: parseInt(result.rows[0].count) });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
 
 // Настройка multer для медиафайлов
 const mediaStorage = multer.diskStorage({
@@ -79,38 +155,6 @@ router.get('/', auth, async (req, res) => {
 });
 
 // Получить архивные чаты
-router.get('/archived', auth, async (req, res) => {
-    const userId = req.userId;
-    try {
-        const userRoleRes = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
-        const role = userRoleRes.rows[0]?.role;
-        const isStaff = (role === 'admin' || role === 'moderator');
-        let query = `
-            SELECT c.*, 
-                   l.title as listing_title,
-                   u_seller.username as seller_name,
-                   u_buyer.username as buyer_name,
-                   (SELECT COUNT(*) FROM messages m WHERE m.chat_id = c.id AND m.sender_id != $1 AND m.is_read = false) as unread_count,
-                   (EXTRACT(EPOCH FROM NOW() - 
-                       CASE WHEN c.seller_id = $1 THEN u_buyer.last_seen ELSE u_seller.last_seen END) < 300) as other_is_online
-            FROM chats c
-            LEFT JOIN listings l ON c.listing_id = l.id
-            JOIN users u_seller ON c.seller_id = u_seller.id AND u_seller.deleted_at IS NULL
-            JOIN users u_buyer ON c.buyer_id = u_buyer.id AND u_buyer.deleted_at IS NULL
-            WHERE (c.buyer_id = $1 AND c.status_buyer = 'archived') 
-               OR (c.seller_id = $1 AND c.status_seller = 'archived')
-        `;
-        if (!isStaff) {
-            query += ` AND c.listing_id IS NOT NULL`;
-        }
-        query += ` ORDER BY c.updated_at DESC`;
-        const result = await pool.query(query, [userId]);
-        res.json(result.rows);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Ошибка сервера' });
-    }
-});
 
 // Получить информацию о чате
 router.get('/:chatId', auth, async (req, res) => {
@@ -505,28 +549,6 @@ router.get('/:chatId/export', auth, async (req, res) => {
 });
 
 // Количество непрочитанных
-router.get('/unread/count', auth, async (req, res) => {
-    const userId = req.userId;
-    try {
-        const userRoleRes = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
-        const role = userRoleRes.rows[0]?.role;
-        const isStaff = (role === 'admin' || role === 'moderator');
-        let query = `
-            SELECT COUNT(*) as count
-            FROM messages m JOIN chats c ON m.chat_id = c.id
-            WHERE ((c.buyer_id = $1 AND c.status_buyer = 'active') OR (c.seller_id = $1 AND c.status_seller = 'active'))
-            AND m.sender_id != $1 AND m.is_read = false
-        `;
-        if (!isStaff) {
-            query += ` AND c.listing_id IS NOT NULL`;
-        }
-        const result = await pool.query(query, [userId]);
-        res.json({ count: parseInt(result.rows[0].count) });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Ошибка сервера' });
-    }
-});
 
 // Отметить прочитанные
 router.post('/:chatId/read', auth, async (req, res) => {
