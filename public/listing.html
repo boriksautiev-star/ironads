@@ -801,10 +801,6 @@
             }
             
             renderListing(listingData, ratingHtml); 
-            // Загружаем просмотры
-            if (listingData.id) {
-                loadViews(listingData.id);
-            }
         } catch(e) { 
             console.error(e); 
             container.innerHTML = `<div style="text-align:center;padding:50px;color:red;">❌ Ошибка загрузки объявления: ${e.message}</div>`; 
@@ -889,7 +885,7 @@
             statsButtonHtml = `<button class="btn-primary" onclick="showDetailedStats(${listing.id})" style="margin-right:0.5rem;">📊 Детальная статистика</button>`;
         }
 
-        document.getElementById('listingContent').innerHTML = `<div class="listing-grid">${mediaHtml}<div class="info">${warningHtml}${breadcrumbsHtml}<div class="listing-title">${escapeHtml(listing.title)}</div><div class="listing-price-row"><div class="listing-price">${listing.price.toLocaleString()} ₽</div><div><button id="favoriteButton" class="favorite-btn ${favorited ? 'active' : ''}" onclick="toggleFavorite()">${favorited ? '❤️ В избранном' : '🤍 В избранное'}</button><button class="complaint-btn" onclick="showComplaintModal('listing', ${listing.id})">🚩 Пожаловаться</button></div></div><div class="listing-meta"><span>📁 ${escapeHtml(listing.category_name || 'Без категории')}</span><span>📅 ${new Date(listing.created_at).toLocaleDateString()}</span>${listing.city_name ? `<span>📍 ${escapeHtml(listing.city_name)}</span>` : ''}${ratingHtml ? `<span>${ratingHtml}</span>` : ''}<span>👁️ <span id="viewsNumber">0</span></span></div><div class="listing-description">${escapeHtml(listing.description || 'Описание отсутствует')}</div>
+        document.getElementById('listingContent').innerHTML = `<div class="listing-grid">${mediaHtml}<div class="info">${warningHtml}${breadcrumbsHtml}<div class="listing-title">${escapeHtml(listing.title)}</div><div class="listing-price-row"><div class="listing-price">${listing.price.toLocaleString()} ₽</div><div><button id="favoriteButton" class="favorite-btn ${favorited ? 'active' : ''}" onclick="toggleFavorite()">${favorited ? '❤️ В избранном' : '🤍 В избранное'}</button><button class="complaint-btn" onclick="showComplaintModal('listing', ${listing.id})">🚩 Пожаловаться</button></div></div><div class="listing-meta"><span>📁 ${escapeHtml(listing.category_name || 'Без категории')}</span><span>📅 ${new Date(listing.created_at).toLocaleDateString()}</span>${listing.city_name ? `<span>📍 ${escapeHtml(listing.city_name)}</span>` : ''}${ratingHtml ? `<span>${ratingHtml}</span>` : ''}<span>👁️ ${listing.views || 0}</span></div><div class="listing-description">${escapeHtml(listing.description || 'Описание отсутствует')}</div>
         ${contactsHtml}
         ${shareHtml}
         <div class="contacts" style="margin-top:1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">

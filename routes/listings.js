@@ -614,6 +614,13 @@ router.get('/my/archived', auth, async (req, res) => {
 
 // ===== МАРШРУТ GET /:id =====
 router.get('/:id', async (req, res) => {
+    // --- СЧЕТЧИК ПРОСМОТРОВ ---
+    try {
+        await pool.query(`UPDATE listings SET views = COALESCE(views, 0) + 1 WHERE id = $1`, [req.params.id]);
+    } catch (viewErr) {
+        console.error('Ошибка обновления счетчика просмотров:', viewErr.message);
+    }
+    // ---------------------------
     try {
         let isModerator = false;
         const authHeader = req.headers.authorization;

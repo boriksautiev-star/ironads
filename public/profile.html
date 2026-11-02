@@ -1728,7 +1728,7 @@
                                 <div class="listing-title">${escapeHtml(l.title)}</div>
                                 <div class="listing-meta">
                                     📁 ${escapeHtml(l.category_name || 'Без категории')}
-                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''}
+                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''} | 👁️ ${l.views || 0}
                                     | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
                                 </div>
                                 <div class="listing-description">${escapeHtml(l.description || '')}</div>
@@ -1760,7 +1760,7 @@
                                 <div class="listing-row-title">${escapeHtml(l.title)}</div>
                                 <div class="listing-row-meta">
                                     📁 ${escapeHtml(l.category_name || 'Без категории')}
-                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''}
+                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''} | 👁️ ${l.views || 0}
                                     | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
                                 </div>
                                 <div class="listing-row-description">${escapeHtml((l.description || '').substring(0, 100))}</div>
@@ -1814,7 +1814,7 @@
                                 <div class="listing-title">${escapeHtml(l.title)}</div>
                                 <div class="listing-meta">
                                     📁 ${escapeHtml(l.category_name || 'Без категории')}
-                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''}
+                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''} | 👁️ ${l.views || 0}
                                     | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
                                 </div>
                                 <div class="listing-description">${escapeHtml(l.description || '')}</div>
@@ -1844,7 +1844,7 @@
                                 <div class="listing-row-title">${escapeHtml(l.title)}</div>
                                 <div class="listing-meta">
                                     📁 ${escapeHtml(l.category_name || 'Без категории')}
-                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''}
+                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''} | 👁️ ${l.views || 0}
                                     | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
                                 </div>
                                 <div class="listing-row-description">${escapeHtml(l.description || '')}</div>
@@ -1897,7 +1897,7 @@
                                 <div class="listing-meta">
                                     👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/profile.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a> ${l.is_online ? '<span class="online-indicator"></span>' : ''}
                                     | 📁 ${escapeHtml(l.category_name || 'Без категории')}
-                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''}
+                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''} | 👁️ ${l.views || 0}
                                     | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
                                 </div>
                                 <div class="listing-description">${escapeHtml(l.description || '')}</div>
@@ -1925,7 +1925,7 @@
                                 <div class="listing-row-meta">
                                     👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/profile.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a> ${l.is_online ? '<span class="online-indicator"></span>' : ''}
                                     | 📁 ${escapeHtml(l.category_name || 'Без категории')}
-                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''}
+                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''} | 👁️ ${l.views || 0}
                                     | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
                                 </div>
                                 <div class="listing-row-description">${escapeHtml(l.description || '')}</div>
@@ -1974,7 +1974,7 @@
                                 <div class="listing-meta">
                                     👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/profile.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a> ${l.is_online ? '<span class="online-indicator"></span>' : ''}
                                     | 📁 ${escapeHtml(l.category_name || 'Без категории')}
-                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''}
+                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''} | 👁️ ${l.views || 0}
                                     | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
                                 </div>
                                 <div class="listing-description">${escapeHtml(l.description || '')}</div>
@@ -2004,7 +2004,7 @@
                                 <div class="listing-row-meta">
                                     👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/profile.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a> ${l.is_online ? '<span class="online-indicator"></span>' : ''}
                                     | 📁 ${escapeHtml(l.category_name || 'Без категории')}
-                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''}
+                                    ${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''} | 👁️ ${l.views || 0}
                                     | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
                                 </div>
                                 <div class="listing-row-description">${escapeHtml(l.description || '')}</div>
