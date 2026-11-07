@@ -5,6 +5,7 @@ import { ActivityIndicator, View, Platform, StatusBar } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import Constants from 'expo-constants'; // <-- ДОБАВЛЕНО для получения projectId
 
 import AppNavigator from './navigation';
 import { registerPushToken, getUnreadCount } from './services/api';
@@ -69,7 +70,13 @@ function AppContent() {
         console.log('Permission for notifications not granted');
         return;
       }
-      const tokenData = await Notifications.getExpoPushTokenAsync();
+      
+      // Исправлено: передаем projectId для Expo
+      const projectId = Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+      const tokenData = await Notifications.getExpoPushTokenAsync({
+        projectId: projectId
+      });
+      
       const token = tokenData.data;
       console.log('Expo push token:', token);
       const deviceOs = Platform.OS === 'ios' ? 'ios' : 'android';
@@ -91,20 +98,21 @@ function AppContent() {
   };
 
   useEffect(() => {
-    if (isDev) return;
+    if (isDev || !user) return; // <-- Добавлена проверка !user
 
     const responseListener = Notifications.addNotificationResponseReceivedListener(handleNotificationResponse);
+    
+    // Исправлено: используем user из контекста, а не несуществующую getCurrentUser()
     const tokenListener = Notifications.addPushTokenListener(async (token) => {
-      const user = await getCurrentUser();
-      if (user) {
-        const deviceOs = Platform.OS === 'ios' ? 'ios' : 'android';
-        await registerPushToken(token.data, deviceOs);
-        await AsyncStorage.setItem('pushToken', token.data);
-      }
+      const deviceOs = Platform.OS === 'ios' ? 'ios' : 'android';
+      await registerPushToken(token.data, deviceOs);
+      await AsyncStorage.setItem('pushToken', token.data);
     });
+    
     const receivedListener = Notifications.addNotificationReceivedListener(async () => {
       await updateBadge();
     });
+    
     const getInitialNotification = async () => {
       const response = await Notifications.getLastNotificationResponseAsync();
       if (response) handleNotificationResponse(response);
@@ -116,7 +124,7 @@ function AppContent() {
       tokenListener.remove();
       receivedListener.remove();
     };
-  }, []);
+  }, [user]); // <-- Добавлен user в зависимости, чтобы слушатель знал о входе в аккаунт
 
   if (loading) {
     return (
