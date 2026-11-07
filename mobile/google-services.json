@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "338824114512",
+    "project_id": "ironads-bf8a0",
+    "storage_bucket": "ironads-bf8a0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:338824114512:android:e555c51ad49bcff0503c55",
+        "android_client_info": {
+          "package_name": "com.sautievshau.IronAdsAppNew"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDqKSSA1_41GcHor79Is65RQK-3TTvU9pc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

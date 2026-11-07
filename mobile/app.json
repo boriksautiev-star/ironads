@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "IronAds",
+    "slug": "IronAdsAppNew",
+    "version": "1.0.5",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      "expo-notifications",
+      "expo-font",
+      "expo-image"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sautievshau.IronAdsAppNew",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.sautievshau.IronAdsAppNew",
+      "googleServicesFile": "./google-services.json"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "665a9444-1ae2-447d-95b7-7e45016723d0"
+      }
+    }
+  }
+}
