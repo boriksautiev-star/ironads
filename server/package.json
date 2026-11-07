@@ -9,7 +9,7 @@
   "dependencies": {
     "@mapbox/node-pre-gyp": "^2.0.3",
     "@yookassa/sdk": "^0.0.3",
-    "axios": "^1.18.0",
+    "axios": "^1.21.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "compression": "^1.8.1",
