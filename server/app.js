@@ -10,6 +10,9 @@ const session = require('express-session');
 const helmet = require('helmet');
 const pool = require('./db/pool');
 
+// ===== ПРОВЕРКА ИНСТАНСА ДЛЯ CRON (чтобы не дублировать задачи) =====
+const isPrimaryInstance = !process.env.NODE_APP_INSTANCE || process.env.NODE_APP_INSTANCE === '0';
+
 // ===== ИНИЦИАЛИЗАЦИЯ EMAIL-ТРАНСПОРТА =====
 const { initTransporter } = require('./services/email');
 initTransporter();
@@ -351,7 +354,8 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, async () => {
     console.log(`✅ Сервер IronAds запущен на http://localhost:${PORT}`);
-    if (topnlabEnabled && importTopnlab) {
+    // Первичный импорт выполняем ТОЛЬКО на первом инстансе
+    if (isPrimaryInstance && topnlabEnabled && importTopnlab) {
         console.log('📥 Выполнение первичного импорта TopNLab...');
         try {
             await importTopnlab();
@@ -366,7 +370,8 @@ pool.connect()
     .then(() => console.log('✅ PostgreSQL подключена'))
     .catch(err => console.error('❌ Ошибка подключения к БД:', err));
 
-if (cron) {
+// Запускаем cron ТОЛЬКО на первом инстансе
+if (cron && isPrimaryInstance) {
     if (feedEnabled && updateFeed) {
         cron.schedule('0 */3 * * *', () => {
             console.log('🔄 Запуск обновления фида по расписанию (каждые 3 часа)...');
@@ -389,5 +394,6 @@ if (cron) {
         console.log('✅ Расписание удаления архивных настроено (ежедневно в 3:00)');
     }
 } else {
-    console.log('ℹ️ Cron не доступен, расписания не настроены');
+    if (!cron) console.log('ℹ️ Cron не доступен, расписания не настроены');
+    if (!isPrimaryInstance) console.log('ℹ️ Инстанс не первичный (NODE_APP_INSTANCE != 0), расписания не настроены');
 }
