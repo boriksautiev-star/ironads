@@ -1177,5 +1177,37 @@
         };
     })();
 </script>
+
+    <script>
+        /* ВНЕДРЕНИЕ ИМЕНИ ПРОДАВЦА */
+        document.addEventListener('DOMContentLoaded', () => {
+            const interval = setInterval(() => {
+                const data = window.listingData || (typeof listingData !== 'undefined' ? listingData : null);
+                if (data && data.username) {
+                    let sellerElement = document.querySelector('.seller-name');
+                    
+                    // Если блока нет, создаем его в контактах
+                    if (!sellerElement) {
+                        const contactsBlock = document.querySelector('.contacts') || document.querySelector('.contacts-block');
+                        if (contactsBlock) {
+                            sellerElement = document.createElement('div');
+                            sellerElement.className = 'seller-name';
+                            sellerElement.style.marginBottom = '1rem';
+                            const h3 = contactsBlock.querySelector('h3');
+                            if (h3) h3.insertAdjacentElement('afterend', sellerElement);
+                            else contactsBlock.prepend(sellerElement);
+                        }
+                    }
+
+                    if (sellerElement) {
+                        sellerElement.innerHTML = `<a href="/seller.html?id=${data.user_id}" style="color:#667eea;text-decoration:none;font-weight:600;font-size:1.1rem;display:inline-flex;align-items:center;gap:8px;">👤 ${data.username}</a>` + (data.is_online ? '<span class="online-indicator" title="Онлайн"></span>' : '');
+                        clearInterval(interval);
+                    }
+                }
+            }, 100);
+            setTimeout(() => clearInterval(interval), 5000);
+        });
+    </script>
+
 </body>
 </html>

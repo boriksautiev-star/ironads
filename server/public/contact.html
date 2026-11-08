@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/dark-theme.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 2rem 1rem; }
+        body { font-family: 'Inter', sans-serif; background: #f4f6f9; min-height: 100vh; padding: 2rem 1rem; }
         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 28px; padding: 2rem; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
         h1 { font-size: 1.8rem; margin-bottom: 1rem; color: #1f2937; }
         .form-group { margin-bottom: 1.25rem; }
@@ -23,6 +23,8 @@
     </style>
 </head>
 <body>
+<header id="main-header"></header>
+
 <div class="container">
     <h1>📧 Связаться с поддержкой</h1>
     <form id="contactForm">
@@ -110,5 +112,6 @@
         }
     });
 </script>
+<script src="/js/common.js" defer></script>
 </body>
 </html>

@@ -43,8 +43,9 @@
                     <span id="sellerDate">📅 На сайте с ...</span>
                 </div>
             </div>
-            <div style="margin-left: auto;">
-                <a href="/" class="btn-secondary" style="text-decoration: none; padding: 0.6rem 1.2rem; border-radius: 8px; background: #e2e8f0; color: #1e293b; font-weight: 500;">← На главную</a>
+            <div style="margin-left: auto; display: flex; gap: 0.5rem;">
+                <button onclick="window.history.back()" class="btn-secondary" style="text-decoration: none; padding: 0.6rem 1.2rem; border-radius: 8px; background: #e2e8f0; color: #1e293b; font-weight: 500; cursor: pointer; border: none; font-family: inherit; font-size: inherit;">← Назад</button>
+                <a href="/" class="btn-secondary" style="text-decoration: none; padding: 0.6rem 1.2rem; border-radius: 8px; background: #e2e8f0; color: #1e293b; font-weight: 500;">🏠 На главную</a>
             </div>
         </div>
 
@@ -111,7 +112,7 @@
 
                     let html = '';
                     listings.forEach(l => {
-                        const img = l.media && l.media.length > 0 ? l.media[0].file_path : '/default-image.png';
+                        const img = (l.first_media && l.first_media.file_path) ? l.first_media.file_path : '/icons/icon-192.png';
                         html += `
                             <div class="listing-card" onclick="window.location.href='/listing.html?id=${l.id}'">
                                 <div class="listing-image"><img src="${img}" alt="${l.title}"></div>

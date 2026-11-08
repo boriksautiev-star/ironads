@@ -140,7 +140,7 @@ async function updatePeriodStats() {
         const ctx = document.getElementById('activityChart')?.getContext('2d');
         if (!ctx) return;
         if (activityChart) activityChart.destroy();
-        const labels = data.stats.map(s => s.day);
+        const labels = data.stats.map(s => { const d = new Date(s.day); return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }); });
         const newUsers = data.stats.map(s => s.new_users);
         const newListings = data.stats.map(s => s.new_listings);
         const newChats = data.stats.map(s => s.new_chats);

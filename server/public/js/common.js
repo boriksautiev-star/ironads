@@ -255,14 +255,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderHeader() {
         const html = `
             <div class="main-header">
-                <div class="header-container">
-                    <div class="logo-area">
-                        <div class="logo"><a href="/">🛒 IronAds</a></div>
-                        ${isLoggedIn && userName ? `<span class="user-name">👋 ${escapeHtml(userName)}</span>` : ''}
-                    </div>
+                <div class="sidebar-header">
+                    <div class="logo"><a href="/">🛒 IronAds</a></div>
                     <button class="burger" id="burgerBtn">☰</button>
-                    <div class="nav-links" id="navLinks">
-                        <a href="/">Главная</a>
+                </div>
+                <div class="nav-links" id="navLinks">
+                    ${isLoggedIn && userName ? `<div class="sidebar-user" style="padding: 1rem; font-weight: 600; color: #1e293b; border-bottom: 1px solid #e2e8f0; margin-bottom: 0.5rem;">👋 ${escapeHtml(userName)}</div>` : ''}
+                    <div class="sidebar-menu">
+                        <a href="/" class="nav-btn">🏠 Главная</a>
                         ${isLoggedIn ? `
                             <button class="nav-btn" data-action="create">➕ Создать</button>
                             <button class="nav-btn" data-action="chats">💬 Чаты</button>
@@ -273,43 +273,40 @@ document.addEventListener('DOMContentLoaded', async () => {
                             ${userRole === 'admin' || userRole === 'moderator' ? '<button class="nav-btn" data-action="admin">⚙️ Админ-панель</button>' : ''}
                             <button class="nav-btn" data-action="profile">👤 Кабинет</button>
                         ` : '<a href="/contact.html" class="nav-btn">📞 Поддержка</a>'}
-                        <div class="font-controls">
+                    </div>
+                    <div class="sidebar-footer">
+                        <div class="font-controls" style="display: flex; gap: 5px; margin-bottom: 5px; justify-content: center;">
                             <button class="font-btn" id="fontMinus">A-</button>
                             <button class="font-btn reset" id="fontReset">A</button>
                             <button class="font-btn" id="fontPlus">A+</button>
                         </div>
-                        <button class="theme-toggle" id="themeToggle">${localStorage.getItem('ironads_theme') === 'dark' ? '☀️' : '🌙'}</button>
-                        ${isLoggedIn ? `
-                            <button id="installPwaBtn" class="install-btn">📲 Установить</button>
-                            <button id="logoutBtn" class="logout-btn">🚪 Выйти</button>
-                        ` : `
-                            <button class="login-btn" id="loginBtn">Войти</button>
-                            <button class="register-btn" id="registerBtn">Регистрация</button>
-                        `}
-                        <div class="view-toggle-group">
-                            <button class="view-toggle" data-view="grid-large" id="viewGridLarge">🔲 Крупная</button>
-                            <button class="view-toggle" data-view="grid-small" id="viewGridSmall">⊞ Мелкая</button>
-                            <button class="view-toggle" data-view="list" id="viewList">📄 Список</button>
+                        <div class="view-toggle-group" style="display: flex; gap: 5px; margin-bottom: 5px; justify-content: center; flex-wrap: wrap;">
+                            <button class="view-toggle" data-view="grid-large" id="viewGridLarge" title="Крупная">🔲</button>
+                            <button class="view-toggle" data-view="grid-small" id="viewGridSmall" title="Мелкая">⊞</button>
+                            <button class="view-toggle" data-view="list" id="viewList" title="Список">📄</button>
                         </div>
+                        <button class="theme-toggle nav-btn" id="themeToggle" style="justify-content: center;">${localStorage.getItem('ironads_theme') === 'dark' ? '☀️ Светлая тема' : '🌙 Темная тема'}</button>
+                        ${isLoggedIn ? `
+                            <button id="installPwaBtn" class="nav-btn" style="justify-content: center; margin-top: 5px;">📲 Установить</button>
+                            <button id="logoutBtn" class="nav-btn" style="justify-content: center; color: #ef4444; margin-top: 5px;">🚪 Выйти</button>
+                        ` : `
+                            <button class="nav-btn" id="loginBtn" style="justify-content: center; background: #3b82f6; color: white; margin-top: 5px; border-radius: 8px;">Войти</button>
+                            <button class="nav-btn" id="registerBtn" style="justify-content: center; margin-top: 5px; border: 1px solid #cbd5e1; border-radius: 8px;">Регистрация</button>
+                        `}
                     </div>
                 </div>
             </div>
         `;
         headerContainer.innerHTML = html;
 
-        // Динамическая корректировка отступа отключена – CSS управляет отступом
-        // adjustHeaderOffset();
-
         if (isLoggedIn) {
-            document.querySelector('[data-action="create"]')?.addEventListener('click', () => { if (typeof window.showCreateModal === 'function') window.showCreateModal(); else window.location.href = '/create-listing.html'; });
+            document.querySelector('[data-action="create"]')?.addEventListener('click', () => window.location.href = '/create-listing.html');
             document.querySelector('[data-action="chats"]')?.addEventListener('click', () => window.location.href = '/chats.html');
             document.querySelector('[data-action="favorites"]')?.addEventListener('click', (e) => { e.preventDefault(); window.location.href = '/?tab=favorites'; });
             document.querySelector('[data-action="history"]')?.addEventListener('click', () => window.location.href = '/history.html');
             document.querySelector('[data-action="moderation"]')?.addEventListener('click', () => window.location.href = '/moderation.html');
             document.querySelector('[data-action="admin"]')?.addEventListener('click', () => window.location.href = '/admin.html');
-            document.querySelector('[data-action="profile"]')?.addEventListener('click', () => {
-                window.location.href = '/profile.html';
-            });
+            document.querySelector('[data-action="profile"]')?.addEventListener('click', () => { window.location.href = '/profile.html'; });
             document.getElementById('logoutBtn')?.addEventListener('click', () => { localStorage.removeItem('token'); window.location.href = '/'; });
         } else {
             const loginBtn = document.getElementById('loginBtn');
@@ -330,7 +327,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (newTheme === 'dark') document.body.classList.add('dark-theme');
                 else document.body.classList.remove('dark-theme');
                 localStorage.setItem('ironads_theme', newTheme);
-                themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+                themeToggle.textContent = newTheme === 'dark' ? '☀️ Светлая тема' : '🌙 Темная тема';
             });
         }
 
@@ -365,9 +362,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
-        document.getElementById('viewGridLarge')?.addEventListener('click', () => window.setListingView('grid-large'));
-        document.getElementById('viewGridSmall')?.addEventListener('click', () => window.setListingView('grid-small'));
-        document.getElementById('viewList')?.addEventListener('click', () => window.setListingView('list'));
+        document.getElementById('viewGridLarge')?.addEventListener('click', () => { window.setListingView('grid-large'); window.location.reload(); });
+        document.getElementById('viewGridSmall')?.addEventListener('click', () => { window.setListingView('grid-small'); window.location.reload(); });
+        document.getElementById('viewList')?.addEventListener('click', () => { window.setListingView('list'); window.location.reload(); });
 
         if (isLoggedIn) {
             updateUnreadCount();
@@ -594,3 +591,9 @@ function handleCityRouting() {
 document.addEventListener('DOMContentLoaded', function() {
     handleCityRouting();
 });
+
+    // Переопределяем редактирование для перехода на отдельную страницу
+    window.editListing = function(id) {
+        window.location.href = '/edit-listing.html?id=' + id;
+    };
+    
