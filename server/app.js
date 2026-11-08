@@ -7,6 +7,7 @@ const passport = require('passport');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
 const helmet = require('helmet');
 const pool = require('./db/pool');
 
@@ -255,17 +256,22 @@ app.use('/downloads', express.static(path.join(__dirname, 'public/downloads'), {
 
 app.use(passport.initialize());
 
-// ===== SESSION (MemoryStore) =====
+// ===== SESSION (PostgreSQL) =====
 app.use(session({
+    store: new pgSession({
+        pool: pool,
+        tableName: 'user_sessions'
+    }),
     secret: process.env.SESSION_SECRET || 'fallback_secret_key_for_vk_oauth',
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         maxAge: 7 * 24 * 60 * 60 * 1000
     }
 }));
-console.log('✅ Сессии хранятся в MemoryStore');
+console.log('✅ Сессии перенесены в PostgreSQL');
+
 
 // ===== ОБРАБОТКА ОШИБОК РАЗРЫВА =====
 app.use((err, req, res, next) => {
