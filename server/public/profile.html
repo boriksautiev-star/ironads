@@ -2068,7 +2068,7 @@
             } catch(e) { showNotification('Ошибка соединения', 'error'); }
         }
 
-        async function openEditModal(listingId) {
+        async function openEditModal(listingId) { window.location.href = '/edit-listing.html?id=' + listingId; return;
         window.location.href = '/edit-listing.html?id=' + listingId;
         return;
     

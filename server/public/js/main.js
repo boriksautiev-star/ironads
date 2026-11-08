@@ -1393,7 +1393,7 @@ function setupEditCategoryHandlers() {
     });
 }
 
-async function openEditModal(listingId) { window.location.href = '/edit-listing.html?id=' + listingId; return;
+async function openEditModal(listingId) { window.location.href = '/edit-listing.html?id=' + listingId; return; window.location.href = '/edit-listing.html?id=' + listingId; return;
     try {
         const resp = await fetch(`${API_URL}/listings/${listingId}`);
         const listing = await resp.json();
