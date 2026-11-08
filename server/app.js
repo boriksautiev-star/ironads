@@ -109,7 +109,7 @@ app.use(helmet({
                 "https://api-maps.yandex.ru",
                 "https://js.hcaptcha.com",
                 "https://yastatic.net", "https://cdn.jsdelivr.net"
-            ],
+            , "https://yandex.ru", "https://*.yandex.ru", "https://*.yandex.net", "https://*.maps.yandex.ru", "https://*.maps.yandex.net", "https://*.yandex.com"],
             scriptSrcAttr: [
                 "'unsafe-inline'"
             ],
@@ -129,21 +129,21 @@ app.use(helmet({
                 "data:",
                 "https://api-maps.yandex.ru",
                 "https://yastatic.net", "https://cdn.jsdelivr.net"
-            ],
+            , "https://*.maps.yandex.net", "https://*.yandex.ru", "https://yandex.ru", "https://*.yandex.ru", "https://*.yandex.net", "https://*.maps.yandex.ru", "https://*.maps.yandex.net", "https://*.yandex.com"],
             connectSrc: [
                 "'self'",
                 "https://api-maps.yandex.ru",
                 "https://js.hcaptcha.com",
                 "https://cdnjs.cloudflare.com",
                 "https://*.hcaptcha.com"
-            ],
+            , "https://yandex.ru", "https://*.yandex.ru", "https://*.yandex.net", "https://*.maps.yandex.ru", "https://*.maps.yandex.net", "https://*.yandex.com"],
             frameSrc: [
                 "'self'",
                 "https://js.hcaptcha.com",
                 "https://newassets.hcaptcha.com",
                 "https://vk.com",
                 "https://id.vk.com"
-            ]
+            , "https://yandex.ru", "https://*.yandex.ru", "https://*.yandex.net", "https://*.maps.yandex.ru", "https://*.maps.yandex.net", "https://*.yandex.com"]
         }
     }
 }));

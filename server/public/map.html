@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Объявления на карте - IronAds</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/dark-theme.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f4f6f9; margin-left: 260px; padding-top: 1rem; height: 100vh; overflow: hidden; }
+        .container { padding: 0 1rem; height: 100%; display: flex; flex-direction: column; }
+        .map-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .map-header h1 { font-size: 1.5rem; color: #1e293b; margin: 0; }
+        .btn-back { background: #e2e8f0; color: #1e293b; padding: 0.6rem 1.2rem; border-radius: 8px; text-decoration: none; font-weight: 500; border: none; cursor: pointer; font-family: inherit; }
+        .btn-back:hover { background: #cbd5e1; }
+        
+        /* Контейнер для карты */
+        #map { width: 100%; height: calc(100vh - 100px); border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
+        @media (max-width: 992px) { body { margin-left: 0; padding-top: 80px; } .container { padding: 0; } #map { border-radius: 0; height: calc(100vh - 80px); } .map-header { padding: 0 1rem; } }
+        body.dark-theme { background: #0f172a; }
+        body.dark-theme .map-header h1 { color: #f8fafc; }
+        body.dark-theme .btn-back { background: #334155; color: #f8fafc; }
+        body.dark-theme #map { border-color: #334155; }
+    </style>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=97d0fa92-e83f-48a4-b404-4a55881bc4a8&suggest_apikey=97d0fa92-e83f-48a4-b404-4a55881bc4a8&lang=ru_RU" defer></script>
+</head>
+<body>
+    <header id="main-header"></header>
+    <div class="container">
+        <div class="map-header">
+            <h1>🗺️ Объявления на карте</h1>
+            <button onclick="window.location.href='/'" class="btn-back">← Вернуться к списку</button>
+        </div>
+        <div id="map"></div>
+    </div>
+
+    <script src="/js/common.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ждем загрузки API Яндекс.Карт
+            const checkYmaps = setInterval(() => {
+                if (typeof ymaps !== 'undefined') {
+                    clearInterval(checkYmaps);
+                    ymaps.ready(initMap);
+                }
+            }, 100);
+
+            async function initMap() {
+                const map = new ymaps.Map('map', {
+                    center: [55.75, 37.62], // Москва по умолчанию
+                    zoom: 10,
+                    controls: ['zoomControl', 'geolocationControl', 'searchControl']
+                });
+
+                const clusterer = new ymaps.Clusterer({
+                    preset: 'islands#blueClusterIcons',
+                    groupByCoordinates: false,
+                    clusterDisableClickZoom: false,
+                    clusterHideIconOnBalloonOpen: true,
+                    geoObjectHideIconOnBalloonOpen: true
+                });
+
+                map.geoObjects.add(clusterer);
+
+                try {
+                    // Загружаем объявления
+                    const res = await fetch('/api/listings/filter?limit=1000');
+                    const data = await res.json();
+                    const listings = data.listings || [];
+                    const geoObjects = [];
+
+                    for (const l of listings) {
+                        if (!l.lat || !l.lng) continue;
+                        
+                        const coords = [parseFloat(l.lat), parseFloat(l.lng)];
+                        const balloonContent = `
+                            <div style="max-width:250px;">
+                                <strong>${l.title}</strong><br>
+                                Цена: ${l.price ? l.price.toLocaleString() + ' ₽' : 'Не указана'}
+                                <br><br>
+                                <a href="/listing.html?id=${l.id}" target="_blank" style="color: #3b82f6; text-decoration: none; font-weight: bold;">Подробнее →</a>
+                            </div>
+                        `;
+                        const placemark = new ymaps.Placemark(coords, {
+                            balloonContent: balloonContent,
+                            hintContent: l.title
+                        }, {
+                            preset: 'islands#blueDotIcon',
+                            balloonMaxWidth: 300
+                        });
+                        geoObjects.push(placemark);
+                    }
+
+                    clusterer.add(geoObjects);
+                    
+                    if (geoObjects.length > 0) {
+                        map.setBounds(clusterer.getBounds(), {
+                            checkZoomRange: true,
+                            zoomMargin: 50
+                        });
+                    }
+                } catch (e) {
+                    console.error('Ошибка загрузки объявлений для карты:', e);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

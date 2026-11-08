@@ -300,7 +300,7 @@ document.getElementById('filterRadius')?.addEventListener('change', () => { if (
 // ========== ПЕРЕКЛЮЧЕНИЕ МЕЖДУ СПИСКОМ И КАРТОЙ ==========
 document.getElementById('viewGrid')?.addEventListener('click', function() {
     currentMapMode = false;
-    document.getElementById('viewGrid').classList.add('active');
+    document.getElementById('viewGrid')?.classList.add('active');
     document.getElementById('viewMap').classList.remove('active');
     document.getElementById('listings').style.display = 'grid';
     document.getElementById('mapContainer').classList.remove('active');
@@ -313,7 +313,7 @@ document.getElementById('viewGrid')?.addEventListener('click', function() {
 document.getElementById('viewMap')?.addEventListener('click', function() {
     currentMapMode = true;
     document.getElementById('viewMap').classList.add('active');
-    document.getElementById('viewGrid').classList.remove('active');
+    document.getElementById('viewGrid')?.classList.remove('active');
     document.getElementById('listings').style.display = 'none';
     document.getElementById('mapContainer').classList.add('active');
     document.getElementById('pagination').style.display = 'none';
@@ -390,23 +390,28 @@ document.getElementById('mapLocationBtn')?.addEventListener('click', function() 
 function initMap() {
     if (mapInitPromise) return mapInitPromise;
     mapInitPromise = new Promise((resolve, reject) => {
+        // Обертка для сброса промиса при ошибке, чтобы можно было попробовать снова
+        const safeReject = (err) => {
+            mapInitPromise = null;
+            reject(err);
+        };
         if (typeof ymaps === 'undefined') {
             const checkYmaps = setInterval(() => {
                 if (typeof ymaps !== 'undefined') {
                     clearInterval(checkYmaps);
                     ymaps.ready(() => {
-                        createMap().then(resolve).catch(reject);
+                        createMap().then(resolve).catch(safeReject);
                     });
                 }
             }, 100);
             setTimeout(() => {
                 clearInterval(checkYmaps);
-                reject('Таймаут загрузки Яндекс.Карт');
+                safeReject('Таймаут загрузки Яндекс.Карт');
             }, 10000);
             return;
         }
         ymaps.ready(() => {
-            createMap().then(resolve).catch(reject);
+            createMap().then(resolve).catch(safeReject);
         });
     });
     return mapInitPromise;
@@ -459,7 +464,7 @@ async function createMap() {
         userLocation = { lat: coords[0], lng: coords[1] };
         map.setCenter(coords, 12);
     } catch(e) {
-        console.warn('Геолокация не доступна', e);
+        console.log('ℹ️ Геолокация недоступна (пользователь не дал разрешение). Карта центрируется по умолчанию.');
         map.setCenter(defaultCoords, 10);
     }
     return map;
@@ -584,6 +589,12 @@ async function applyFilters() {
         let data = await r.json();
         let listings = data.listings || [];
         totalPages = data.pagination ? data.pagination.pages : 1;
+        
+        // Обновляем счетчик на главной
+        if (data.pagination && data.pagination.total !== undefined) {
+            const totalEl = document.getElementById('totalListingsCount');
+            if (totalEl) totalEl.textContent = 'Найдено активных объявлений: ' + data.pagination.total;
+        }
 
         // ========== НОВЫЙ БЛОК ДЛЯ ОТОБРАЖЕНИЯ НАЗВАНИЯ КАТЕГОРИИ И КНОПКИ "i" ==========
         const infoBar = document.getElementById('categoryInfoBar');
@@ -667,9 +678,13 @@ async function applyFilters() {
         if (currentMapMode) {
             renderMapListings(listings);
         } else {
+            if (window.currentMapMode) {
+            if (typeof renderMapListings === 'function') renderMapListings(listings);
+        } else {
             const view = window.listingViewMode || 'grid-large';
             if (view === 'list') renderListView(listings);
             else renderGridView(listings);
+        }
             renderPagination();
         }
         if (typeof window.applyCurrentViewToContainers === 'function') {
@@ -1929,9 +1944,13 @@ async function loadListingsWithoutFilters() {
         if (currentToken) {
             for (let l of listings) if (favoritedStatus[l.id] === undefined) await checkFavoriteStatus(l.id);
         }
-        const view = window.listingViewMode || 'grid-large';
-        if (view === 'list') renderListView(listings);
-        else renderGridView(listings);
+        if (window.currentMapMode) {
+            if (typeof renderMapListings === 'function') renderMapListings(listings);
+        } else {
+            const view = window.listingViewMode || 'grid-large';
+            if (view === 'list') renderListView(listings);
+            else renderGridView(listings);
+        }
         renderPagination();
         if (typeof window.applyCurrentViewToContainers === 'function') {
             window.applyCurrentViewToContainers();
@@ -2469,7 +2488,7 @@ function showMainPage() { document.getElementById('profilePage').classList.add('
     };
 
     currentMapMode = false;
-    document.getElementById('viewGrid').classList.add('active');
+    document.getElementById('viewGrid')?.classList.add('active');
     document.getElementById('viewMap').classList.remove('active');
     document.getElementById('listings').style.display = 'grid';
     document.getElementById('mapContainer').classList.remove('active');
@@ -2714,3 +2733,20 @@ window.initRegisterCaptcha = function() {
         registerWidgetId = createCaptchaWidget('registerCaptchaContainer', false);
     }
 };
+
+    /* ЗАЩИТА КАРТЫ */
+    setInterval(() => {
+        if (typeof currentMapMode !== 'undefined' && currentMapMode === true) {
+            const mapEl = document.getElementById('mapContainer');
+            const listEl = document.getElementById('listings');
+            if (mapEl && !mapEl.classList.contains('active')) {
+                mapEl.classList.add('active');
+                if (listEl) listEl.style.display = 'none';
+                // Принудительно обновляем размер, если карта была скрыта
+                if (typeof map !== 'undefined' && map && map.container) {
+                    map.container.fitToViewport();
+                }
+            }
+        }
+    }, 300);
+    
