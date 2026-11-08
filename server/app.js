@@ -163,7 +163,83 @@ app.use(cookieParser());
 app.use(express.json({ limit: '500mb' }));
 app.use(express.urlencoded({ extended: true, limit: '500mb' }));
 
-// ===== СТАТИЧЕСКИЕ ФАЙЛЫ =====
+
+
+
+
+
+
+
+
+// ========== SEO: SITEMAP, ROBOTS, МИКРОРАЗМЕТКА ==========
+app.get('/sitemap.xml', async (req, res) => {
+    try {
+        const result = await pool.query("SELECT id, updated_at FROM listings WHERE deleted_at IS NULL ORDER BY updated_at DESC LIMIT 50000");
+        let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+        xml += '  <url>\n    <loc>https://ironads.ru/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n';
+        result.rows.forEach(row => {
+            xml += `  <url>\n    <loc>https://ironads.ru/listing.html?id=${row.id}</loc>\n    <lastmod>${new Date(row.updated_at).toISOString()}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+        });
+        xml += '</urlset>';
+        res.header('Content-Type', 'application/xml').send(xml);
+    } catch (err) { res.status(500).send('Error'); }
+});
+
+app.get('/robots.txt', (req, res) => {
+    res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin/\n\nSitemap: https://ironads.ru/sitemap.xml`);
+});
+
+app.get(['/listing/:id', '/listing.html'], async (req, res, next) => {
+    try {
+        const listingId = req.params.id || req.query.id;
+        if (!listingId || isNaN(listingId)) return next();
+
+        const result = await pool.query('SELECT * FROM listings WHERE id = $1::int AND deleted_at IS NULL', [listingId]);
+        const listing = result.rows[0];
+        
+        if (!listing) {
+            console.log('⚠️ SEO: Объявление id=' + listingId + ' не найдено в БД');
+            return next();
+        }
+
+        const indexPath = path.join(__dirname, 'public', 'listing.html');
+        let html = require('fs').readFileSync(indexPath, 'utf8');
+
+        const pageTitle = listing.title + ' - ' + (listing.price || 0) + ' руб. | IronAds';
+        const pageDescription = (listing.description || "").replace(/<[^>]*>?/gm, '').substring(0, 160).replace(/"/g, '&quot;').replace(/\n/g, ' ');
+
+        const schema = {
+            "@context": "https://schema.org", "@type": "Product",
+            "name": listing.title || "Объявление", "description": pageDescription,
+            "offers": { "@type": "Offer", "priceCurrency": "RUB", "price": listing.price || 0, "url": 'https://ironads.ru/listing.html?id=' + listingId }
+        };
+
+        html = html.replace('</head>', () => `<script type="application/ld+json">\n${JSON.stringify(schema, null, 2)}\n</script>\n</head>`);
+        
+        const titleStart = html.indexOf('<title>');
+        const titleEnd = html.indexOf('</title>');
+        if (titleStart !== -1 && titleEnd !== -1) {
+            html = html.substring(0, titleStart) + '<title>' + pageTitle + '</title>' + html.substring(titleEnd + 8);
+        }
+
+        const descStart = html.indexOf('<meta name="description"');
+        if (descStart !== -1) {
+            const descEnd = html.indexOf('>', descStart);
+            if (descEnd !== -1) {
+                html = html.substring(0, descStart) + '<meta name="description" content="' + pageDescription + '">' + html.substring(descEnd + 1);
+            }
+        } else {
+            html = html.replace('</head>', () => '<meta name="description" content="' + pageDescription + '">\n</head>');
+        }
+
+        console.log('✅ SEO: Успешно отрендерено id=' + listingId);
+        res.send(html);
+    } catch (err) {
+        console.error('SEO Error:', err);
+        next();
+    }
+});
+// ================================================
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ===== ДОПОЛНИТЕЛЬНАЯ НАСТРОЙКА ДЛЯ APK =====
@@ -319,6 +395,13 @@ app.get('/api/public-prices', async (req, res) => {
 app.get('/city/:slug', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'city.html'));
 });
+
+// ========== ОТДАЧА HTML ==========
+// ========== ОТДАЧА HTML ==========
+
+
+
+// ========== ОТДАЧА HTML ==========
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
