@@ -5,175 +5,127 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>Админ-панель IronAds</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding-top: 130px; }
-        .admin-header { position: fixed; top: 0; left: 0; width: 100%; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.1); z-index: 1000; padding: 0.8rem 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-        .logo { font-size: 1.6rem; font-weight: 800; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .burger { display: none; background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #1e293b; padding: 0 0.5rem; }
-        .nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; transition: all 0.3s ease; }
-        .tab-btn { padding: 0.5rem 1.2rem; border: none; background: #f1f5f9; border-radius: 40px; cursor: pointer; font-weight: 500; transition: 0.2s; white-space: nowrap; }
-        .tab-btn.active { background: #667eea; color: white; box-shadow: 0 2px 8px rgba(102,126,234,0.3); }
-        .back-home, .support-link, .guide-link { background: #f1f5f9; padding: 0.5rem 1rem; border-radius: 30px; text-decoration: none; color: #1e293b; margin-left: 0.5rem; display: inline-block; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
-        .card { background: white; border-radius: 24px; padding: 1.8rem; margin-bottom: 1.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
-        h2 { font-size: 1.5rem; margin-bottom: 1.2rem; color: #0f172a; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.2rem; margin-bottom: 2rem; }
-        .stat-card { background: #f8fafc; padding: 1.2rem; border-radius: 20px; text-align: center; }
-        .stat-number { font-size: 2rem; font-weight: 800; color: #667eea; }
-        .filter-group { display: flex; gap: 0.8rem; margin-bottom: 1.2rem; flex-wrap: wrap; align-items: center; }
-        .filter-group input, .filter-group select { padding: 0.5rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 16px; }
-        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th, td { padding: 0.9rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        th { background: #f8fafc; font-weight: 600; }
-        .btn { padding: 0.4rem 0.9rem; border-radius: 12px; border: none; cursor: pointer; font-size: 0.8rem; font-weight: 500; transition: 0.2s; }
-        .btn-primary { background: #667eea; color: white; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-warning { background: #f59e0b; color: white; }
-        .btn-secondary { background: #cbd5e1; color: #1e293b; }
-        .btn-sm { padding: 0.25rem 0.6rem; margin: 0 0.2rem; }
-        .pagination { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; flex-wrap: wrap; }
-        .pagination button { background: #f1f5f9; border: none; padding: 0.4rem 0.8rem; border-radius: 20px; cursor: pointer; }
-        .pagination button.active { background: #667eea; color: white; }
-        .complaint-card { background: #f8fafc; border-radius: 16px; padding: 1rem; margin-bottom: 1rem; }
-        .hidden { display: none; }
-        canvas { max-width: 100%; height: auto; }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-        .modal.hidden { display: none; }
-        .modal-content { background: white; padding: 2rem; border-radius: 28px; width: 90%; max-width: 550px; max-height: 85vh; overflow-y: auto; }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.3rem; font-weight: 500; }
-        .form-group input, .form-group select { width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 16px; }
-        .form-actions { display: flex; gap: 0.8rem; justify-content: flex-end; margin-top: 1rem; flex-wrap: wrap; }
-        .install-pwa-btn { background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 40px; cursor: pointer; font-size: 0.75rem; font-weight: 500; margin-left: 8px; display: inline-block; }
-        .ticket-item { background: #f8fafc; border-radius: 16px; padding: 1rem; margin-bottom: 1rem; }
-        .ticket-status { display: inline-block; padding: 0.2rem 0.7rem; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
-        .status-open { background: #ffc107; color: #333; }
-        .status-in_progress { background: #17a2b8; color: white; }
-        .status-closed { background: #6c757d; color: white; }
-        .reply-area { margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
-        .reply-area textarea { flex: 1; padding: 0.5rem; border-radius: 12px; border: 1px solid #cbd5e1; }
-        .category-tree { list-style: none; padding-left: 0; }
-        .category-tree ul { list-style: none; padding-left: 1.5rem; margin-top: 0.25rem; }
-        .category-tree li { margin: 0.5rem 0; padding: 0.25rem 0; border-left: 2px solid #e2e8f0; }
-        .category-tree .category-node { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; background: #f8fafc; padding: 0.5rem 0.75rem; border-radius: 12px; margin-left: -0.5rem; transition: background 0.2s; }
-        .city-tree { list-style: none; padding-left: 0; }
-        .city-tree ul { list-style: none; padding-left: 1.5rem; margin-top: 0.25rem; }
-        .city-tree li { margin: 0.5rem 0; padding: 0.25rem 0; border-left: 2px solid #e2e8f0; }
-        .city-tree .region-node { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; background: #e2e8f0; padding: 0.5rem 0.75rem; border-radius: 12px; font-weight: bold; }
-        .city-tree .city-node { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; background: #f8fafc; padding: 0.5rem 0.75rem; border-radius: 12px; margin-top: 0.25rem; }
-        .messages-table .message-preview { max-width: 250px; white-space: normal; word-break: break-word; }
-        .hint-text { font-size: 0.9rem; color: #475569; margin-bottom: 0.75rem; }
-        .subscription-status-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
-        .badge-active { background: #10b981; color: white; }
-        .badge-expired { background: #ef4444; color: white; }
-        .badge-near { background: #f59e0b; color: white; }
-        .days-left { font-weight: 600; }
-        .days-left.green { color: #10b981; }
-        .days-left.yellow { color: #f59e0b; }
-        .days-left.red { color: #ef4444; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+    body { background-color: #f1f5f9; color: #1e293b; min-height: 100vh; }
 
-        /* ========== МОБИЛЬНАЯ ВЕРСИЯ ========== */
-        @media (max-width: 768px) {
-            body { padding-top: 70px; }
-            .admin-header { padding: 0.5rem 1rem; flex-direction: row; justify-content: space-between; }
-            .burger { display: block; }
-            .nav-links {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: white;
-                flex-direction: column;
-                align-items: stretch;
-                gap: 0.4rem;
-                padding: 1rem;
-                box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-                border-radius: 0 0 20px 20px;
-                z-index: 999;
-                max-height: 80vh;
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            body.dark-theme .nav-links { background: #1e293b; }
-            .nav-links.open { display: flex; }
-            .nav-links .tab-btn,
-            .nav-links .back-home,
-            .nav-links .support-link,
-            .nav-links .guide-link,
-            .nav-links .install-pwa-btn,
-            .nav-links .theme-toggle-btn {
-                width: 100% !important;
-                text-align: left !important;
-                padding: 0.7rem 1rem !important;
-                border-radius: 12px !important;
-                background: #f1f5f9 !important;
-                color: #1f2937 !important;
-                font-size: 0.95rem;
-                font-weight: 500;
-                border: none !important;
-                margin: 0 !important;
-            }
-            body.dark-theme .nav-links .tab-btn,
-            body.dark-theme .nav-links .back-home,
-            body.dark-theme .nav-links .support-link,
-            body.dark-theme .nav-links .guide-link,
-            body.dark-theme .nav-links .install-pwa-btn,
-            body.dark-theme .nav-links .theme-toggle-btn {
-                background: #334155 !important;
-                color: #f1f5f9 !important;
-            }
-            .nav-links .tab-btn.active {
-                background: #667eea !important;
-                color: white !important;
-            }
-            body.dark-theme .nav-links .tab-btn.active {
-                background: #3b82f6 !important;
-            }
-            .container { padding: 1rem; }
-            .card { padding: 1rem; }
-            .stats-grid { gap: 0.8rem; }
-            .filter-group { flex-direction: column; align-items: stretch; }
-        }
-        @media (min-width: 769px) {
-            .container .card:first-of-type {
-                margin-top: 10px;
-            }
-        }
-    </style>
+    /* ===== ЛЕЙАУТ ===== */
+    .admin-layout { display: flex; min-height: 100vh; }
+    
+    /* ===== САЙДБАР ===== */
+    .sidebar { width: 260px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; left: 0; z-index: 1000; transition: transform 0.3s ease; }
+    .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #e2e8f0; }
+    .logo { font-size: 1.4rem; font-weight: 800; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    
+    .sidebar-menu { flex: 1; overflow-y: auto; padding: 1rem 0.75rem; display: flex; flex-direction: column; gap: 0.25rem; }
+    .tab-btn { width: 100%; text-align: left; padding: 0.7rem 1rem; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 0.9rem; color: #475569; transition: all 0.2s; display: flex; align-items: center; gap: 0.75rem; }
+    .tab-btn:hover { background: #f8fafc; color: #1e293b; }
+    .tab-btn.active { background: #eff6ff; color: #3b82f6; font-weight: 600; }
+    
+    .sidebar-footer { padding: 1rem 0.75rem; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 0.5rem; }
+    .nav-link { text-decoration: none; padding: 0.6rem 1rem; color: #475569; border-radius: 8px; font-size: 0.9rem; font-weight: 500; display: block; transition: 0.2s; }
+    .nav-link:hover { background: #f8fafc; color: #1e293b; }
+    .install-pwa-btn, .theme-toggle-btn { padding: 0.6rem 1rem; border: none; background: #f1f5f9; border-radius: 8px; cursor: pointer; font-weight: 500; color: #475569; text-align: left; display: block; width: 100%; transition: 0.2s; font-size: 0.9rem; }
+    .install-pwa-btn:hover, .theme-toggle-btn:hover { background: #e2e8f0; }
+    
+    /* ===== КОНТЕНТ ===== */
+    .main-content { flex: 1; margin-left: 260px; padding: 2rem; transition: margin 0.3s ease; }
+    .container { max-width: 1400px; margin: 0 auto; }
+    
+    /* ===== КАРТОЧКИ И ТАБЛИЦЫ ===== */
+    .card { background: white; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; }
+    h2 { font-size: 1.3rem; margin-bottom: 1.25rem; color: #0f172a; font-weight: 700; }
+    h3 { font-size: 1.1rem; margin-bottom: 1rem; color: #334155; font-weight: 600; }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: #f8fafc; padding: 1.25rem; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; }
+    .stat-number { font-size: 1.8rem; font-weight: 800; color: #3b82f6; margin-bottom: 0.25rem; }
+    
+    .filter-group { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center; }
+    .filter-group input, .filter-group select { padding: 0.5rem 1rem; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-size: 0.9rem; transition: border 0.2s; }
+    .filter-group input:focus, .filter-group select:focus { border-color: #3b82f6; }
+    
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    th, td { padding: 0.8rem 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+    th { background: #f8fafc; font-weight: 600; color: #475569; }
+    tr:hover { background: #f8fafc; }
+    
+    .btn { padding: 0.5rem 1rem; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; }
+    .btn-primary { background: #3b82f6; color: white; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-warning { background: #f59e0b; color: white; }
+    .btn-warning:hover { background: #d97706; }
+    .btn-secondary { background: #e2e8f0; color: #1e293b; }
+    .btn-secondary:hover { background: #cbd5e1; }
+    .btn-sm { padding: 0.25rem 0.6rem; font-size: 0.8rem; }
+    
+    /* ===== МОБИЛЬНАЯ ВЕРСИЯ ===== */
+    .mobile-header { display: none; background: white; padding: 1rem; border-bottom: 1px solid #e2e8f0; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 999; }
+    .burger { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #1e293b; }
+    .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1001; opacity: 0; transition: opacity 0.3s; }
+    
+    @media (max-width: 992px) {
+        .sidebar { transform: translateX(-100%); z-index: 1002; box-shadow: 4px 0 15px rgba(0,0,0,0.1); }
+        .sidebar.open { transform: translateX(0); }
+        .sidebar.open + .sidebar-overlay { display: block; opacity: 1; }
+        .main-content { margin-left: 0; padding: 1rem; padding-top: 1rem; }
+        .mobile-header { display: flex; }
+        .desktop-logo { display: none; }
+        .container { margin-top: 0; }
+        .filter-group { flex-direction: column; align-items: stretch; }
+        .filter-group input, .filter-group select, .filter-group button { width: 100%; }
+    }
+    .hidden { display: none !important; }
+</style>
     <link rel="stylesheet" href="/dark-theme.css">
     <link rel="stylesheet" href="/css/header.css">
 </head>
 <body>
-<div class="admin-header">
-    <div class="logo">🛡️ IronAds Admin</div>
-    <button class="burger" id="burgerBtn">☰</button>
-    <div class="nav-links" id="navLinks">
-        <button id="themeToggleBtn" class="theme-toggle-btn" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0.5rem;">🌙</button>
-        <button class="tab-btn active" data-tab="stats">📊 Статистика</button>
-        <button class="tab-btn" data-tab="listings">📦 Объявления</button>
-        <button class="tab-btn" data-tab="categoriesTree">📂 Категории (дерево)</button>
-        <button class="tab-btn" data-tab="users">👥 Пользователи</button>
-        <button class="tab-btn" data-tab="cities">🏙️ Города</button>
-        <button class="tab-btn" data-tab="complaints">🚨 Жалобы</button>
-        <button class="tab-btn" data-tab="logs">📜 Аудит администраторов</button>
-        <button class="tab-btn" data-tab="userActions">👥 Журнал пользователей</button>
-        <button class="tab-btn" data-tab="settings">⚙️ Настройки</button>
-        <button class="tab-btn" data-tab="newsletter">📧 Рассылка</button>
-        <button class="tab-btn" data-tab="grantSubscription">🎁 Выдать подписку</button>
-        <button class="tab-btn" data-tab="subscriptionsList">📋 Список подписок</button>
-        <button class="tab-btn" data-tab="supportTickets">🛎️ Обращения в поддержку</button>
-        <button class="tab-btn" data-tab="contactMessages">📨 Обращения с сайта</button>
-        <!-- Новая вкладка партнёрских тарифов -->
-        <button class="tab-btn" data-tab="partnerPlans">🤝 Тарифы партнёров</button>
-        <a href="/admin-guide.html" class="guide-link">📘 Руководство админа</a>
-        <button id="installPwaBtn" class="install-pwa-btn">📲 Установить</button>
-        <a href="/" class="back-home">🏠 На главную</a>
-    </div>
-</div>
+<div class="admin-layout">
+    <!-- Мобильный хедер -->
+    <header class="mobile-header">
+        <div class="logo">🛡️ IronAds Admin</div>
+        <button class="burger" id="burgerBtn">☰</button>
+    </header>
 
-<div class="container">
+    <!-- Сайдбар -->
+    <aside class="sidebar" id="navLinks">
+        <div class="sidebar-header">
+            <div class="logo desktop-logo">🛡️ IronAds Admin</div>
+        </div>
+        <div class="sidebar-menu">
+            <button class="tab-btn active" data-tab="stats">📊 Статистика</button>
+            <button class="tab-btn" data-tab="listings">📦 Объявления</button>
+            <button class="tab-btn" data-tab="categoriesTree">📂 Категории</button>
+            <button class="tab-btn" data-tab="users">👥 Пользователи</button>
+            <button class="tab-btn" data-tab="cities">🏙️ Города</button>
+            <button class="tab-btn" data-tab="complaints">🚨 Жалобы</button>
+            <button class="tab-btn" data-tab="logs">📜 Аудит админов</button>
+            <button class="tab-btn" data-tab="userActions">👥 Журнал юзеров</button>
+            <button class="tab-btn" data-tab="settings">⚙️ Настройки</button>
+            <button class="tab-btn" data-tab="newsletter">📧 Рассылка</button>
+            <button class="tab-btn" data-tab="grantSubscription">🎁 Выдать подписку</button>
+            <button class="tab-btn" data-tab="subscriptionsList">📋 Подписки</button>
+            <button class="tab-btn" data-tab="supportTickets">🛎️ Поддержка</button>
+            <button class="tab-btn" data-tab="contactMessages">📨 Обращения</button>
+            <button class="tab-btn" data-tab="partnerPlans">🤝 Тарифы партнёров</button>
+        </div>
+        <div class="sidebar-footer">
+            <a href="/admin-guide.html" class="nav-link">📘 Руководство</a>
+            <a href="/" class="nav-link">🏠 На главную</a>
+            <button id="installPwaBtn" class="install-pwa-btn">📲 Установить PWA</button>
+            <button id="themeToggleBtn" class="theme-toggle-btn">🌙 Тема</button>
+        </div>
+    </aside>
+
+    <!-- Затемнение для мобильного меню -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Основной контент -->
+    <main class="main-content">
+        <div class="container">>
     <!-- ===== СТАТИСТИКА ===== -->
     <div id="statsSection" class="tab-content active">
         <div class="card">
@@ -559,6 +511,24 @@
             applyTheme(isDark ? 'light' : 'dark');
         });
     })();
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const overlay = document.getElementById('sidebarOverlay');
+        const sidebar = document.getElementById('navLinks');
+        const burger = document.getElementById('burgerBtn');
+        if (overlay && sidebar && burger) {
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+            });
+            // Закрываем меню при клике на любую кнопку вкладки на мобильных
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (window.innerWidth <= 992) sidebar.classList.remove('open');
+                });
+            });
+        }
+    });
 </script>
 </body>
 </html>
