@@ -13,7 +13,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { font-size: 16px; scroll-behavior: smooth; }
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        body { font-family: 'Inter', sans-serif; background: #f4f6f9; min-height: 100vh; }
         .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
         .filter-card { background: white; border-radius: 1.25rem; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
         .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
@@ -57,6 +57,41 @@
         }
     </style>
     <link rel="stylesheet" href="/dark-theme.css">
+
+    <style>
+        /* ГЛОБАЛЬНЫЙ ФИКС ЦВЕТОВ ДЛЯ СТРАНИЦЫ */
+        body { background: #f4f6f9 !important; color: #1e293b !important; }
+        
+        /* Заголовки и текст */
+        h1, h2, h3, h4, h5, h6, p, span, label, div:not(.main-header):not(.nav-links):not(.sidebar-menu) {
+            color: #1e293b;
+        }
+        
+        /* Ссылки и кнопки "Назад" */
+        a:not(.nav-btn):not(.logo a), .back-link {
+            color: #3b82f6 !important;
+            text-decoration: none;
+        }
+        a:not(.nav-btn):not(.logo a):hover, .back-link:hover {
+            text-decoration: underline;
+            color: #2563eb !important;
+        }
+
+        /* Карточки и контейнеры */
+        .container, .card, .filter-card {
+            background: transparent;
+        }
+
+        /* ===== ТЕМНАЯ ТЕМА ===== */
+        body.dark-theme { background: #0f172a !important; color: #f8fafc !important; }
+        body.dark-theme h1, body.dark-theme h2, body.dark-theme h3, body.dark-theme p, body.dark-theme span, body.dark-theme label {
+            color: #f8fafc !important;
+        }
+        body.dark-theme a:not(.nav-btn):not(.logo a), body.dark-theme .back-link {
+            color: #60a5fa !important;
+        }
+    </style>
+    
 </head>
 <body>
     <header id="main-header"></header>

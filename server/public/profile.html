@@ -14,7 +14,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { font-size: 16px; scroll-behavior: smooth; }
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        body { font-family: 'Inter', sans-serif; background: #f4f6f9; min-height: 100vh; }
         .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
         .filter-card { background: white; border-radius: 1.25rem; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
         .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
@@ -249,7 +249,7 @@
         .modal-grid .pagination button.active { background: #667eea; color: white; }
         .modal-grid .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
         .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.2rem; flex-wrap: wrap; }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.6rem 1.2rem; border: none; border-radius: 0.75rem; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; }
+        .btn-primary { background: #f4f6f9; color: white; padding: 0.6rem 1.2rem; border: none; border-radius: 0.75rem; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; }
         .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-secondary { background: #e5e7eb; color: #374151; padding: 0.5rem 1rem; border: none; border-radius: 0.75rem; cursor: pointer; }
         body.dark-theme .btn-secondary { background: #334155; color: #e2e8f0; }
@@ -1734,7 +1734,7 @@
                                 <div class="listing-description">${escapeHtml(l.description || '')}</div>
                                 <div class="listing-actions">
                                     <button class="btn-view-listing" onclick="event.stopPropagation(); window.location.href='/listing.html?id=${l.id}'">🔍 Открыть</button>
-                                    <button class="btn-edit-listing" onclick="event.stopPropagation(); openEditModal(${l.id})">✏️ Редактировать</button>
+                                    <button class="btn-edit-listing" onclick="event.stopPropagation(); window.location.href='/edit-listing.html?id=${l.id}'">✏️ Редактировать</button>
                                     <button class="btn-delete-listing" onclick="event.stopPropagation(); archiveListing(${l.id})">🗑️ В архив</button>
                                     ${getBumpButtonHtml(l)}
                                 </div>
@@ -1766,7 +1766,7 @@
                                 <div class="listing-row-description">${escapeHtml((l.description || '').substring(0, 100))}</div>
                                 <div class="listing-actions" style="margin-top: 0.5rem;">
                                     <button class="btn-view-listing" onclick="event.stopPropagation(); window.location.href='/listing.html?id=${l.id}'">🔍 Открыть</button>
-                                    <button class="btn-edit-listing" onclick="event.stopPropagation(); openEditModal(${l.id})">✏️ Редактировать</button>
+                                    <button class="btn-edit-listing" onclick="event.stopPropagation(); window.location.href='/edit-listing.html?id=${l.id}'">✏️ Редактировать</button>
                                     <button class="btn-delete-listing" onclick="event.stopPropagation(); archiveListing(${l.id})">🗑️ В архив</button>
                                     ${getBumpButtonHtml(l)}
                                 </div>
@@ -2069,6 +2069,9 @@
         }
 
         async function openEditModal(listingId) {
+        window.location.href = '/edit-listing.html?id=' + listingId;
+        return;
+    
             try {
                 const resp = await fetch(`${API_URL}/listings/${listingId}`);
                 const listing = await resp.json();
@@ -2959,5 +2962,25 @@
     }, 100);
 })();
 </script>
+
+    <!-- Принудительное переключение на "Мои объявления" при загрузке -->
+    <script id="force_my_tab_script">
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ждем 300мс, чтобы основные скрипты инициализировались
+            setTimeout(() => {
+                const myTab = document.querySelector('.tab[data-tab="my"]');
+                if (myTab) {
+                    // Программно кликаем по вкладке, чтобы сработала вся логика переключения
+                    myTab.click();
+                }
+                
+                // Если кнопки не появились, принудительно вызываем загрузку объявлений
+                if (typeof loadMyListings === 'function') {
+                    setTimeout(() => loadMyListings(), 200);
+                }
+            }, 300);
+        });
+    </script>
+    
 </body>
 </html>

@@ -265,7 +265,8 @@ router.get('/filter', async (req, res) => {
         radius,
         sort,
         page = 1,
-        limit = 12
+        limit = 12,
+        user_id
     } = req.query;
 
     let userId = null;
@@ -326,6 +327,15 @@ router.get('/filter', async (req, res) => {
 
     const params = [];
     let paramIndex = 1;
+
+    if (user_id) {
+        const cond = ` AND l.user_id = $${paramIndex}::int`;
+        countQuery += cond;
+        dataQuery += cond;
+        params.push(user_id);
+        paramIndex++;
+    }
+
 
     if (categoryIds.length > 0) {
         const placeholders = categoryIds.map((_, i) => `$${paramIndex + i}`).join(',');

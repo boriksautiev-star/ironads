@@ -708,7 +708,7 @@ function renderGridView(listings) {
         html += '<div class="listing-price">' + priceDisplay + '</div>';
         html += '<div class="listing-title">' + escapeHtml(l.title) + '</div>';
         html += '<div class="listing-meta">';
-        html += '<span>👤 <a href="#" onclick="event.stopPropagation(); window.location.href=\'/profile.html?id=' + l.user_id + '\'; return false;" style="color:#667eea;text-decoration:none;">' + escapeHtml(l.username) + '</a> ' + (l.is_online ? '<span class="online-indicator"></span>' : '') + '</span>';
+        html += '<span>👤 <a href="#" onclick="event.stopPropagation(); window.location.href=\'/seller.html?id=' + l.user_id + '\'; return false;" style="color:#667eea;text-decoration:none;">' + escapeHtml(l.username) + '</a> ' + (l.is_online ? '<span class="online-indicator"></span>' : '') + '</span>';
         if (l.rating_avg && l.rating_avg > 0) html += ' | ' + renderRatingStars(l.rating_avg);
         html += ' | 📁 ' + escapeHtml(l.category_name || 'Без категории');
         if (l.city_name) html += ' | 📍 ' + escapeHtml(l.city_name);
@@ -749,7 +749,7 @@ function renderListView(listings) {
         html += '<div class="listing-row-price">' + priceDisplay + '</div>';
         html += '<div class="listing-row-title">' + escapeHtml(l.title) + '</div>';
         html += '<div class="listing-row-meta">';
-        html += '<span>👤 <a href="#" onclick="event.stopPropagation(); window.location.href=\'/profile.html?id=' + l.user_id + '\'; return false;" style="color:#667eea;text-decoration:none;">' + escapeHtml(l.username) + '</a> ' + (l.is_online ? '<span class="online-indicator"></span>' : '') + '</span>';
+        html += '<span>👤 <a href="#" onclick="event.stopPropagation(); window.location.href=\'/seller.html?id=' + l.user_id + '\'; return false;" style="color:#667eea;text-decoration:none;">' + escapeHtml(l.username) + '</a> ' + (l.is_online ? '<span class="online-indicator"></span>' : '') + '</span>';
         if (l.rating_avg && l.rating_avg > 0) html += ' | ' + renderRatingStars(l.rating_avg);
         html += ' | 📁 ' + escapeHtml(l.category_name || 'Без категории');
         if (l.city_name) html += ' | 📍 ' + escapeHtml(l.city_name);
@@ -850,7 +850,7 @@ function renderFavoritesGrid() {
                     <div class="listing-price">${priceDisplay}</div>
                     <div class="listing-title">${escapeHtml(l.title)}</div>
                     <div class="listing-meta">
-                        👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/profile.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a> ${l.is_online ? '<span class="online-indicator"></span>' : ''}
+                        👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/seller.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a> ${l.is_online ? '<span class="online-indicator"></span>' : ''}
                         | 📁 ${escapeHtml(l.category_name || 'Без категории')}
                         ${l.city_name ? `| 📍 ${escapeHtml(l.city_name)}` : ''}
                         | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
@@ -893,7 +893,7 @@ function renderFavoritesList() {
                     <div class="listing-row-price">${priceDisplay}</div>
                     <div class="listing-row-title">${escapeHtml(l.title)}</div>
                     <div class="listing-row-meta">
-                        👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/profile.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a>
+                        👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/seller.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a>
                         | 📁 ${escapeHtml(l.category_name || 'Без категории')}
                         ${l.city_name ? `| 📍 ${escapeHtml(l.city_name)}` : ''}
                         | <span class="listing-type-badge ${typeClass}">${typeLabel}</span>
@@ -1017,7 +1017,7 @@ function renderMyListingsGrid() {
                     ${typeof getContactsHtml === 'function' ? getContactsHtml(l, currentUserId) : ''}
                     <div class="listing-actions">
                         <button class="btn-view-listing" onclick="event.stopPropagation(); window.location.href='/listing.html?id=${l.id}'">🔍 Открыть</button>
-                        <button class="btn-edit-listing" onclick="event.stopPropagation(); openEditModal(${l.id})">✏️ Редактировать</button>
+                        <button class="btn-edit-listing" onclick="event.stopPropagation(); window.location.href='/edit-listing.html?id=${l.id}'">✏️ Редактировать</button>
                         <button class="btn-delete-listing" onclick="event.stopPropagation(); archiveListing(${l.id})">🗑️ В архив</button>
                         ${getBumpButtonHtml(l)}
                     </div>
@@ -1060,7 +1060,7 @@ function renderMyListingsList() {
                     ${typeof getContactsHtml === 'function' ? getContactsHtml(l, currentUserId) : ''}
                     <div class="listing-actions">
                         <button class="btn-view-listing" onclick="event.stopPropagation(); window.location.href='/listing.html?id=${l.id}'">🔍 Открыть</button>
-                        <button class="btn-edit-listing" onclick="event.stopPropagation(); openEditModal(${l.id})">✏️ Редактировать</button>
+                        <button class="btn-edit-listing" onclick="event.stopPropagation(); window.location.href='/edit-listing.html?id=${l.id}'">✏️ Редактировать</button>
                         <button class="btn-delete-listing" onclick="event.stopPropagation(); archiveListing(${l.id})">🗑️ В архив</button>
                         ${getBumpButtonHtml(l)}
                     </div>
@@ -1172,7 +1172,7 @@ async function loadFavoritesInProfile() {
                     <div class="listing-info">
                         <div class="listing-price">${priceDisplay}</div>
                         <div class="listing-title">${escapeHtml(l.title)}</div>
-                        <div class="listing-meta">👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/profile.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a> | 📁 ${escapeHtml(l.category_name || 'Без категории')}${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''} | <span class="listing-type-badge ${typeClass}">${typeLabel}</span></div>
+                        <div class="listing-meta">👤 <a href="#" onclick="event.stopPropagation(); window.location.href='/seller.html?id=${l.user_id}'; return false;" style="color:#667eea;text-decoration:none;">${escapeHtml(l.username)}</a> | 📁 ${escapeHtml(l.category_name || 'Без категории')}${l.city_name ? ` | 📍 ${escapeHtml(l.city_name)}` : ''} | <span class="listing-type-badge ${typeClass}">${typeLabel}</span></div>
                         <div class="listing-description">${escapeHtml(l.description || '')}</div>
                         ${typeof getContactsHtml === 'function' ? getContactsHtml(l, currentUserId) : ''}
                         <button class="remove-fav-btn" onclick="event.stopPropagation(); removeFromFavoritesInProfile(${l.id}, this)">🗑️ Удалить</button>
@@ -1378,7 +1378,7 @@ function setupEditCategoryHandlers() {
     });
 }
 
-async function openEditModal(listingId) {
+async function openEditModal(listingId) { window.location.href = '/edit-listing.html?id=' + listingId; return;
     try {
         const resp = await fetch(`${API_URL}/listings/${listingId}`);
         const listing = await resp.json();
@@ -1464,7 +1464,7 @@ function renderEditMediaList() {
     if (!currentMediaList.length) { container.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">Нет фото</div>'; return; }
     let html = '';
     for (let m of currentMediaList) {
-        html += `<div class="media-item" data-id="${m.id}"><img src="${m.file_path}"><div class="media-actions"><button onclick="setMainPhoto(${m.id})">⭐ Главное</button><button onclick="deletePhoto(${m.id})">🗑️</button></div></div>`;
+        html += `<div class="media-item" data-id="${m.id}"><img src="${m.file_path}" style="cursor: zoom-in;" onclick="openImagePreview('${m.file_path}')"><div class="media-actions"><button onclick="setMainPhoto(${m.id})">⭐ Главное</button><button onclick="deletePhoto(${m.id})">🗑️</button></div></div>`;
     }
     container.innerHTML = html;
 }

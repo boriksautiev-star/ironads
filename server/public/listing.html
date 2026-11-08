@@ -49,7 +49,8 @@
         .seller-name { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: #374151; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .seller-name a { color: #667eea; text-decoration: none; }
         .chat-button { width: 100%; padding: 0.875rem; font-size: 1rem; font-weight: 600; border-radius: 0.75rem; }
-        .back-link { display: inline-block; margin-bottom: 1.25rem; color: white; text-decoration: none; cursor: pointer; font-size: 0.875rem; }
+        .back-link { display: inline-block; margin-bottom: 1.25rem; color: #475569; text-decoration: none; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+        .back-link:hover { color: #3b82f6; }
         .blocked-warning { background: #fee2e2; border-left: 4px solid #dc2626; padding: 0.75rem; margin-bottom: 1.25rem; border-radius: 0.75rem; color: #dc2626; font-weight: 500; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1001; justify-content: center; align-items: center; }
         .modal-content { background: white; border-radius: 1.5rem; padding: 2rem; width: 90%; max-width: 600px; animation: modalFadeIn 0.2s ease; max-height: 80vh; overflow-y: auto; }
@@ -298,6 +299,10 @@
         .btn-stats:hover {
             opacity: 0.8;
         }
+    
+        body.dark-theme .back-link { color: #94a3b8; }
+        body.dark-theme .back-link:hover { color: #60a5fa; }
+    
     </style>
     <link rel="stylesheet" href="/dark-theme.css">
     <style>
@@ -326,8 +331,19 @@
             .install-pwa-btn { display: none; }
         }
     </style>
-<meta name="description" content="IronAds">`n</head>
+<meta name="description" content="IronAds">`n
+    <style>
+        body { margin-left: 260px; transition: margin 0.3s; background: #f4f6f9 !important; }
+        @media (max-width: 992px) {
+            body { margin-left: 0; padding-top: 70px !important; }
+        }
+        body.dark-theme { background: #0f172a !important; }
+    </style>
+
+</head>
 <body>
+<header id="main-header"></header>
+
 <div class="container">
     <div class="header">
         <div class="logo" onclick="window.location.href='/'">IronAds</div>

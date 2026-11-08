@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль продавца - IronAds</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/dark-theme.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f4f6f9; margin-left: 260px; padding-top: 2rem; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+        .seller-header { background: white; border-radius: 16px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+        .seller-avatar { width: 80px; height: 80px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold; }
+        .seller-info h1 { margin: 0 0 0.5rem 0; font-size: 1.8rem; color: #1e293b; }
+        .seller-meta { color: #64748b; font-size: 0.95rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+        .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        .listing-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; transition: 0.3s; cursor: pointer; }
+        .listing-card:hover { transform: translateY(-4px); box-shadow: 0 12px 25px rgba(0,0,0,0.08); }
+        .listing-image { height: 200px; background: #f8fafc; }
+        .listing-image img { width: 100%; height: 100%; object-fit: cover; }
+        .listing-info { padding: 1rem; }
+        .listing-title { font-weight: 600; color: #1e293b; margin-bottom: 0.5rem; }
+        .listing-price { font-weight: 800; color: #3b82f6; font-size: 1.2rem; }
+        
+        @media (max-width: 992px) { body { margin-left: 0; padding-top: 90px; } }
+        body.dark-theme { background: #0f172a; }
+        body.dark-theme .seller-header { background: #1e293b; border-color: #334155; }
+        body.dark-theme .seller-info h1 { color: #f8fafc; }
+        body.dark-theme .listing-card { background: #1e293b; border-color: #334155; }
+        body.dark-theme .listing-title { color: #f8fafc; }
+    </style>
+</head>
+<body>
+    <header id="main-header"></header>
+    <div class="container">
+        <div class="seller-header">
+            <div class="seller-avatar" id="sellerAvatar">👤</div>
+            <div class="seller-info">
+                <h1 id="sellerName">Загрузка...</h1>
+                <div class="seller-meta">
+                    <span id="sellerRating">⭐ Рейтинг: -</span>
+                    <span id="sellerDate">📅 На сайте с ...</span>
+                </div>
+            </div>
+            <div style="margin-left: auto;">
+                <a href="/" class="btn-secondary" style="text-decoration: none; padding: 0.6rem 1.2rem; border-radius: 8px; background: #e2e8f0; color: #1e293b; font-weight: 500;">← На главную</a>
+            </div>
+        </div>
+
+        <h2 style="color: #1e293b; margin-bottom: 1.5rem;" id="listingsTitle">Объявления продавца</h2>
+        <div class="listings-grid" id="sellerListings">
+            <div style="color: #64748b;">Загрузка объявлений...</div>
+        </div>
+    </div>
+
+    <script src="/js/common.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('id');
+            
+            if (!userId) {
+                document.getElementById('sellerName').textContent = 'Пользователь не найден';
+                return;
+            }
+
+            // 1. Загружаем данные продавца
+            try {
+                // Пытаемся получить данные пользователя (если есть такой эндпоинт)
+                const userRes = await fetch('/api/users/' + userId);
+                if (userRes.ok) {
+                    const user = await userRes.json();
+                    document.getElementById('sellerName').textContent = user.username || 'Продавец';
+                    document.getElementById('sellerAvatar').textContent = (user.username || 'П').charAt(0).toUpperCase();
+                    if (user.created_at) {
+                        const date = new Date(user.created_at).toLocaleDateString('ru-RU');
+                        document.getElementById('sellerDate').textContent = '📅 На сайте с ' + date;
+                    }
+                } else {
+                    document.getElementById('sellerName').textContent = 'Продавец';
+                }
+            } catch (e) {
+                document.getElementById('sellerName').textContent = 'Продавец';
+            }
+
+            // 2. Загружаем рейтинг (если есть)
+            try {
+                const ratingRes = await fetch('/api/users/' + userId + '/rating');
+                if (ratingRes.ok) {
+                    const ratingData = await ratingRes.json();
+                    if (ratingData.average) {
+                        document.getElementById('sellerRating').textContent = '⭐ Рейтинг: ' + ratingData.average.toFixed(1) + ' (' + ratingData.count + ')';
+                    }
+                }
+            } catch (e) {}
+
+            // 3. Загружаем объявления продавца
+            try {
+                // Используем фильтр по user_id
+                const listingsRes = await fetch('/api/listings/filter?user_id=' + userId + '&limit=100');
+                if (listingsRes.ok) {
+                    const data = await listingsRes.json();
+                    const listings = data.listings || [];
+                    const container = document.getElementById('sellerListings');
+                    
+                    if (listings.length === 0) {
+                        container.innerHTML = '<div style="color: #64748b; padding: 2rem;">У этого продавца пока нет активных объявлений.</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    listings.forEach(l => {
+                        const img = l.media && l.media.length > 0 ? l.media[0].file_path : '/default-image.png';
+                        html += `
+                            <div class="listing-card" onclick="window.location.href='/listing.html?id=${l.id}'">
+                                <div class="listing-image"><img src="${img}" alt="${l.title}"></div>
+                                <div class="listing-info">
+                                    <div class="listing-title">${l.title}</div>
+                                    <div class="listing-price">${l.price ? l.price + ' ₽' : 'Цена не указана'}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                    document.getElementById('listingsTitle').textContent = 'Объявления продавца (' + listings.length + ')';
+                }
+            } catch (e) {
+                document.getElementById('sellerListings').innerHTML = '<div style="color: #ef4444;">Ошибка загрузки объявлений</div>';
+            }
+        });
+    </script>
+</body>
+</html>
