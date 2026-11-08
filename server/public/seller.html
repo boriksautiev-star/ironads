@@ -63,12 +63,12 @@
             
             if (!userId) {
                 document.getElementById('sellerName').textContent = 'Пользователь не найден';
+                document.getElementById('sellerListings').innerHTML = '<div style="color: #64748b;">Не указан ID пользователя.</div>';
                 return;
             }
 
             // 1. Загружаем данные продавца
             try {
-                // Пытаемся получить данные пользователя (если есть такой эндпоинт)
                 const userRes = await fetch('/api/users/' + userId);
                 if (userRes.ok) {
                     const user = await userRes.json();
@@ -79,13 +79,18 @@
                         document.getElementById('sellerDate').textContent = '📅 На сайте с ' + date;
                     }
                 } else {
+                    // Если API пользователя нет, просто ставим заглушку
                     document.getElementById('sellerName').textContent = 'Продавец';
+                    document.getElementById('sellerAvatar').textContent = 'П';
+                    document.getElementById('sellerDate').textContent = '📅 На сайте с неизвестно';
                 }
             } catch (e) {
                 document.getElementById('sellerName').textContent = 'Продавец';
+                document.getElementById('sellerAvatar').textContent = 'П';
+                document.getElementById('sellerDate').textContent = '📅 На сайте с неизвестно';
             }
 
-            // 2. Загружаем рейтинг (если есть)
+            // 2. Загружаем рейтинг
             try {
                 const ratingRes = await fetch('/api/users/' + userId + '/rating');
                 if (ratingRes.ok) {
@@ -98,24 +103,27 @@
 
             // 3. Загружаем объявления продавца
             try {
-                // Используем фильтр по user_id
                 const listingsRes = await fetch('/api/listings/filter?user_id=' + userId + '&limit=100');
                 if (listingsRes.ok) {
                     const data = await listingsRes.json();
                     const listings = data.listings || [];
                     const container = document.getElementById('sellerListings');
                     
+                    // Обновляем заголовок с общим количеством из базы (pagination.total)
+                    const totalCount = (data.pagination && data.pagination.total !== undefined) ? data.pagination.total : listings.length;
+                    document.getElementById('listingsTitle').textContent = 'Объявления продавца (' + totalCount + ')';
+                    
                     if (listings.length === 0) {
                         container.innerHTML = '<div style="color: #64748b; padding: 2rem;">У этого продавца пока нет активных объявлений.</div>';
                         return;
                     }
 
-                    let html = '';
+                    let htmlCards = '';
                     listings.forEach(l => {
                         const img = (l.first_media && l.first_media.file_path) ? l.first_media.file_path : '/icons/icon-192.png';
-                        html += `
+                        htmlCards += `
                             <div class="listing-card" onclick="window.location.href='/listing.html?id=${l.id}'">
-                                <div class="listing-image"><img src="${img}" alt="${l.title}"></div>
+                                <div class="listing-image"><img src="${img}" alt="${l.title}" onerror="this.src='/icons/icon-192.png'"></div>
                                 <div class="listing-info">
                                     <div class="listing-title">${l.title}</div>
                                     <div class="listing-price">${l.price ? l.price + ' ₽' : 'Цена не указана'}</div>
@@ -123,10 +131,10 @@
                             </div>
                         `;
                     });
-                    container.innerHTML = html;
-                    document.getElementById('listingsTitle').textContent = 'Объявления продавца (' + listings.length + ')';
+                    container.innerHTML = htmlCards;
                 }
             } catch (e) {
+                console.error('Ошибка загрузки объявлений:', e);
                 document.getElementById('sellerListings').innerHTML = '<div style="color: #ef4444;">Ошибка загрузки объявлений</div>';
             }
         });

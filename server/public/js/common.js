@@ -275,6 +275,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         ` : '<a href="/contact.html" class="nav-btn">📞 Поддержка</a>'}
                     </div>
                     <div class="sidebar-footer">
+                        <div id="sidebarListingsCount" style="text-align: center; font-size: 0.85rem; color: #64748b; margin-bottom: 1rem; font-weight: 600;">Загрузка...</div>
                         <div class="font-controls" style="display: flex; gap: 5px; margin-bottom: 5px; justify-content: center;">
                             <button class="font-btn" id="fontMinus">A-</button>
                             <button class="font-btn reset" id="fontReset">A</button>
@@ -371,6 +372,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             setInterval(updateUnreadCount, 15000);
             window.addEventListener('focus', updateUnreadCount);
         }
+
+        
+        // Загружаем счетчик объявлений для сайдбара
+        fetch('/api/listings/count')
+            .then(r => r.json())
+            .then(data => {
+                if (data.total !== undefined) {
+                    const el = document.getElementById('sidebarListingsCount');
+                    if (el) el.textContent = 'Всего объявлений: ' + data.total;
+                }
+            }).catch(console.error);
 
         setTimeout(() => { window.setListingView(window.listingViewMode); }, 100);
     }

@@ -7,6 +7,26 @@ const pool = require('../db/pool');
 const { auth } = require('../middleware/auth');
 const { logUserAction } = require('../utils/audit');
 const router = express.Router();
+
+// ========== БЫСТРЫЙ СЧЕТЧИК ОБЪЯВЛЕНИЙ (Должен быть выше /:id) ==========
+router.get('/count', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT COUNT(*) as total 
+            FROM listings l
+            JOIN users u ON l.user_id = u.id
+            WHERE (l.status = 'active' OR l.status IS NULL)
+              AND u.is_blocked = false
+              AND u.deleted_at IS NULL
+              AND l.deleted_at IS NULL
+        `);
+        res.json({ total: parseInt(result.rows[0].total) });
+    } catch (e) {
+        console.error('Ошибка счетчика:', e);
+        res.status(500).json({ error: 'Ошибка' });
+    }
+});
+
 const jwt = require('jsonwebtoken');
 
 // Настройка multer для загрузки файлов
@@ -1388,5 +1408,6 @@ router.put('/:id/contacts-settings', auth, async (req, res) => {
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
+
 
 module.exports = router;

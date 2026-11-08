@@ -601,6 +601,7 @@
         <!-- H1 заголовок для SEO -->
         <h1 style="color: white; font-size: 2rem; text-align: center; margin-bottom: 1.5rem;">IronAds доска объявлений по всей России</h1>
 
+
         <!-- ===== НОВАЯ КНОПКА СКАЧИВАНИЯ ПРИЛОЖЕНИЯ ===== -->
         <div style="text-align: center; margin: 1rem 0;">
             <p style="color: white; font-size: 1rem; margin-bottom: 0.5rem;">📱 Установите мобильное приложение IronAds</p>
@@ -670,8 +671,8 @@
                     <div class="filter-group"><button class="btn-primary" id="searchBtn">Найти</button></div>
                 </div>
                 <div class="view-toggle-group" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; align-items: center;">
-                    <button class="view-toggle active" data-view="grid" id="viewGrid">📋 Список</button>
-                    <button class="view-toggle" data-view="map" id="viewMap">🗺️ Карта</button>
+                    
+                    <button class="view-toggle" data-view="map" id="viewMap" style="flex: 1; justify-content: center; padding: 0.6rem;">🗺️ Показать на карте</button>
                     <div class="location-btn-wrapper">
                         <button class="btn-secondary" id="locationToggleBtn" style="font-size:0.75rem; padding:0.3rem 0.8rem;">📍 Местоположение</button>
                         <div class="location-dropdown" id="locationDropdown">
@@ -1083,5 +1084,29 @@
             };
         })();
     </script>
+
+    
+
+
+    <script>
+        /* ВЫХОД ИЗ РЕЖИМА КАРТЫ */
+        document.addEventListener('DOMContentLoaded', () => {
+            // Перехватываем переключение вида из сайдбара
+            const originalSetView = window.setListingView;
+            if (typeof originalSetView === 'function') {
+                window.setListingView = function(view) {
+                    originalSetView(view);
+                    
+                    // Принудительно закрываем карту и показываем список
+                    const mapContainer = document.getElementById('mapContainer');
+                    if (mapContainer) mapContainer.classList.remove('active');
+                    
+                    const listingsContainer = document.getElementById('listings');
+                    if (listingsContainer) listingsContainer.style.display = '';
+                };
+            }
+        });
+    </script>
+    
 </body>
 </html>
