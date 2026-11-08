@@ -732,36 +732,33 @@ async function importTopnlab() {
         }
 
         // ============================================================
-        // ⚠️ АРХИВАЦИЯ ВРЕМЕННО ОТКЛЮЧЕНА (до выяснения причины с АН "Семья")
-        // ============================================================
-        /*
-        // ---- Архивация ----
+        // ---- Безопасная архивация с счетчиком пропусков ----
         if (externalIds.length > 0) {
             const placeholders = externalIds.map((_, i) => `$${i+1}`).join(',');
-            const result = await pool.query(
-                `UPDATE listings
-                 SET status = 'archived', archived_at = NOW()
-                 WHERE source = 'topnlab'
-                   AND external_id NOT IN (${placeholders})
-                   AND status != 'archived'`,
+            
+            // Сбрасываем счетчик для тех, кто есть в фиде
+            await pool.query(
+                `UPDATE listings SET miss_count = 0 WHERE source = 'topnlab' AND external_id IN (${placeholders})`,
                 externalIds
             );
-            stats.archived = result.rowCount;
-            if (result.rowCount > 0) {
-                console.log(`📦 Заархивировано ${result.rowCount} объявлений (пропали из фида)`);
+
+            // Увеличиваем счетчик для тех, кого нет в фиде
+            await pool.query(
+                `UPDATE listings SET miss_count = COALESCE(miss_count, 0) + 1 WHERE source = 'topnlab' AND status != 'archived' AND external_id NOT IN (${placeholders})`,
+                externalIds
+            );
+
+            // Архивируем тех, кто пропал 3 раза подряд
+            const archiveRes = await pool.query(
+                `UPDATE listings SET status = 'archived', archived_at = NOW() WHERE source = 'topnlab' AND miss_count >= 3 AND status != 'archived' RETURNING id`
+            );
+            stats.archived = archiveRes.rowCount;
+            if (archiveRes.rowCount > 0) {
+                console.log(`📦 Заархивировано ${archiveRes.rowCount} объявлений (отсутствуют в фиде 3 раза подряд)`);
             }
         } else {
-            const result = await pool.query(
-                `UPDATE listings SET status = 'archived', archived_at = NOW()
-                 WHERE source = 'topnlab' AND status != 'archived'`
-            );
-            stats.archived = result.rowCount;
-            if (result.rowCount > 0) {
-                console.log(`📦 Заархивировано ${result.rowCount} объявлений (фид пуст)`);
-            }
+            console.log('⚠️ Фид пуст. Архивация пропущена во избежание удаления всех объявлений.');
         }
-        */
-        console.log('ℹ️ АРХИВАЦИЯ ОТКЛЮЧЕНА (временная мера). Ни одно объявление не будет заархивировано.');
 
         // ---- Фоновая загрузка фото ----
         const photoTasks = [];
