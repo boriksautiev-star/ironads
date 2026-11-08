@@ -1736,10 +1736,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setInterval(updateSupportBadge, 30000);
     window.addEventListener('focus', updateSupportBadge);
-    loadStats();
     loadLogActions();
     const today = new Date().toISOString().split('T')[0];
     const weekAgo = new Date(Date.now() - 7*24*3600000).toISOString().split('T')[0];
     if (document.getElementById('statsStartDate')) document.getElementById('statsStartDate').value = weekAgo;
     if (document.getElementById('statsEndDate')) document.getElementById('statsEndDate').value = today;
+    loadStats(); // Вызываем ПОСЛЕ установки дат
 });

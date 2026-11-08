@@ -108,7 +108,7 @@ app.use(helmet({
                 "'unsafe-eval'",
                 "https://api-maps.yandex.ru",
                 "https://js.hcaptcha.com",
-                "https://yastatic.net"
+                "https://yastatic.net", "https://cdn.jsdelivr.net"
             ],
             scriptSrcAttr: [
                 "'unsafe-inline'"
@@ -116,7 +116,7 @@ app.use(helmet({
             styleSrc: [
                 "'self'",
                 "'unsafe-inline'",
-                "https://fonts.googleapis.com",
+                "https://fonts.googleapis.com", "https://cdn.jsdelivr.net",
                 "https://cdnjs.cloudflare.com"
             ],
             fontSrc: [
@@ -128,7 +128,7 @@ app.use(helmet({
                 "'self'",
                 "data:",
                 "https://api-maps.yandex.ru",
-                "https://yastatic.net"
+                "https://yastatic.net", "https://cdn.jsdelivr.net"
             ],
             connectSrc: [
                 "'self'",
