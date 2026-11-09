@@ -301,9 +301,9 @@ document.getElementById('filterRadius')?.addEventListener('change', () => { if (
 document.getElementById('viewGrid')?.addEventListener('click', function() {
     currentMapMode = false;
     document.getElementById('viewGrid')?.classList.add('active');
-    document.getElementById('viewMap').classList.remove('active');
+    document.getElementById('viewMap')?.classList.remove('active');
     document.getElementById('listings').style.display = 'grid';
-    document.getElementById('mapContainer').classList.remove('active');
+    document.getElementById('mapContainer')?.classList.remove('active');
     document.getElementById('mapContainer').classList.remove('highlight');
     mapHighlightActive = false;
     document.getElementById('pagination').style.display = 'flex';
@@ -2489,9 +2489,9 @@ function showMainPage() { document.getElementById('profilePage').classList.add('
 
     currentMapMode = false;
     document.getElementById('viewGrid')?.classList.add('active');
-    document.getElementById('viewMap').classList.remove('active');
+    document.getElementById('viewMap')?.classList.remove('active');
     document.getElementById('listings').style.display = 'grid';
-    document.getElementById('mapContainer').classList.remove('active');
+    document.getElementById('mapContainer')?.classList.remove('active');
     document.getElementById('pagination').style.display = 'flex';
     window.showCreateModal = showCreateModal;
 })();
