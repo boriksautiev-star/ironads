@@ -558,6 +558,120 @@
             font-size: 1.1rem !important;
             margin-bottom: 1rem !important;
         }
+            /* ===== СВОРАЧИВАЕМЫЙ ФИЛЬТР ДЛЯ МОБИЛЬНЫХ ===== */
+        .filter-header {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.5rem 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1e293b;
+            user-select: none;
+        }
+        .filter-toggle-icon {
+            transition: transform 0.3s ease;
+        }
+        @media (max-width: 768px) {
+            .filter-header {
+                display: flex;
+            }
+            .filter-collapsible-content {
+                display: none;
+            }
+            .filter-card.expanded .filter-collapsible-content {
+                display: block;
+                margin-top: 1rem;
+            }
+            .filter-card.expanded .filter-toggle-icon {
+                transform: rotate(180deg);
+            }
+        }
+        body.dark-theme .filter-header {
+            color: #f8fafc;
+        }
+            /* ===== ДОПОЛНИТЕЛЬНЫЕ УЛУЧШЕНИЯ ДЛЯ МОБИЛЬНЫХ ===== */
+        @media (max-width: 768px) {
+            /* 1. Скрываем пустой блок описания категории (серая полоса) */
+            #categoryDescription:empty {
+                display: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* 2. Уменьшаем главный заголовок, чтобы сэкономить место */
+            .container > h1 {
+                font-size: 1.6rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            /* 3. Делаем баннер приложения более компактным */
+            .container > div[style*="text-align: center; margin: 1rem 0;"] {
+                margin: 0.5rem 0 !important;
+            }
+            .container > div[style*="text-align: center; margin: 1rem 0;"] p {
+                font-size: 0.85rem !important;
+                margin-bottom: 0.3rem !important;
+            }
+            .container > div[style*="text-align: center; margin: 1rem 0;"] a {
+                padding: 8px 16px !important;
+                font-size: 0.95rem !important;
+            }
+        }
+                    @media (max-width: 768px) {
+            #categoryDescription {
+                display: none !important;
+                height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .filter-card {
+                margin-bottom: 0.5rem !important;
+            }
+            #listingsContainer {
+                margin-top: 0 !important;
+            }
+        }
+            /* Жестко скрываем пустую полосу, чтобы не ломать main.js */
+        #categoryDescription {
+            display: none !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .filter-card { margin-bottom: 0.5rem !important; }
+        #listingsContainer { margin-top: 0 !important; }
+            /* Убираем зазоры на главной */
+        #categoryInfoBar, #categoryDescription {
+            display: none !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        #listingsContainer { margin-top: 0 !important; padding-top: 0 !important; }
+        .filter-card { margin-bottom: 0.5rem !important; }
+
+        /* Стили для перенесенных городов (работают в обеих темах) */
+        .moved-cities-wrapper a {
+            color: #1e293b !important; /* Темный текст для светлой темы */
+            font-size: 0.85rem;
+            text-decoration: none;
+            padding: 4px 8px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        body.dark-theme .moved-cities-wrapper a {
+            color: #e2e8f0 !important; /* Светлый текст для темной темы */
+            background: rgba(255,255,255,0.1);
+        }
+        .moved-cities-wrapper a:hover {
+            background: #e2e8f0;
+        }
+        body.dark-theme .moved-cities-wrapper a:hover {
+            background: rgba(255,255,255,0.2);
+        }
     </style>
     <link rel="stylesheet" href="/dark-theme.css">
 
@@ -591,6 +705,120 @@
         body.dark-theme .listing-card { background: #1e293b; border-color: #334155; }
         body.dark-theme .listing-title { color: #f8fafc; }
         body.dark-theme .listing-price { color: #60a5fa; }
+            /* ===== СВОРАЧИВАЕМЫЙ ФИЛЬТР ДЛЯ МОБИЛЬНЫХ ===== */
+        .filter-header {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.5rem 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1e293b;
+            user-select: none;
+        }
+        .filter-toggle-icon {
+            transition: transform 0.3s ease;
+        }
+        @media (max-width: 768px) {
+            .filter-header {
+                display: flex;
+            }
+            .filter-collapsible-content {
+                display: none;
+            }
+            .filter-card.expanded .filter-collapsible-content {
+                display: block;
+                margin-top: 1rem;
+            }
+            .filter-card.expanded .filter-toggle-icon {
+                transform: rotate(180deg);
+            }
+        }
+        body.dark-theme .filter-header {
+            color: #f8fafc;
+        }
+            /* ===== ДОПОЛНИТЕЛЬНЫЕ УЛУЧШЕНИЯ ДЛЯ МОБИЛЬНЫХ ===== */
+        @media (max-width: 768px) {
+            /* 1. Скрываем пустой блок описания категории (серая полоса) */
+            #categoryDescription:empty {
+                display: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* 2. Уменьшаем главный заголовок, чтобы сэкономить место */
+            .container > h1 {
+                font-size: 1.6rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            /* 3. Делаем баннер приложения более компактным */
+            .container > div[style*="text-align: center; margin: 1rem 0;"] {
+                margin: 0.5rem 0 !important;
+            }
+            .container > div[style*="text-align: center; margin: 1rem 0;"] p {
+                font-size: 0.85rem !important;
+                margin-bottom: 0.3rem !important;
+            }
+            .container > div[style*="text-align: center; margin: 1rem 0;"] a {
+                padding: 8px 16px !important;
+                font-size: 0.95rem !important;
+            }
+        }
+                    @media (max-width: 768px) {
+            #categoryDescription {
+                display: none !important;
+                height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .filter-card {
+                margin-bottom: 0.5rem !important;
+            }
+            #listingsContainer {
+                margin-top: 0 !important;
+            }
+        }
+            /* Жестко скрываем пустую полосу, чтобы не ломать main.js */
+        #categoryDescription {
+            display: none !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .filter-card { margin-bottom: 0.5rem !important; }
+        #listingsContainer { margin-top: 0 !important; }
+            /* Убираем зазоры на главной */
+        #categoryInfoBar, #categoryDescription {
+            display: none !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        #listingsContainer { margin-top: 0 !important; padding-top: 0 !important; }
+        .filter-card { margin-bottom: 0.5rem !important; }
+
+        /* Стили для перенесенных городов (работают в обеих темах) */
+        .moved-cities-wrapper a {
+            color: #1e293b !important; /* Темный текст для светлой темы */
+            font-size: 0.85rem;
+            text-decoration: none;
+            padding: 4px 8px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        body.dark-theme .moved-cities-wrapper a {
+            color: #e2e8f0 !important; /* Светлый текст для темной темы */
+            background: rgba(255,255,255,0.1);
+        }
+        .moved-cities-wrapper a:hover {
+            background: #e2e8f0;
+        }
+        body.dark-theme .moved-cities-wrapper a:hover {
+            background: rgba(255,255,255,0.2);
+        }
     </style>
 
 </head>
@@ -716,7 +944,7 @@
             </div>
 
             <!-- Динамическое описание категории (устарело, но пока оставим) -->
-            <div id="categoryDescription" style="color: #475569; text-align: center; padding: 0.5rem; font-size: 1.1rem; background: #e2e8f0; border-radius: 1rem; margin-bottom: 0.5rem;"></div>
+            
 
             <!-- Блок категории с кнопкой i -->
             <div id="categoryInfoBar" style="display: none; background: rgba(255,255,255,0.1); backdrop-filter: blur(4px); border-radius: 1rem; padding: 0.6rem 1.2rem; margin: 1rem 0; color: white; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
@@ -724,7 +952,7 @@
                 <button id="categoryInfoBtn" style="background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.2rem; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;">ⓘ</button>
             </div>
 
-            <div id="listingsContainer">
+            <div id="categoryDescription"></div>`<div id="listingsContainer">
                 <div id="listings" class="listings-grid"></div>
                 <div id="mapContainer" class="map-container">
                     <div id="map"></div>
@@ -1093,5 +1321,108 @@
 
     
     
+    <!-- ===== СКРИПТ СВОРАЧИВАНИЯ ФИЛЬТРОВ ===== -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const filterCard = document.querySelector('.filter-card');
+            if (!filterCard) return;
+
+            // 1. Создаем заголовок
+            const header = document.createElement('div');
+            header.className = 'filter-header';
+            header.innerHTML = '<span>🔍 Фильтры и поиск</span><span class="filter-toggle-icon">▼</span>';
+            
+            // 2. Создаем контейнер для содержимого
+            const contentWrapper = document.createElement('div');
+            contentWrapper.className = 'filter-collapsible-content';
+            
+            // 3. Переносим все текущие элементы фильтра внутрь обертки
+            const elementsToMove = Array.from(filterCard.children);
+            elementsToMove.forEach(child => contentWrapper.appendChild(child));
+            
+            // 4. Вставляем заголовок и обертку обратно
+            filterCard.appendChild(header);
+            filterCard.appendChild(contentWrapper);
+
+            // 5. Логика сворачивания (только на мобильных)
+            header.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    filterCard.classList.toggle('expanded');
+                }
+            });
+        });
+    </script>
+    <!-- ===== ПЕРЕНОС БЛОКА ПОПУЛЯРНЫХ ГОРОДОВ ВНИЗ ===== -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const popularCities = document.getElementById('popularCities');
+            const pagination = document.getElementById('pagination');
+            const mainPage = document.getElementById('mainPage');
+            
+            // Если блок и контейнер существуют, переносим города в самый низ
+            if (popularCities && pagination && mainPage) {
+                // Вставляем блок сразу после пагинации (кнопок страниц)
+                pagination.parentNode.insertBefore(popularCities, pagination.nextSibling);
+            }
+        });
+    </script>
+    
+        
+    
+    
+    <!-- ===== ТОЧНЫЙ ПЕРЕНОС ГОРОДОВ В #navLinks ===== -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const observer = new MutationObserver(() => {
+                const popularCities = document.getElementById('popularCities');
+                const navLinks = document.getElementById('navLinks');
+
+                if (popularCities && navLinks && !document.querySelector('.moved-cities-wrapper')) {
+                    observer.disconnect();
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'moved-cities-wrapper';
+                    wrapper.style.marginTop = '20px';
+                    wrapper.style.paddingTop = '15px';
+                    wrapper.style.borderTop = '1px solid rgba(255,255,255,0.1)'; 
+                    wrapper.style.width = '100%';
+                    
+                    // Наш заголовок
+                    wrapper.innerHTML = '<div style="margin-bottom:12px; color:#94a3b8; font-size:0.8rem; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; padding-left:15px;">🏙️ Популярные города</div>';
+                    
+                    // Очищаем старые стили контейнера
+                    popularCities.style.background = 'transparent';
+                    popularCities.style.padding = '0';
+                    popularCities.style.margin = '0';
+                    popularCities.style.border = 'none';
+                    popularCities.style.boxShadow = 'none';
+                    
+                    // ПРЯЧЕМ СТАРЫЙ ЗАГОЛОВОК И КНОПКУ, ЧТОБЫ НЕ БЫЛО ДУБЛЕЙ
+                    const oldHeader = popularCities.querySelector('#citiesToggleLabel');
+                    if (oldHeader) oldHeader.style.display = 'none';
+                    const toggleBtn = popularCities.querySelector('#toggleCitiesBtn');
+                    if (toggleBtn) toggleBtn.style.display = 'none';
+                    
+                    const citiesList = popularCities.querySelector('#citiesList');
+                    if (citiesList) {
+                        citiesList.style.display = 'flex';
+                        citiesList.style.flexWrap = 'wrap';
+                        citiesList.style.justifyContent = 'flex-start';
+                        citiesList.style.padding = '0 15px';
+                        citiesList.style.gap = '8px';
+                        citiesList.style.marginTop = '0';
+                    }
+
+                    // Удаляем инлайн-стили со ссылок (чтобы работал наш CSS)
+                    popularCities.querySelectorAll('a').forEach(a => a.removeAttribute('style'));
+
+                    wrapper.appendChild(popularCities);
+                    navLinks.appendChild(wrapper); 
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+            setTimeout(() => observer.disconnect(), 10000);
+        });
+    </script>
 </body>
 </html>

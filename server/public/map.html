@@ -23,6 +23,54 @@
         body.dark-theme .map-header h1 { color: #f8fafc; }
         body.dark-theme .btn-back { background: #334155; color: #f8fafc; }
         body.dark-theme #map { border-color: #334155; }
+            /* ===== ФИКС КНОПКИ "НА ГЛАВНУЮ" ИЛИ "НАЗАД" ДЛЯ СВЕТЛОЙ И ТЕМНОЙ ТЕМ ===== */
+        /* В светлой теме (по умолчанию) */
+        body:not(.dark-theme) a[href="/"],
+        body:not(.dark-theme) a[href="/index.html"],
+        body:not(.dark-theme) .btn-back,
+        body:not(.dark-theme) .back-button {
+            color: #1e293b !important;
+            background-color: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+            padding: 6px 12px !important;
+            border-radius: 8px !important;
+            text-decoration: none !important;
+            display: inline-block !important;
+            font-weight: 500 !important;
+            transition: all 0.2s !important;
+        }
+
+        /* Наведение в светлой теме */
+        body:not(.dark-theme) a[href="/"]:hover,
+        body:not(.dark-theme) a[href="/index.html"]:hover,
+        body:not(.dark-theme) .btn-back:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        /* В темной теме */
+        body.dark-theme a[href="/"],
+        body.dark-theme a[href="/index.html"],
+        body.dark-theme .btn-back,
+        body.dark-theme .back-button {
+            color: #f8fafc !important;
+            background-color: #334155 !important;
+            border: 1px solid #475569 !important;
+            padding: 6px 12px !important;
+            border-radius: 8px !important;
+            text-decoration: none !important;
+            display: inline-block !important;
+            font-weight: 500 !important;
+            transition: all 0.2s !important;
+        }
+
+        /* Наведение в темной теме */
+        body.dark-theme a[href="/"]:hover,
+        body.dark-theme a[href="/index.html"]:hover,
+        body.dark-theme .btn-back:hover {
+            background-color: #475569 !important;
+            color: #ffffff !important;
+        }
     </style>
     <script src="https://api-maps.yandex.ru/2.1/?apikey=97d0fa92-e83f-48a4-b404-4a55881bc4a8&suggest_apikey=97d0fa92-e83f-48a4-b404-4a55881bc4a8&lang=ru_RU" defer></script>
 </head>

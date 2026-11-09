@@ -303,6 +303,54 @@
         body.dark-theme .back-link { color: #94a3b8; }
         body.dark-theme .back-link:hover { color: #60a5fa; }
     
+            /* ===== ФИКС КНОПКИ "НА ГЛАВНУЮ" ИЛИ "НАЗАД" ДЛЯ СВЕТЛОЙ И ТЕМНОЙ ТЕМ ===== */
+        /* В светлой теме (по умолчанию) */
+        body:not(.dark-theme) a[href="/"],
+        body:not(.dark-theme) a[href="/index.html"],
+        body:not(.dark-theme) .btn-back,
+        body:not(.dark-theme) .back-button {
+            color: #1e293b !important;
+            background-color: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+            padding: 6px 12px !important;
+            border-radius: 8px !important;
+            text-decoration: none !important;
+            display: inline-block !important;
+            font-weight: 500 !important;
+            transition: all 0.2s !important;
+        }
+
+        /* Наведение в светлой теме */
+        body:not(.dark-theme) a[href="/"]:hover,
+        body:not(.dark-theme) a[href="/index.html"]:hover,
+        body:not(.dark-theme) .btn-back:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        /* В темной теме */
+        body.dark-theme a[href="/"],
+        body.dark-theme a[href="/index.html"],
+        body.dark-theme .btn-back,
+        body.dark-theme .back-button {
+            color: #f8fafc !important;
+            background-color: #334155 !important;
+            border: 1px solid #475569 !important;
+            padding: 6px 12px !important;
+            border-radius: 8px !important;
+            text-decoration: none !important;
+            display: inline-block !important;
+            font-weight: 500 !important;
+            transition: all 0.2s !important;
+        }
+
+        /* Наведение в темной теме */
+        body.dark-theme a[href="/"]:hover,
+        body.dark-theme a[href="/index.html"]:hover,
+        body.dark-theme .btn-back:hover {
+            background-color: #475569 !important;
+            color: #ffffff !important;
+        }
     </style>
     <link rel="stylesheet" href="/dark-theme.css">
     <style>
@@ -330,6 +378,54 @@
         @media (max-width: 480px) {
             .install-pwa-btn { display: none; }
         }
+            /* ===== ФИКС КНОПКИ "НА ГЛАВНУЮ" ИЛИ "НАЗАД" ДЛЯ СВЕТЛОЙ И ТЕМНОЙ ТЕМ ===== */
+        /* В светлой теме (по умолчанию) */
+        body:not(.dark-theme) a[href="/"],
+        body:not(.dark-theme) a[href="/index.html"],
+        body:not(.dark-theme) .btn-back,
+        body:not(.dark-theme) .back-button {
+            color: #1e293b !important;
+            background-color: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+            padding: 6px 12px !important;
+            border-radius: 8px !important;
+            text-decoration: none !important;
+            display: inline-block !important;
+            font-weight: 500 !important;
+            transition: all 0.2s !important;
+        }
+
+        /* Наведение в светлой теме */
+        body:not(.dark-theme) a[href="/"]:hover,
+        body:not(.dark-theme) a[href="/index.html"]:hover,
+        body:not(.dark-theme) .btn-back:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        /* В темной теме */
+        body.dark-theme a[href="/"],
+        body.dark-theme a[href="/index.html"],
+        body.dark-theme .btn-back,
+        body.dark-theme .back-button {
+            color: #f8fafc !important;
+            background-color: #334155 !important;
+            border: 1px solid #475569 !important;
+            padding: 6px 12px !important;
+            border-radius: 8px !important;
+            text-decoration: none !important;
+            display: inline-block !important;
+            font-weight: 500 !important;
+            transition: all 0.2s !important;
+        }
+
+        /* Наведение в темной теме */
+        body.dark-theme a[href="/"]:hover,
+        body.dark-theme a[href="/index.html"]:hover,
+        body.dark-theme .btn-back:hover {
+            background-color: #475569 !important;
+            color: #ffffff !important;
+        }
     </style>
 <meta name="description" content="IronAds">`n
     <style>
@@ -338,6 +434,54 @@
             body { margin-left: 0; padding-top: 70px !important; }
         }
         body.dark-theme { background: #0f172a !important; }
+            /* ===== ФИКС КНОПКИ "НА ГЛАВНУЮ" ИЛИ "НАЗАД" ДЛЯ СВЕТЛОЙ И ТЕМНОЙ ТЕМ ===== */
+        /* В светлой теме (по умолчанию) */
+        body:not(.dark-theme) a[href="/"],
+        body:not(.dark-theme) a[href="/index.html"],
+        body:not(.dark-theme) .btn-back,
+        body:not(.dark-theme) .back-button {
+            color: #1e293b !important;
+            background-color: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+            padding: 6px 12px !important;
+            border-radius: 8px !important;
+            text-decoration: none !important;
+            display: inline-block !important;
+            font-weight: 500 !important;
+            transition: all 0.2s !important;
+        }
+
+        /* Наведение в светлой теме */
+        body:not(.dark-theme) a[href="/"]:hover,
+        body:not(.dark-theme) a[href="/index.html"]:hover,
+        body:not(.dark-theme) .btn-back:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        /* В темной теме */
+        body.dark-theme a[href="/"],
+        body.dark-theme a[href="/index.html"],
+        body.dark-theme .btn-back,
+        body.dark-theme .back-button {
+            color: #f8fafc !important;
+            background-color: #334155 !important;
+            border: 1px solid #475569 !important;
+            padding: 6px 12px !important;
+            border-radius: 8px !important;
+            text-decoration: none !important;
+            display: inline-block !important;
+            font-weight: 500 !important;
+            transition: all 0.2s !important;
+        }
+
+        /* Наведение в темной теме */
+        body.dark-theme a[href="/"]:hover,
+        body.dark-theme a[href="/index.html"]:hover,
+        body.dark-theme .btn-back:hover {
+            background-color: #475569 !important;
+            color: #ffffff !important;
+        }
     </style>
 
 </head>
