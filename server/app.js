@@ -187,7 +187,7 @@ app.get('/sitemap.xml', async (req, res) => {
 });
 
 app.get('/robots.txt', (req, res) => {
-    res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin/\n\nSitemap: https://ironads.ru/sitemap.xml`);
+    res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin/\n\n# Разрешаем ИИ-ботам читать сайт\nUser-agent: GPTBot\nAllow: /\n\nUser-agent: YandexBot\nAllow: /\n\nUser-agent: Googlebot\nAllow: /\n\nSitemap: https://ironads.ru/sitemap.xml\nSitemap: https://ironads.ru/llms.txt`);
 });
 
 app.get(['/listing/:id', '/listing.html'], async (req, res, next) => {
@@ -241,6 +241,29 @@ app.get(['/listing/:id', '/listing.html'], async (req, res, next) => {
     }
 });
 // ================================================
+// ========== ВНЕДРЕНИЕ РАЗМЕТКИ НА ГЛАВНУЮ ==========
+app.get('/', (req, res, next) => {
+    const indexPath = path.join(__dirname, 'public', 'index.html');
+    require('fs').readFile(indexPath, 'utf8', (err, html) => {
+        if (err) return next(err);
+        const orgSchema = {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "IronAds",
+            "url": "https://ironads.ru",
+            "logo": "https://ironads.ru/logo.png",
+            "description": "Бесплатная доска объявлений по всей России",
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "email": "support@ironads.ru",
+                "contactType": "customer support"
+            }
+        };
+        const finalHtml = html.replace('</head>', `<script type="application/ld+json">\n${JSON.stringify(orgSchema, null, 2)}\n</script>\n</head>`);
+        res.send(finalHtml);
+    });
+});
+// ====================================================
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ===== ДОПОЛНИТЕЛЬНАЯ НАСТРОЙКА ДЛЯ APK =====
@@ -409,8 +432,32 @@ app.get('/city/:slug', (req, res) => {
 
 // ========== ОТДАЧА HTML ==========
 
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('*', (req, res, next) => {
+    // Если это запрос к API или статике, пропускаем
+    if (req.path.startsWith('/api') || req.path.includes('.')) return next();
+
+    const indexPath = path.join(__dirname, 'public', 'index.html');
+    require('fs').readFile(indexPath, 'utf8', (err, html) => {
+        if (err) return next(err);
+        
+        // Разметка Организации для ИИ и поисковиков
+        const orgSchema = {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "IronAds",
+            "url": "https://ironads.ru",
+            "logo": "https://ironads.ru/logo.png",
+            "description": "Бесплатная доска объявлений по всей России",
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "email": "support@ironads.ru",
+                "contactType": "customer support"
+            }
+        };
+
+        const finalHtml = html.replace('</head>', `<script type="application/ld+json">\n${JSON.stringify(orgSchema, null, 2)}\n</script>\n</head>`);
+        res.send(finalHtml);
+    });
 });
 
 // ===== ЦЕНТРАЛИЗОВАННЫЙ ОБРАБОТЧИК ОШИБОК =====
