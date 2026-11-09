@@ -1178,7 +1178,7 @@ async function loadContactMessages(page = 1, status = 'all') {
                 <td class="message-preview">${escapeHtml(msg.message.substring(0, 100))}…</td>
                 <td>${msg.status === 'new' ? '🆕 Новое' : '📖 Прочитано'}</td>
                 <td><button class="btn-sm btn-primary mark-read" data-id="${msg.id}" ${msg.status !== 'new' ? 'disabled' : ''}>✅ Отметить прочитанным</button>
-                <a href="mailto:${escapeHtml(msg.email)}" class="btn-sm btn-secondary" target="_blank">✉️ Ответить</a></td>
+                <button class="btn-sm btn-primary open-reply-modal" data-email="${escapeHtml(msg.email)}" data-name="${escapeHtml(msg.name || ')}" data-subject="${escapeHtml(msg.subject || ')}" data-message="${escapeHtml(msg.message)}">✉️ Прочитать / Ответить</button></td>
             </tr>`;
         }
         html += '</tbody></table></div>';
@@ -1742,4 +1742,61 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('statsStartDate')) document.getElementById('statsStartDate').value = weekAgo;
     if (document.getElementById('statsEndDate')) document.getElementById('statsEndDate').value = today;
     loadStats(); // Вызываем ПОСЛЕ установки дат
+});
+
+// === МОДАЛЬНОЕ ОКНО ДЛЯ ЧТЕНИЯ И ОТВЕТА НА ОБРАЩЕНИЯ ===
+document.addEventListener('DOMContentLoaded', () => {
+    // Создаем модалку, если ее нет
+    if (!document.getElementById('contactReplyModal')) {
+        const modalHtml = `
+        <div id="contactReplyModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+            <div style="background:white; padding:20px; border-radius:12px; width:600px; max-width:90%; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+                <h3 style="margin-top:0; color:#1e293b;">Обращение от <span id="crmName" style="color:#3b82f6;"></span></h3>
+                <p style="color:#64748b; font-size:0.9em; margin-bottom:15px;">Email: <strong id="crmEmail"></strong></p>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; border-radius:8px; margin-bottom:15px; max-height:250px; overflow-y:auto; white-space:pre-wrap; color:#334155; font-size:0.95em;" id="crmMessage"></div>
+                <textarea id="crmReplyText" rows="4" style="width:100%; margin-bottom:15px; border:1px solid #cbd5e1; border-radius:8px; padding:10px; font-family:inherit; box-sizing:border-box;" placeholder="Введите текст ответа..."></textarea>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button class="btn btn-secondary" onclick="document.getElementById('contactReplyModal').style.display='none'">Отмена</button>
+                    <button class="btn btn-secondary" id="crmCopyEmailBtn" style="background:#10b981; color:white; border:none;">📋 Скопировать Email</button>
+                    <button class="btn btn-primary" id="crmSendBtn" style="background:#3b82f6; color:white; border:none;">📨 Открыть почту</button>
+                </div>
+            </div>
+        </div>`;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    // Обработчик клика по кнопкам в таблице
+    document.body.addEventListener('click', (e) => {
+        const btn = e.target.closest('.open-reply-modal');
+        if (!btn) return;
+
+        const email = btn.dataset.email;
+        const name = btn.dataset.name;
+        const subject = btn.dataset.subject;
+        const message = btn.dataset.message;
+
+        document.getElementById('crmName').textContent = name || 'Гость';
+        document.getElementById('crmEmail').textContent = email;
+        document.getElementById('crmMessage').textContent = message;
+        document.getElementById('crmReplyText').value = '';
+        
+        const modal = document.getElementById('contactReplyModal');
+        modal.style.display = 'flex';
+
+        // Кнопка копирования email
+        document.getElementById('crmCopyEmailBtn').onclick = () => {
+            navigator.clipboard.writeText(email);
+            document.getElementById('crmCopyEmailBtn').textContent = '✅ Скопировано!';
+            setTimeout(() => {
+                document.getElementById('crmCopyEmailBtn').textContent = '📋 Скопировать Email';
+            }, 2000);
+        };
+
+        // Кнопка открытия почтового клиента (с уже вставленным текстом)
+        document.getElementById('crmSendBtn').onclick = () => {
+            const replyText = document.getElementById('crmReplyText').value;
+            const mailtoLink = `mailto:${email}?subject=Re: ${encodeURIComponent(subject || 'Обращение с сайта IronAds')}&body=${encodeURIComponent(replyText)}`;
+            window.location.href = mailtoLink;
+        };
+    });
 });
