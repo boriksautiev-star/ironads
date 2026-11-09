@@ -84,19 +84,19 @@
         <div class="form-wrapper">
             <h2 class="page-title">➕ Новое объявление</h2>
             
-            <div class="form-group"><label>Название</label><input type="text" id="listingTitleModal" placeholder="iPhone 14 Pro"></div>
-            <div class="form-group"><label>Цена от (₽) *</label><input type="number" id="listingPriceModal" placeholder="Минимальная цена" required></div>
-            <div class="form-group"><label>Цена до (₽) (если диапазон)</label><input type="number" id="listingPriceMaxModal" placeholder="Максимальная цена"></div>
-            <div class="form-group"><label>Описание</label><textarea id="listingDescriptionModal" rows="3"></textarea></div>
+            <div class="form-group"><label>Название</label><input type="text" id="createTitle" placeholder="iPhone 14 Pro"></div>
+            <div class="form-group"><label>Цена от (₽) *</label><input type="number" id="createPriceMin" placeholder="Минимальная цена" required></div>
+            <div class="form-group"><label>Цена до (₽) (если диапазон)</label><input type="number" id="createPriceMax" placeholder="Максимальная цена"></div>
+            <div class="form-group"><label>Описание</label><textarea id="createDescription" rows="3"></textarea></div>
             <div class="category-select-group">
                 <div class="form-group"><label>Группа</label><select id="createGroup"><option value="">-- Выберите группу --</option></select></div>
                 <div class="form-group" id="createSubgroupGroup" style="display: none;"><label>Подгруппа</label><select id="createSubgroup"><option value="">-- Сначала выберите группу --</option></select></div>
                 <div class="form-group" id="createCategoryGroup" style="display: none;"><label>Категория</label><select id="createCategorySelect"><option value="">-- Сначала выберите подгруппу --</option></select></div>
             </div>
-            <div class="form-group"><label>Тип объявления</label><select id="listingTypeModal"><option value="sell">Продам</option><option value="buy">Куплю</option></select></div>
+            <div class="form-group"><label>Тип объявления</label><select id="createType"><option value="sell">Продам</option><option value="buy">Куплю</option></select></div>
             <div class="row-select-group">
-                <div class="form-group"><label>Регион</label><select id="modalRegion"><option value="">-- Выберите регион --</option></select></div>
-                <div class="form-group" id="modalCityGroup" style="display: none;"><label>Город</label><select id="modalCity"><option value="">-- Сначала выберите регион --</option></select></div>
+                <div class="form-group"><label>Регион</label><select id="createRegion"><option value="">-- Выберите регион --</option></select></div>
+                <div class="form-group" id="createCityGroup" style="display: none;"><label>Город</label><select id="createCity"><option value="">-- Сначала выберите регион --</option></select></div>
             </div>
             <div class="form-group">
                 <label>Местоположение на карте</label>
@@ -110,7 +110,7 @@
             </div>
     
             </div>
-            <div class="form-group"><label>Фото (до 10 шт)</label><input type="file" id="listingMediaModal" multiple accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/heic,image/heif"></div>
+            <div class="form-group"><label>Фото (до 10 шт)</label><input type="file" id="createMedia" multiple accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/heic,image/heif"></div>
             <div class="form-group">
                 <label>Телефон для связи</label>
                 <input type="text" id="createPhone" placeholder="+7 (999) 123-45-67">
