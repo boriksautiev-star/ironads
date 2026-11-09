@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Новое объявление - IronAds</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/header.css">
     <link rel="stylesheet" href="/dark-theme.css">
-    <script src="https://api-maps.yandex.ru/2.1/?apikey=97d0fa92-e83f-48a4-b404-4a55881bc4a8&suggest_apikey=97d0fa92-e83f-48a4-b404-4a55881bc4a8&lang=ru_RU" defer></script>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=97d0fa92-e83f-48a4-b404-4a55881bc4a8&suggest_apikey=4b980638-31f9-47fb-9bd6-77fa0023a874&lang=ru_RU" defer></script>
     
     <style>
         body { background: #f4f6f9; margin-left: 260px; padding-top: 2rem; font-family: 'Inter', sans-serif; }
@@ -37,6 +38,43 @@
         .media-item .media-actions { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: space-around; padding: 4px; }
         .media-item .media-actions button { background: none; border: none; color: white; cursor: pointer; font-size: 0.8rem; }
         .map-small { width: 100%; height: 250px; border-radius: 12px; margin-top: 0.5rem; border: 1px solid #e5e7eb; }
+                    /* =========================================
+           ИСПРАВЛЕНИЕ ДЛЯ ТЕМНОЙ ТЕМЫ (АДРЕС И ПОДСКАЗКИ)
+           ========================================= */
+        body.dark-theme #editMapSearch,
+        body.dark-theme #createMapSearch {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border-color: #334155 !important;
+        }
+
+        /* Главный контейнер подсказок (wildcard надежно ловит классы Яндекса) */
+        body.dark-theme [class*="suggest"] {
+            background-color: #1e293b !important;
+            background: #1e293b !important;
+            border: 1px solid #334155 !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
+            color: #cbd5e1 !important;
+        }
+
+        /* Убираем белый фон у всех вложенных элементов списка */
+        body.dark-theme [class*="suggest"] * {
+            background-color: transparent !important;
+            color: #cbd5e1 !important;
+        }
+
+        /* Подсветка строки при наведении */
+        body.dark-theme [class*="suggest"] [class*="item"]:hover,
+        body.dark-theme [class*="suggest"] li:hover {
+            background-color: #334155 !important;
+            background: #334155 !important;
+        }
+
+        /* Делаем текст белым при наведении */
+        body.dark-theme [class*="suggest"] [class*="item"]:hover *,
+        body.dark-theme [class*="suggest"] li:hover * {
+            color: #ffffff !important;
+        }
     </style>
 
 </head>
@@ -51,9 +89,9 @@
             <div class="form-group"><label>Цена до (₽) (если диапазон)</label><input type="number" id="listingPriceMaxModal" placeholder="Максимальная цена"></div>
             <div class="form-group"><label>Описание</label><textarea id="listingDescriptionModal" rows="3"></textarea></div>
             <div class="category-select-group">
-                <div class="form-group"><label>Группа</label><select id="modalGroup"><option value="">-- Выберите группу --</option></select></div>
-                <div class="form-group" id="modalSubgroupGroup" style="display: none;"><label>Подгруппа</label><select id="modalSubgroup"><option value="">-- Сначала выберите группу --</option></select></div>
-                <div class="form-group" id="modalCategoryGroup" style="display: none;"><label>Категория</label><select id="modalCategory"><option value="">-- Сначала выберите подгруппу --</option></select></div>
+                <div class="form-group"><label>Группа</label><select id="createGroup"><option value="">-- Выберите группу --</option></select></div>
+                <div class="form-group" id="createSubgroupGroup" style="display: none;"><label>Подгруппа</label><select id="createSubgroup"><option value="">-- Сначала выберите группу --</option></select></div>
+                <div class="form-group" id="createCategoryGroup" style="display: none;"><label>Категория</label><select id="createCategorySelect"><option value="">-- Сначала выберите подгруппу --</option></select></div>
             </div>
             <div class="form-group"><label>Тип объявления</label><select id="listingTypeModal"><option value="sell">Продам</option><option value="buy">Куплю</option></select></div>
             <div class="row-select-group">
@@ -151,7 +189,7 @@
                 if (!select) return;
                 try {
                     const res = await fetch('/api' + endpoint);
-                    const items = await res.json();
+                    let items = await res.json(); if (items.value && Array.isArray(items.value)) items = items.value;
                     select.innerHTML = `<option value="">-- ${placeholder} --</option>`;
                     items.forEach(item => {
                         const opt = document.createElement('option');
@@ -202,7 +240,7 @@
                     subgroupSelect.innerHTML = '<option value="">Загрузка...</option>';
                     try {
                         const res = await fetch('/api/categories?parent_id=' + gId);
-                        const subgroups = await res.json();
+                        const subData = await res.json(); const subgroups = subData.value || subData;
                         subgroupSelect.innerHTML = '<option value="">-- Выберите подгруппу --</option>';
                         subgroups.forEach(s => subgroupSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`);
                     } catch(e) { console.error(e); }
@@ -217,7 +255,7 @@
                     categorySelect.innerHTML = '<option value="">Загрузка...</option>';
                     try {
                         const res = await fetch('/api/categories?parent_id=' + sId);
-                        const cats = await res.json();
+                        const catData = await res.json(); const cats = catData.value || catData;
                         categorySelect.innerHTML = '<option value="">-- Выберите категорию --</option>';
                         cats.forEach(c => categorySelect.innerHTML += `<option value="${c.id}">${c.name}</option>`);
                     } catch(e) { console.error(e); }
