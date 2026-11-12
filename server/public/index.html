@@ -672,6 +672,22 @@
         body.dark-theme .moved-cities-wrapper a:hover {
             background: rgba(255,255,255,0.2);
         }
+            /* ===== РАСТЯГИВАНИЕ САЙТА НА 100% ШИРИНЫ (БОЛЬШЕ ОБЪЯВЛЕНИЙ НА ЭКРАНЕ) ===== */
+        .container {
+            max-width: 100% !important; /* Убираем искусственное ограничение */
+            width: 100% !important;
+            padding-left: 2rem !important; /* Добавляем немного воздуха по бокам */
+            padding-right: 2rem !important;
+            margin: 0 auto !important;
+        }
+
+        /* На мобильных устройствах возвращаем стандартные отступы, чтобы не было сжатия */
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 0.8rem !important;
+                padding-right: 0.8rem !important;
+            }
+        }
     </style>
     <link rel="stylesheet" href="/dark-theme.css">
 
@@ -818,6 +834,22 @@
         }
         body.dark-theme .moved-cities-wrapper a:hover {
             background: rgba(255,255,255,0.2);
+        }
+            /* ===== РАСТЯГИВАНИЕ САЙТА НА 100% ШИРИНЫ (БОЛЬШЕ ОБЪЯВЛЕНИЙ НА ЭКРАНЕ) ===== */
+        .container {
+            max-width: 100% !important; /* Убираем искусственное ограничение */
+            width: 100% !important;
+            padding-left: 2rem !important; /* Добавляем немного воздуха по бокам */
+            padding-right: 2rem !important;
+            margin: 0 auto !important;
+        }
+
+        /* На мобильных устройствах возвращаем стандартные отступы, чтобы не было сжатия */
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 0.8rem !important;
+                padding-right: 0.8rem !important;
+            }
         }
     </style>
 

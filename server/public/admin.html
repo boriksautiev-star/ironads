@@ -78,7 +78,46 @@
         .filter-group input, .filter-group select, .filter-group button { width: 100%; }
     }
     .hidden { display: none !important; }
-</style>
+                                        /* ===== РАСТЯГИВАНИЕ КОНТЕНТА НА ВСЮ ШИРИНУ ===== */
+        html, body {
+            overflow-x: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .main-content {
+            margin-left: 260px !important;
+            width: calc(100% - 260px) !important;
+            padding: 2rem !important;
+            box-sizing: border-box !important;
+            display: block !important;
+        }
+
+        .container {
+            width: 100% !important;
+            max-width: 100% !important; /* Вот главное изменение — нет ограничений! */
+            margin: 0 !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Фикс для широких таблиц: если места хватает — они растягиваются. 
+           Если нет — появляется аккуратный скролл внутри таблицы, а не на всю страницу. */
+        .container table {
+            display: block !important;
+            width: 100% !important;
+            overflow-x: auto !important;
+            white-space: nowrap !important;
+        }
+
+        /* Мобильная адаптация */
+        @media (max-width: 992px) {
+            .main-content {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 1rem !important;
+            }
+        }
+    </style>
     <link rel="stylesheet" href="/dark-theme.css">
     <link rel="stylesheet" href="/css/header.css">
 </head>
