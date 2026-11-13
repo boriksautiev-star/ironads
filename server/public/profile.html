@@ -447,6 +447,25 @@
                 -webkit-backdrop-filter: none !important;
             }
         }
+    
+        
+            /* ===== СТИЛИ ДЛЯ БЕЙДЖА ПАРТНЕРА ===== */
+        .partner-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 12px;
+            vertical-align: middle;
+            box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
     </style>
     <link rel="stylesheet" href="/dark-theme.css">
 </head>
@@ -926,7 +945,7 @@
             try {
                 const resp = await fetch(`${API_URL}/users/${targetUserId}`);
                 const user = await resp.json();
-                let profileHtml = `${escapeHtml(user.username)} ${user.is_online ? '<span class="online-indicator"></span>' : ''}`;
+                let profileHtml = `${escapeHtml(user.username)} ${user.is_online ? '<span class="online-indicator"></span>' : ''} ${user.is_partner ? '<span class="partner-badge">💼 Партнер</span>' : ''}`;
                 document.getElementById('profileUsername').innerHTML = profileHtml;
                 document.getElementById('profilePhone').textContent = user.phone || 'скрыто';
                 let ratingText = (user.rating_count && user.rating_count > 0) ? `${user.rating_avg.toFixed(1)} (${user.rating_count} оценок)` : 'нет оценок';
@@ -979,6 +998,8 @@
                 if (!resp.ok) throw new Error();
                 const data = await resp.json();
 
+                
+
                 let partnerFromSubs = false;
                 if (data.listing && Array.isArray(data.listing)) {
                     for (const pkg of data.listing) { if (pkg.plan_name || pkg.max_slots > 5) { partnerFromSubs = true; break; } }
@@ -1007,7 +1028,15 @@
                     </div>`;
                 }
 
-                const listingPackages = Array.isArray(data.listing) ? data.listing : (data.listing ? [data.listing] : []);
+                let listingPackages = Array.isArray(data.listing) ? data.listing : (data.listing ? [data.listing] : []);
+
+                
+
+                
+
+                
+
+                
                 const autobumpPackages = Array.isArray(data.autobump) ? data.autobump : (data.autobump ? [data.autobump] : []);
 
                 let filteredListingPackages = listingPackages;
@@ -1188,6 +1217,8 @@
             try {
                 const resp = await fetch(`${API_URL}/subscriptions/${subscriptionId}/cancel`, { method: 'POST', headers: { 'Authorization': `Bearer ${currentToken}` } });
                 const data = await resp.json();
+
+                
                 if (resp.ok) { showNotification('Подписка успешно отменена', 'success'); await loadSubscriptionStatus(); }
                 else { showNotification(data.error || 'Ошибка отмены подписки', 'error'); }
             } catch (e) { showNotification('Ошибка соединения при отмене подписки', 'error'); console.error(e); }
@@ -1260,6 +1291,8 @@
                     body: JSON.stringify({ planId })
                 });
                 const data = await resp.json();
+
+                
                 if (resp.ok) { alert('Подписка приобретена!'); closeModal('buyPartnerPlanModal'); loadSubscriptionStatus(); }
                 else { alert(data.error || 'Ошибка покупки'); }
             } catch (err) { alert('Ошибка: ' + err.message); }
@@ -1678,6 +1711,8 @@
             try {
                 const resp = await fetch(`${API_URL}/payments/subscriptions/${packageId}/renew`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ listingIds }) });
                 const data = await resp.json();
+
+                
                 if (resp.ok) { showNotification(data.message || 'Пакет продлён!', 'success'); loadSubscriptionStatus(); }
                 else { showNotification(data.error || 'Ошибка', 'error'); }
             } catch(e) { showNotification('Ошибка соединения', 'error'); }
@@ -1687,6 +1722,8 @@
             try {
                 const resp = await fetch(`${API_URL}/payments/create`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ subscriptionType: type, listingIds }) });
                 const data = await resp.json();
+
+                
                 if (data.free) { showNotification(`✅ Пакет активирован бесплатно! Добавлено ${listingIds.length} объявлений.`, 'success'); loadSubscriptionStatus(); }
                 else if (data.confirmationUrl) { window.location.href = data.confirmationUrl; }
                 else { showNotification(data.error || 'Ошибка', 'error'); }
@@ -2268,6 +2305,8 @@
                     try {
                         const resp = await fetch(`${API_URL}/listings/${listingId}/bump`, { method: 'POST', headers: { 'Authorization': `Bearer ${currentToken}` } });
                         const data = await resp.json();
+
+                
                         if (resp.ok) { showNotification('Объявление поднято!', 'success'); switchTab(currentTab); }
                         else { showNotification(data.error || 'Ошибка', 'error'); btn.textContent = originalText; btn.disabled = false; }
                     } catch(e) { showNotification('Ошибка соединения', 'error'); btn.textContent = originalText; btn.disabled = false; }
@@ -2501,7 +2540,26 @@
     -webkit-user-select: none !important;
     user-select: none !important;
 }
-</style>
+
+        
+            /* ===== СТИЛИ ДЛЯ БЕЙДЖА ПАРТНЕРА ===== */
+        .partner-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 12px;
+            vertical-align: middle;
+            box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+    </style>
 
 <script>
 (function() {
@@ -2750,6 +2808,8 @@
                     });
                     
                     const data = await resp.json();
+
+                
                     console.log('🔧 Ответ сервера:', resp.status, data);
                     
                     if (resp.ok) {
@@ -2782,6 +2842,8 @@
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await resp.json();
+
+                
             window._origAlert('RAW RESPONSE:\n\n' + JSON.stringify(data, null, 2));
         };
         
@@ -2821,6 +2883,8 @@
                     });
                     if (!resp.ok) throw new Error('HTTP ' + resp.status);
                     const data = await resp.json();
+
+                
                     
                     // ❗ ВАЖНО: определяем партнёра ТОЛЬКО по данным из user
                     // НЕ используем max_slots > 5 — это была ошибка!
@@ -2828,7 +2892,15 @@
                     
                     console.log('🔧 isPartner =', isPartner, '(источник: user.is_partner)'); if (document.getElementById("partnerToolsBlock")) document.getElementById("partnerToolsBlock").style.display = isPartner ? "block" : "none";
                     
-                    const listingPackages = Array.isArray(data.listing) ? data.listing : (data.listing ? [data.listing] : []);
+                    let listingPackages = Array.isArray(data.listing) ? data.listing : (data.listing ? [data.listing] : []);
+
+                
+
+                
+
+                
+
+                
                     const autobumpPackages = Array.isArray(data.autobump) ? data.autobump : (data.autobump ? [data.autobump] : []);
                     
                     // Сохраняем для возможного использования
@@ -3001,6 +3073,12 @@
     <script>
         
         
-    </body>
+        
+    
+    
+    
+    
+    
+</body>
     </html>
 </html>

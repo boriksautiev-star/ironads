@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Массовая загрузка объявлений - IronAds</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/dark-theme.css">
+    <style>
+        body { background: #f4f6f9; margin-left: 260px; padding-top: 2rem; font-family: 'Inter', sans-serif; }
+        .page-container { max-width: 800px; margin: 0 auto; padding: 0 1rem; }
+        .form-wrapper { background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 3rem; }
+        h2.page-title { color: #1e293b; font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .subtitle { color: #64748b; margin-bottom: 2rem; font-size: 0.95rem; }
+        
+        /* Зона Drag & Drop */
+        .drop-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 3rem 2rem; text-align: center; cursor: pointer; transition: all 0.2s; background: #f8fafc; margin-bottom: 1.5rem; }
+        .drop-zone:hover { border-color: #3b82f6; background: #eff6ff; }
+        .drop-zone.dragover { border-color: #3b82f6; background: #dbeafe; transform: scale(1.01); }
+        .drop-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+        .drop-text { color: #475569; font-size: 1rem; font-weight: 500; margin-bottom: 0.5rem; }
+        .drop-subtext { color: #94a3b8; font-size: 0.85rem; }
+        #fileInput { display: none; }
+        
+        /* Прогресс-бар */
+        .progress-container { display: none; margin-bottom: 1.5rem; background: #e2e8f0; border-radius: 8px; overflow: hidden; height: 12px; }
+        .progress-bar { height: 100%; background: #3b82f6; width: 0%; transition: width 0.3s; }
+        
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; font-size: 0.95rem; border: none; cursor: pointer; transition: 0.2s; text-decoration: none; }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
+        .btn-secondary { background: #e2e8f0; color: #1e293b; }
+        .btn-secondary:hover { background: #cbd5e1; }
+        
+        /* Результат */
+        #resultMessage { display: none; padding: 1rem; border-radius: 8px; margin-top: 1.5rem; font-size: 0.9rem; }
+        .result-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .result-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+        /* Инструкция */
+        .instructions { background: #f1f5f9; padding: 1.5rem; border-radius: 12px; margin-top: 2rem; font-size: 0.9rem; color: #334155; line-height: 1.6; }
+        .instructions ol { margin: 0; padding-left: 1.5rem; }
+        .instructions li { margin-bottom: 0.5rem; }
+
+        @media (max-width: 992px) { body { margin-left: 0; padding-top: 90px; } }
+        body.dark-theme { background: #0f172a; }
+        body.dark-theme .form-wrapper { background: #1e293b; border-color: #334155; }
+        body.dark-theme h2.page-title { color: #f8fafc; }
+        body.dark-theme .drop-zone { background: #0f172a; border-color: #475569; }
+        body.dark-theme .drop-zone:hover { background: #1e293b; border-color: #3b82f6; }
+        body.dark-theme .drop-text { color: #e2e8f0; }
+        body.dark-theme .btn-secondary { background: #334155; color: #f8fafc; }
+        body.dark-theme .instructions { background: #0f172a; color: #cbd5e1; }
+        body.dark-theme .progress-container { background: #334155; }
+    </style>
+</head>
+<body>
+    <header id="main-header"></header>
+    
+    <div class="page-container">
+        <div class="form-wrapper">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <div>
+                    <h2 class="page-title">🚀 Массовая загрузка объявлений</h2>
+                    <p class="subtitle">Загрузите ZIP-архив с Excel-таблицей и папкой фотографий. Мы автоматически обработаем файл и добавим объявления.</p>
+                </div>
+                <a href="/profile.html" class="btn btn-secondary">← Назад в кабинет</a>
+            </div>
+
+            <div class="drop-zone" id="dropZone">
+                <span class="drop-icon">📦</span>
+                <div class="drop-text">Перетащите ZIP-архив сюда</div>
+                <div class="drop-subtext">или нажмите, чтобы выбрать файл (до 100 МБ)</div>
+                <input type="file" id="fileInput" accept=".zip">
+            </div>
+
+            <div id="fileInfo" style="display: none; margin-bottom: 1.5rem; font-weight: 500; color: #3b82f6;">
+                Выбран файл: <span id="fileName"></span>
+            </div>
+
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div style="text-align: center;">
+                <button id="uploadBtn" class="btn btn-primary" disabled style="width: 100%;">Загрузить на сервер</button>
+            </div>
+
+            <div id="resultMessage"></div>
+
+            <div class="instructions">
+                <strong style="display: block; margin-bottom: 0.5rem; font-size: 1rem;">📋 Как подготовить архив:</strong>
+                <ol>
+                    <li>Скачайте шаблон (ZIP) в личном кабинете и распакуйте его.</li>
+                    <li>Откройте файл <strong>Шаблон_объявлений.xlsx</strong> и заполните данные.</li>
+                    <li>Зайдите в папку <strong>photos</strong>, создайте папки с ID товаров и положите туда фото.</li>
+                    <li>Заархивируйте папку <strong>IronAds_Partner</strong> обратно в ZIP.</li>
+                    <li>Загрузите полученный ZIP-архив на этой странице.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/common.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const resultMessage = document.getElementById('resultMessage');
+
+            let selectedFile = null;
+
+            // Обработка клика по зоне
+            dropZone.addEventListener('click', () => fileInput.click());
+
+            // Обработка Drag & Drop
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            // Обработка выбора через input
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+
+            function handleFile(file) {
+                if (!file.name.endsWith('.zip')) {
+                    alert('Пожалуйста, выберите файл формата .zip');
+                    return;
+                }
+                selectedFile = file;
+                fileName.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} МБ)`;
+                fileInfo.style.display = 'block';
+                uploadBtn.disabled = false;
+                resultMessage.style.display = 'none';
+            }
+
+            // Загрузка файла
+            uploadBtn.addEventListener('click', async () => {
+                if (!selectedFile) return;
+
+                // Получаем ID пользователя из localStorage (или из токена)
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    alert('Вы не авторизованы!');
+                    return;
+                }
+
+                // Простой способ получить userId - декодировать JWT (если в нем есть id)
+                // В идеале лучше запросить /api/users/me, но для скорости можно так:
+                let userId = null;
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    userId = payload.id || payload.userId;
+                } catch (e) {
+                    // Если не удалось, сделаем запрос к серверу
+                    const res = await fetch('/api/users/me', { headers: { 'Authorization': 'Bearer ' + token } });
+                    const data = await res.json();
+                    userId = data.id || (data.user && data.user.id);
+                }
+
+                if (!userId) {
+                    alert('Не удалось определить ID пользователя');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                formData.append('userId', userId);
+
+                // Настраиваем UI для загрузки
+                uploadBtn.disabled = true;
+                uploadBtn.textContent = 'Загрузка...';
+                progressContainer.style.display = 'block';
+                progressBar.style.width = '0%';
+                resultMessage.style.display = 'none';
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/api/partner-upload/upload-zip', true);
+                xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+
+                // Прогресс загрузки
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        progressBar.style.width = percentComplete + '%';
+                    }
+                };
+
+                xhr.onload = () => {
+                    uploadBtn.disabled = false;
+                    uploadBtn.textContent = 'Загрузить на сервер';
+                    progressContainer.style.display = 'none';
+
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        resultMessage.className = 'result-success';
+                        resultMessage.innerHTML = `<strong>✅ Успешно!</strong><br>${response.message}`;
+                        resultMessage.style.display = 'block';
+                        
+                        // Очищаем выбранный файл
+                        selectedFile = null;
+                        fileInfo.style.display = 'none';
+                        fileInput.value = '';
+                        uploadBtn.disabled = true;
+                    } else {
+                        let errorMsg = 'Произошла ошибка при загрузке';
+                        try {
+                            const err = JSON.parse(xhr.responseText);
+                            errorMsg = err.error || errorMsg;
+                        } catch(e) {}
+                        
+                        resultMessage.className = 'result-error';
+                        resultMessage.innerHTML = `<strong>❌ Ошибка:</strong><br>${errorMsg}`;
+                        resultMessage.style.display = 'block';
+                    }
+                };
+
+                xhr.onerror = () => {
+                    uploadBtn.disabled = false;
+                    uploadBtn.textContent = 'Загрузить на сервер';
+                    progressContainer.style.display = 'none';
+                    resultMessage.className = 'result-error';
+                    resultMessage.innerHTML = '<strong>❌ Ошибка сети:</strong><br>Не удалось связаться с сервером.';
+                    resultMessage.style.display = 'block';
+                };
+
+                xhr.send(formData);
+            });
+        });
+    </script>
+</body>
+</html>
