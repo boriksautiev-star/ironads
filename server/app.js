@@ -40,6 +40,9 @@ const paymentsRoutes = require('./routes/payments');
 const subscriptionsRoutes = require('./routes/subscriptions');
 const partnerRoutes = require('./routes/partner');
 
+// НОВЫЙ РОУТ ДЛЯ ЗАГРУЗКИ ZIP-АРХИВОВ ПАРТНЕРАМИ
+const partnerUploadRoutes = require('./routes/partner-upload'); 
+
 const { getPrice, getPeriod } = require('./services/settingsService');
 
 // ===== БЕЗОПАСНОЕ ПОДКЛЮЧЕНИЕ ФИДА =====
@@ -163,13 +166,6 @@ app.use(cors({
 app.use(cookieParser());
 app.use(express.json({ limit: '500mb' }));
 app.use(express.urlencoded({ extended: true, limit: '500mb' }));
-
-
-
-
-
-
-
 
 
 // ========== SEO: SITEMAP, ROBOTS, МИКРОРАЗМЕТКА ==========
@@ -343,6 +339,10 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/subscriptions', subscriptionsRoutes);
 app.use('/api/partner', partnerRoutes);
+
+// ПОДКЛЮЧАЕМ НОВЫЙ РОУТ ЗАГРУЗКИ ZIP
+app.use('/api/partner-upload', partnerUploadRoutes); 
+
 app.use('/auth', authRoutes);
 
 // ===== МАРШРУТЫ ФИДА =====
@@ -424,11 +424,6 @@ app.get('/api/public-prices', async (req, res) => {
 app.get('/city/:slug', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'city.html'));
 });
-
-// ========== ОТДАЧА HTML ==========
-// ========== ОТДАЧА HTML ==========
-
-
 
 // ========== ОТДАЧА HTML ==========
 

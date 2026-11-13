@@ -454,6 +454,22 @@
     <header id="main-header"></header>
 
     <div class="container">
+    <div id="partnerToolsBlock" style="display: none; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #bfdbfe; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+        <h3 style="margin-top: 0; color: #1e40af; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+            💼 Инструменты партнера
+        </h3>
+        <p style="font-size: 0.9rem; color: #1e3a8a; margin-bottom: 1.2rem;">
+            Загружайте десятки объявлений с фотографиями за один раз с помощью нашего Excel-шаблона.
+        </p>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a href="/templates/IronAds_Partner.zip" download style="display: inline-flex; align-items: center; gap: 0.5rem; background: #3b82f6; color: white; padding: 0.6rem 1.2rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: 0.2s;">
+                📥 Скачать шаблон (ZIP)
+            </a>
+            <a href="/bulk-upload.html" style="display: inline-flex; align-items: center; gap: 0.5rem; background: #10b981; color: white; padding: 0.6rem 1.2rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: 0.2s;">
+                🚀 Загрузить объявления
+            </a>
+        </div>
+    </div>
         <a class="back-link" id="backButton">← Назад</a>
         <div class="filter-card" id="profileCard">
             <h2 id="profileUsername">Загрузка...</h2>
@@ -780,7 +796,7 @@
         let selectListingsFiltered = [];
         let selectedIds = [];
 
-        let isPartner = false;
+        let isPartner = false; if (document.getElementById("partnerToolsBlock")) document.getElementById("partnerToolsBlock").style.display = isPartner ? "block" : "none";
         let currentUserData = null;
         window.activeListingPackages = [];
 
@@ -793,8 +809,8 @@
                 if (resp.ok) {
                     currentUserData = await resp.json();
                     localStorage.setItem('user', JSON.stringify(currentUserData));
-                    isPartner = currentUserData.is_partner || false;
-                    console.log('🔹 loadUserData: isPartner =', isPartner);
+                    isPartner = currentUserData.is_partner || false; if (document.getElementById("partnerToolsBlock")) document.getElementById("partnerToolsBlock").style.display = isPartner ? "block" : "none";
+                    console.log('🔹 loadUserData: isPartner =', isPartner); if (document.getElementById("partnerToolsBlock")) document.getElementById("partnerToolsBlock").style.display = isPartner ? "block" : "none";
                 }
             } catch(e) { console.error('Ошибка загрузки данных пользователя:', e); }
         }
@@ -971,8 +987,8 @@
                     for (const pkg of data.autobump) { if (pkg.plan_name || pkg.max_slots > 5) { partnerFromSubs = true; break; } }
                 }
 
-                isPartner = currentUserData?.is_partner || partnerFromSubs || false;
-                console.log('🔹 loadSubscriptionStatus: isPartner =', isPartner);
+                isPartner = currentUserData?.is_partner || partnerFromSubs || false; if (document.getElementById("partnerToolsBlock")) document.getElementById("partnerToolsBlock").style.display = isPartner ? "block" : "none";
+                console.log('🔹 loadSubscriptionStatus: isPartner =', isPartner); if (document.getElementById("partnerToolsBlock")) document.getElementById("partnerToolsBlock").style.display = isPartner ? "block" : "none";
 
                 renderSubscriptionButtons(isPartner);
 
@@ -1260,7 +1276,7 @@
                 const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
 
                 if (res.status === 403 && isPartner) {
-                    isPartner = false;
+                    isPartner = false; if (document.getElementById("partnerToolsBlock")) document.getElementById("partnerToolsBlock").style.display = isPartner ? "block" : "none";
                     const res2 = await fetch('/api/subscriptions/plans', { headers: { 'Authorization': `Bearer ${token}` } });
                     if (!res2.ok) throw new Error('Не удалось загрузить тарифы');
                     const plans = await res2.json();
@@ -2716,7 +2732,7 @@
                 this.textContent = '⏳ Покупка...';
                 
                 try {
-                    const isPartner = (typeof window.isPartner !== 'undefined' && window.isPartner) || false;
+                    const isPartner = (typeof window.isPartner !== 'undefined' && window.isPartner) || false; if (document.getElementById("partnerToolsBlock")) document.getElementById("partnerToolsBlock").style.display = isPartner ? "block" : "none";
                     let url, body;
                     
                     if (isPartner) {
@@ -2808,9 +2824,9 @@
                     
                     // ❗ ВАЖНО: определяем партнёра ТОЛЬКО по данным из user
                     // НЕ используем max_slots > 5 — это была ошибка!
-                    const isPartner = (userData && userData.is_partner === true);
+                    const isPartner = (userData && userData.is_partner === true); if (document.getElementById("partnerToolsBlock")) document.getElementById("partnerToolsBlock").style.display = isPartner ? "block" : "none";
                     
-                    console.log('🔧 isPartner =', isPartner, '(источник: user.is_partner)');
+                    console.log('🔧 isPartner =', isPartner, '(источник: user.is_partner)'); if (document.getElementById("partnerToolsBlock")) document.getElementById("partnerToolsBlock").style.display = isPartner ? "block" : "none";
                     
                     const listingPackages = Array.isArray(data.listing) ? data.listing : (data.listing ? [data.listing] : []);
                     const autobumpPackages = Array.isArray(data.autobump) ? data.autobump : (data.autobump ? [data.autobump] : []);
@@ -2982,5 +2998,9 @@
         });
     </script>
     
-</body>
+    <script>
+        
+        
+    </body>
+    </html>
 </html>

@@ -2750,3 +2750,71 @@ window.initRegisterCaptcha = function() {
         }
     }, 300);
     
+document.addEventListener('DOMContentLoaded', async () => {
+    // Ждем, пока прогрузится профиль
+    setTimeout(() => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        // Делаем запрос к API, чтобы узнать роль пользователя
+        fetch('/api/users/me', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        })
+        .then(res => res.json())
+        .then(data => {
+            const user = data.user || data; // На случай разной структуры ответа
+            // Если роль partner или есть VIP-статус (настройте под свою БД)
+            if (user.role === 'partner' || user.partner_tariff_id || user.tariff === 'vip') {
+                const block = document.getElementById('partnerToolsBlock');
+                if (block) block.style.display = 'block';
+            }
+        })
+        .catch(err => console.log('Ошибка проверки роли партнера:', err));
+    }, 500); // Небольшая задержка, чтобы DOM успел отрисоваться
+});
+// === УНИВЕРСАЛЬНАЯ ПРОВЕРКА СТАТУСА ПАРТНЕРА ===
+document.addEventListener('DOMContentLoaded', () => {
+    // Ждем 1.5 секунды, чтобы все основные скрипты (common.js) успели загрузить профиль
+    setTimeout(async () => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        try {
+            // Пытаемся получить профиль (пробуем оба возможных эндпоинта)
+            let res = await fetch('/api/users/me', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!res.ok) {
+                res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + token } });
+            }
+            
+            if (res.ok) {
+                const data = await res.json();
+                const user = data.user || data.data || data; // Извлекаем объект пользователя
+                
+                // Выводим в консоль, чтобы вы могли посмотреть, какие поля есть
+                console.log('🔍 Данные пользователя для проверки партнера:', user);
+
+                // Умная проверка: ищем статус партнера в разных возможных полях
+                const isPartner = 
+                    user.role === 'partner' || 
+                    user.role === 'admin' ||   // Админам тоже полезно видеть
+                    user.is_partner === true || 
+                    (user.partner_tariff_id && user.partner_tariff_id !== 0) ||
+                    (user.tariff && user.tariff !== 'none' && user.tariff !== '');
+
+                if (isPartner) {
+                    const block = document.getElementById('partnerToolsBlock');
+                    if (block) {
+                        block.style.display = 'block';
+                        console.log('✅ Блок партнера успешно показан!');
+                    } else {
+                        console.log('⚠️ Элемент partnerToolsBlock не найден в HTML');
+                    }
+                } else {
+                    console.log('ℹ️ Пользователь не является партнером. Блок скрыт.');
+                }
+            }
+        } catch (err) {
+            console.error('❌ Ошибка при проверке статуса партнера:', err);
+        }
+    }, 1500);
+});
