@@ -766,7 +766,8 @@ router.post('/', auth, upload.array('media', 12), async (req, res) => {
             const ext = path.extname(file.originalname).toLowerCase();
             const mime = file.mimetype.toLowerCase();
             if (allowedImageTypes.includes(mime) || ['.heic', '.heif'].includes(ext)) {
-                const processed = await processImage(file.path, file.originalname);
+                let processed = { path: file.path, filename: file.filename, originalname: file.originalname, mimetype: file.mimetype };
+                try { processed = await processImage(file.path, file.originalname); } catch (sharpErr) { console.error('Ошибка Sharp:', sharpErr.message); }
                 processedFiles.push(processed);
             } else {
                 processedFiles.push({
@@ -780,6 +781,30 @@ router.post('/', auth, upload.array('media', 12), async (req, res) => {
     }
 
     try {
+        // ===== БАТЧ 3: ПРОВЕРКА ПАРТНЁРСКОГО ЛИМИТА =====
+        const partnerCheck = await pool.query(`
+            SELECT us.max_slots
+            FROM users u
+            JOIN user_subscriptions us ON u.id = us.user_id AND us.package_type = 'listing' AND us.is_active = true AND us.end_date > NOW()
+            WHERE u.id = $1 AND u.is_partner = true AND us.plan_id IS NOT NULL
+            LIMIT 1
+        `, [userId]);
+
+        if (partnerCheck.rows.length > 0) {
+            const maxSlots = partnerCheck.rows[0].max_slots;
+            const countRes = await pool.query(`
+                SELECT COUNT(*) FROM listings
+                WHERE user_id = $1 AND status = 'active' AND deleted_at IS NULL
+            `, [userId]);
+            const activeCount = parseInt(countRes.rows[0].count);
+            if (activeCount >= maxSlots) {
+                return res.status(400).json({ 
+                    error: `Достигнут лимит объявлений по вашему тарифу (${maxSlots} шт). Пожалуйста, удалите или архивируйте старые объявления.` 
+                });
+            }
+        }
+        // =================================================
+
         const result = await pool.query(`
             INSERT INTO listings (
                 title, price, price_max, description, category_id, user_id, city_id, type, status,
@@ -929,7 +954,8 @@ router.put('/:id', auth, (req, res, next) => {
                 const ext = path.extname(file.originalname).toLowerCase();
                 const mime = file.mimetype.toLowerCase();
                 if (allowedImageTypes.includes(mime) || ['.heic', '.heif'].includes(ext)) {
-                    const processed = await processImage(file.path, file.originalname);
+                    let processed = { path: file.path, filename: file.filename, originalname: file.originalname, mimetype: file.mimetype };
+                try { processed = await processImage(file.path, file.originalname); } catch (sharpErr) { console.error('Ошибка Sharp:', sharpErr.message); }
                     processedFiles.push(processed);
                 } else {
                     processedFiles.push({

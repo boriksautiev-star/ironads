@@ -96,7 +96,7 @@ export default function HomeScreen() {
         </View>
       ),
     });
-  }, [navigation, filters, colors, scrollToTop]);
+  }, [navigation, filters, colors, scrollToTop, user]);
 
   const fetchListingsWithFilters = async (filtersObj, reset = false) => {
     if (reset) {

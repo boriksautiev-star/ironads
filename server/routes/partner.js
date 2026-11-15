@@ -122,34 +122,89 @@ router.delete('/admin/plans/:id', auth, isAdmin, async (req, res) => {
 router.put('/admin/users/:userId/partner', auth, isAdmin, async (req, res) => {
     const { userId } = req.params;
     const { planId } = req.body; // может быть null (снять партнёрство)
+
+    const client = await pool.connect();
     try {
-        const userCheck = await pool.query('SELECT id FROM users WHERE id = $1', [userId]);
+        await client.query('BEGIN');
+
+        const userCheck = await client.query('SELECT id FROM users WHERE id = $1', [userId]);
         if (userCheck.rows.length === 0) {
+            await client.query('ROLLBACK');
             return res.status(404).json({ error: 'Пользователь не найден' });
         }
 
         if (planId) {
-            const planCheck = await pool.query(
-                'SELECT id FROM partner_plans WHERE id = $1 AND is_active = true',
+            const planCheck = await client.query(
+                'SELECT max_listings, period_days FROM partner_plans WHERE id = $1 AND is_active = true',
                 [planId]
             );
             if (planCheck.rows.length === 0) {
+                await client.query('ROLLBACK');
                 return res.status(400).json({ error: 'Тариф не найден или неактивен' });
             }
-            await pool.query(
-                'UPDATE users SET is_partner = true, partner_plan_id = $1 WHERE id = $2',
+            const maxSlots = planCheck.rows[0].max_listings;
+            const periodDays = planCheck.rows[0].period_days || 30;
+
+            await client.query(
+                'UPDATE users SET is_partner = true, partner_plan_id = $1, updated_at = NOW() WHERE id = $2',
                 [planId, userId]
             );
+
+            // Синхронизируем user_subscriptions
+            for (const pkgType of ['listing', 'autobump']) {
+                const existing = await client.query(
+                    `SELECT id FROM user_subscriptions
+                     WHERE user_id = $1 AND package_type = $2 AND is_active = true
+                     ORDER BY id DESC LIMIT 1`,
+                    [userId, pkgType]
+                );
+
+                if (existing.rows.length > 0) {
+                    const subId = existing.rows[0].id;
+                    await client.query(
+                        `UPDATE user_subscriptions
+                         SET max_slots = $1, plan_id = $2, is_active = true,
+                             start_date = NOW(),
+                             end_date = NOW() + INTERVAL '${periodDays} days',
+                             updated_at = NOW()
+                         WHERE id = $3`,
+                        [maxSlots, planId, subId]
+                    );
+                    // Отключаем дубли
+                    await client.query(
+                        `UPDATE user_subscriptions SET is_active = false, updated_at = NOW()
+                         WHERE user_id = $1 AND package_type = $2 AND id <> $3 AND is_active = true`,
+                        [userId, pkgType, subId]
+                    );
+                } else {
+                    await client.query(
+                        `INSERT INTO user_subscriptions
+                            (user_id, package_type, max_slots, start_date, end_date, is_active, plan_id)
+                         VALUES ($1, $2, $3, NOW(), NOW() + INTERVAL '${periodDays} days', true, $4)`,
+                        [userId, pkgType, maxSlots, planId]
+                    );
+                }
+            }
         } else {
-            await pool.query(
-                'UPDATE users SET is_partner = false, partner_plan_id = NULL WHERE id = $1',
+            await client.query(
+                'UPDATE users SET is_partner = false, partner_plan_id = NULL, updated_at = NOW() WHERE id = $1',
+                [userId]
+            );
+            await client.query(
+                `UPDATE user_subscriptions SET is_active = false, updated_at = NOW()
+                 WHERE user_id = $1 AND plan_id IS NOT NULL AND is_active = true`,
                 [userId]
             );
         }
-        res.json({ message: 'Статус партнёра обновлён' });
+
+        await client.query('COMMIT');
+        res.json({ message: 'Статус партнёра обновлён и подписки синхронизированы' });
     } catch (err) {
-        console.error(err);
+        try { await client.query('ROLLBACK'); } catch (_) {}
+        console.error('Ошибка назначения партнёра:', err);
         res.status(500).json({ error: 'Ошибка назначения партнёра' });
+    } finally {
+        client.release();
     }
 });
 

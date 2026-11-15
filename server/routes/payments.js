@@ -55,93 +55,68 @@ async function activateSubscription(userId, packageType, listingIds, period, max
         }
 
         // Если это партнёрский тариф (planId не null)
+        // ВАЖНО: обновляем ЛЮБУЮ существующую активную подписку типа,
+        // не создаём дубли при смене тарифа.
         if (planId) {
-            // Для listing
-            const existingListing = await client.query(
-                `SELECT id FROM user_subscriptions
-                 WHERE user_id = $1 AND package_type = 'listing' AND plan_id = $2`,
-                [userId, planId]
-            );
-            let listingSubId;
-            if (existingListing.rows.length > 0) {
-                listingSubId = existingListing.rows[0].id;
-                await client.query(
-                    `UPDATE user_subscriptions
-                     SET end_date = NOW() + INTERVAL '${period} days',
-                         start_date = NOW(),
-                         updated_at = NOW(),
-                         is_active = true,
-                         max_slots = $1,
-                         plan_id = $2
-                     WHERE id = $3`,
-                    [maxSlots, planId, listingSubId]
+            const packageTypes = ['listing', 'autobump'];
+            const subIds = {};
+            for (const pkgType of packageTypes) {
+                const existing = await client.query(
+                    `SELECT id FROM user_subscriptions
+                     WHERE user_id = $1 AND package_type = $2 AND is_active = true
+                     ORDER BY id DESC LIMIT 1`,
+                    [userId, pkgType]
                 );
-                await client.query('DELETE FROM subscription_listings WHERE subscription_id = $1', [listingSubId]);
-                console.log(`🔄 Обновлена подписка listing (план ${planId}) для пользователя ${userId}, ID ${listingSubId}`);
-            } else {
-                const result = await client.query(
-                    `INSERT INTO user_subscriptions (user_id, package_type, max_slots, start_date, end_date, is_active, plan_id)
-                     VALUES ($1, 'listing', $2, NOW(), NOW() + INTERVAL '${period} days', true, $3)
-                     RETURNING id`,
-                    [userId, maxSlots, planId]
-                );
-                listingSubId = result.rows[0].id;
-                console.log(`✅ Создана подписка listing (план ${planId}) для пользователя ${userId}, ID ${listingSubId}`);
+                let subId;
+                if (existing.rows.length > 0) {
+                    subId = existing.rows[0].id;
+                    await client.query(
+                        `UPDATE user_subscriptions
+                         SET end_date = NOW() + INTERVAL '${period} days',
+                             start_date = NOW(),
+                             updated_at = NOW(),
+                             is_active = true,
+                             max_slots = $1,
+                             plan_id = $2
+                         WHERE id = $3`,
+                        [maxSlots, planId, subId]
+                    );
+                    // страховка от старых дублей того же типа
+                    await client.query(
+                        `UPDATE user_subscriptions
+                         SET is_active = false, updated_at = NOW()
+                         WHERE user_id = $1 AND package_type = $2 AND id <> $3 AND is_active = true`,
+                        [userId, pkgType, subId]
+                    );
+                    await client.query('DELETE FROM subscription_listings WHERE subscription_id = $1', [subId]);
+                    console.log(`🔄 Обновлена подписка ${pkgType} (план ${planId}) для пользователя ${userId}, ID ${subId}`);
+                } else {
+                    const result = await client.query(
+                        `INSERT INTO user_subscriptions (user_id, package_type, max_slots, start_date, end_date, is_active, plan_id)
+                         VALUES ($1, $2, $3, NOW(), NOW() + INTERVAL '${period} days', true, $4)
+                         RETURNING id`,
+                        [userId, pkgType, maxSlots, planId]
+                    );
+                    subId = result.rows[0].id;
+                    console.log(`✅ Создана подписка ${pkgType} (план ${planId}) для пользователя ${userId}, ID ${subId}`);
+                }
+                subIds[pkgType] = subId;
             }
-
-            // Для autobump
-            const existingAutobump = await client.query(
-                `SELECT id FROM user_subscriptions
-                 WHERE user_id = $1 AND package_type = 'autobump' AND plan_id = $2`,
-                [userId, planId]
-            );
-            let autobumpSubId;
-            if (existingAutobump.rows.length > 0) {
-                autobumpSubId = existingAutobump.rows[0].id;
-                await client.query(
-                    `UPDATE user_subscriptions
-                     SET end_date = NOW() + INTERVAL '${period} days',
-                         start_date = NOW(),
-                         updated_at = NOW(),
-                         is_active = true,
-                         max_slots = $1,
-                         plan_id = $2
-                     WHERE id = $3`,
-                    [maxSlots, planId, autobumpSubId]
-                );
-                await client.query('DELETE FROM subscription_listings WHERE subscription_id = $1', [autobumpSubId]);
-                console.log(`🔄 Обновлена подписка autobump (план ${planId}) для пользователя ${userId}, ID ${autobumpSubId}`);
-            } else {
-                const result = await client.query(
-                    `INSERT INTO user_subscriptions (user_id, package_type, max_slots, start_date, end_date, is_active, plan_id)
-                     VALUES ($1, 'autobump', $2, NOW(), NOW() + INTERVAL '${period} days', true, $3)
-                     RETURNING id`,
-                    [userId, maxSlots, planId]
-                );
-                autobumpSubId = result.rows[0].id;
-                console.log(`✅ Создана подписка autobump (план ${planId}) для пользователя ${userId}, ID ${autobumpSubId}`);
-            }
-
-            // Добавляем объявления в обе подписки (если есть)
             for (const listingId of listingIds) {
-                await client.query(
-                    `INSERT INTO subscription_listings (subscription_id, listing_id)
-                     VALUES ($1, $2)`,
-                    [listingSubId, listingId]
-                );
-                await client.query(
-                    `INSERT INTO subscription_listings (subscription_id, listing_id)
-                     VALUES ($1, $2)`,
-                    [autobumpSubId, listingId]
-                );
+                for (const pkgType of packageTypes) {
+                    await client.query(
+                        `INSERT INTO subscription_listings (subscription_id, listing_id)
+                         VALUES ($1, $2)
+                         ON CONFLICT DO NOTHING`,
+                        [subIds[pkgType], listingId]
+                    );
+                }
                 await client.query(
                     `UPDATE listings SET autobump_enabled = true, autobump_expires_at = NOW() + INTERVAL '${period} days'
                      WHERE id = $1`,
                     [listingId]
                 );
-            }
-
-        } else {
+            }        } else {
             // Обычная логика (без planId)
             const existing = await client.query(
                 `SELECT id FROM user_subscriptions

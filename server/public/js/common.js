@@ -272,7 +272,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                             ${userRole === 'moderator' || userRole === 'admin' ? '<button class="nav-btn" data-action="moderation">🛡️ Модерация</button>' : ''}
                             ${userRole === 'admin' || userRole === 'moderator' ? '<button class="nav-btn" data-action="admin">⚙️ Админ-панель</button>' : ''}
                             <button class="nav-btn" data-action="profile">👤 Кабинет</button>
-                        ` : '<a href="/contact.html" class="nav-btn">📞 Поддержка</a>'}
+                            
+                            <!-- Кнопка RuStore -->
+                            <a href="https://www.rustore.ru/catalog/app/com.sautievshau.IronAdsAppNew" target="_blank" class="nav-btn" style="background: linear-gradient(135deg, #0077FF 0%, #0055FF 100%); color: white !important; margin-top: 0.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.6rem; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 10px rgba(0,119,255,0.3);">
+                                <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.9rem;">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                        <path d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85-.29-.15-.65-.06-.83.22l-1.88 3.24c-2.86-1.21-6.08-1.21-8.94 0L5.65 5.67c-.19-.29-.58-.38-.87-.2-.28.18-.37.54-.22.83L6.4 9.48C3.3 11.25 1.28 14.44 1 18h22c-.28-3.56-2.3-6.75-5.4-8.52zM7 15.25c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25zm10 0c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25z"/>
+                                    </svg>
+                                    RuStore
+                                </div>
+                                <span style="font-size: 0.65rem; font-weight: 400; opacity: 0.9; margin-top: 2px;">Приложение для Android</span>
+                            </a>
+                        ` : ''}
                     </div>
                     <div class="sidebar-footer">
                         <div id="sidebarListingsCount" style="text-align: center; font-size: 0.85rem; color: #64748b; margin-bottom: 1rem; font-weight: 600;">Загрузка...</div>
