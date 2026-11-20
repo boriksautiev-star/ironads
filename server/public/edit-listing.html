@@ -426,5 +426,76 @@
             }
         });
     </script>
+<style>
+.media-item { position: relative; }
+.media-item img.is-main { outline: 3px solid #2b7fff; }
+.media-item .main-badge { position: absolute; top: 6px; left: 6px; background: #2b7fff; color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 10px; z-index: 2; }
+.media-actions button { cursor: pointer; }
+</style>
+<script>
+(function () {
+    const listingId = new URLSearchParams(window.location.search).get('id');
+
+    window.openImagePreview = function (src) {
+        window.open(src, '_blank');
+    };
+
+    window.reloadMediaList = async function () {
+        try {
+            const res = await fetch('/api/listings/' + listingId);
+            const data = await res.json();
+            const mediaList = document.getElementById('editMediaList');
+            if (!mediaList) return;
+            mediaList.innerHTML = '';
+            const media = data.media || [];
+            if (!media.length) {
+                mediaList.innerHTML = '<p style="color:#888">Фотографий нет - добавьте новые кнопкой "Добавить фото".</p>';
+                return;
+            }
+            media.forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'media-item';
+                div.innerHTML = `<img src="${m.file_path}" class="${m.is_main ? 'is-main' : ''}" onclick="openImagePreview('${m.file_path}')"><div class="media-actions">${m.is_main ? '' : '<button type="button" title="Сделать главным" onclick="setMainPhoto(' + m.id + ')">⭐</button>'}<button type="button" title="Удалить фото" onclick="deletePhoto(${m.id})">🗑️</button></div>${m.is_main ? '<div class="main-badge">Главное</div>' : ''}`;
+                mediaList.appendChild(div);
+            });
+        } catch (e) { console.error('Ошибка перезагрузки фото:', e); }
+    };
+
+    window.deletePhoto = async function (mediaId) {
+        if (!confirm('Удалить это фото? Файл стирается с сервера безвозвратно.')) return;
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch('/api/listings/media/' + mediaId, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) {
+                await reloadMediaList();
+            } else {
+                const err = await res.json().catch(() => ({}));
+                alert('❌ Не удалось удалить фото: ' + (err.error || res.status));
+            }
+        } catch (e) { alert('❌ Ошибка сети'); }
+    };
+
+    window.setMainPhoto = async function (mediaId) {
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch('/api/listings/media/' + mediaId + '/main', {
+                method: 'PUT',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) {
+                await reloadMediaList();
+            } else {
+                const err = await res.json().catch(() => ({}));
+                alert('❌ Не удалось назначить главное фото: ' + (err.error || res.status));
+            }
+        } catch (e) { alert('❌ Ошибка сети'); }
+    };
+
+    window.addEventListener('load', reloadMediaList);
+})();
+</script>
 </body>
 </html>
