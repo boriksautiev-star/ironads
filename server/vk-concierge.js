@@ -1,25 +1,26 @@
-// vk-concierge.js - ИИ-агент IronAds (v7: getById вызывается всегда)
+// vk-concierge.js - ИИ-агент IronAds (v8: GigaChat вместо Groq)
 require('dotenv').config();
 const { VK } = require('vk-io');
-const Groq = require('groq-sdk');
 const pool = require('./db/pool');
 const axios = require('axios');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
 const VK_TOKEN = process.env.VK_TOKEN || '';
-const GROQ_KEY = process.env.GROQ_API_KEY || '';
-const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+const GIGA_KEY = process.env.GIGACHAT_API_KEY || '';
+const GIGA_MODEL = process.env.GIGACHAT_MODEL || 'GigaChat';
 const DEFAULT_CITY = 'Владикавказ';
 
 const vk = new VK({ token: VK_TOKEN });
 
-let groq = null;
-if (GROQ_KEY) {
-    try { groq = new Groq({ apiKey: GROQ_KEY }); } catch (e) { groq = null; }
-}
+// Сберские сертификаты могут не быть в системном хранилище - отключаем строгую проверку только для API GigaChat
+const gigaAgent = new https.Agent({ rejectUnauthorized: false });
+
+let gigaToken = null;
+let gigaTokenExpires = 0;
 
 console.log('🤖 VK Concierge запускается...');
 
@@ -131,26 +132,45 @@ function parseFallback(text) {
     };
 }
 
-// Попытка получить разбор текста от Groq
-async function askGroq(text) {
-    if (!groq) throw new Error('Groq не инициализирован');
+// Токен GigaChat живет ~30 минут - кешируем с запасом
+async function getGigaToken() {
+    if (gigaToken && Date.now() < gigaTokenExpires) return gigaToken;
+    const resp = await axios.post('https://ngw.devices.sberbank.ru:9443/api/v2/oauth', 'scope=GIGACHAT_API_PERS', {
+        headers: {
+            'Authorization': 'Basic ' + GIGA_KEY,
+            'RqUID': crypto.randomUUID(),
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        httpsAgent: gigaAgent,
+        timeout: 20000
+    });
+    gigaToken = resp.data.access_token;
+    gigaTokenExpires = Date.now() + 25 * 60 * 1000;
+    return gigaToken;
+}
+
+// Попытка получить разбор текста от GigaChat
+async function askGigaChat(text) {
+    if (!GIGA_KEY) throw new Error('GigaChat не настроен (нет GIGACHAT_API_KEY)');
+    const token = await getGigaToken();
     const prompt = 'Ты - ИИ-помощник доски объявлений. Пользователь прислал текст: "' + text + '". ' +
         'Извлеки Название товара, Цену (только цифры; если указан диапазон "от X до Y" - верни X, минимальную цену) и Город. Если чего-то нет - придумай сам (цена 0, если не указана). ' +
         'Также напиши красивое, продающее описание (до 500 символов) с эмодзи. ' +
         'Верни строго JSON формата: {"title": "...", "price": 0, "city": "...", "description": "..."} Без лишних слов, только JSON.';
-    const chatCompletion = await Promise.race([
-        groq.chat.completions.create({
+    const resp = await Promise.race([
+        axios.post('https://gigachat.devices.sberbank.ru/api/v1/chat/completions', {
+            model: GIGA_MODEL,
             messages: [{ role: 'user', content: prompt }],
-            model: GROQ_MODEL,
-            temperature: 0.3
-        }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Groq timeout 15s')), 15000))
+            temperature: 0.3,
+            max_tokens: 512
+        }, { headers: { 'Authorization': 'Bearer ' + token }, httpsAgent: gigaAgent, timeout: 20000 }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('GigaChat timeout 20s')), 20000))
     ]);
-    const rawJson = chatCompletion.choices[0]?.message?.content || '';
-    const jsonMatch = rawJson.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('Groq вернул не JSON');
+    const content = resp.data.choices[0]?.message?.content || '';
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('GigaChat вернул не JSON');
     const data = JSON.parse(jsonMatch[0]);
-    if (!data.title) throw new Error('Groq не вернул title');
+    if (!data.title) throw new Error('GigaChat не вернул title');
     return data;
 }
 
@@ -172,7 +192,7 @@ vk.updates.on('message_new', async (context) => {
     const userId = context.senderId;
     const text = (context.text || '').trim();
 
-    // Фото из события + ВСЕГДА дозапрашиваем полное сообщение по ID
+    // Фото из события + всегда дозапрашиваем полное сообщение по ID
     const fromEvent = photosFromWrappers(context);
     const full = await fetchFullPhotos(context.id);
 
@@ -198,10 +218,10 @@ vk.updates.on('message_new', async (context) => {
 
         let aiData;
         try {
-            aiData = await askGroq(text);
-            console.log('🧠 Groq обработал текст успешно');
-        } catch (groqErr) {
-            console.error('⚠️ Groq недоступен (' + groqErr.message + '), включаю резервный парсер');
+            aiData = await askGigaChat(text);
+            console.log('🧠 GigaChat обработал текст успешно');
+        } catch (gigaErr) {
+            console.error('⚠️ GigaChat недоступен (' + gigaErr.message + '), включаю резервный парсер');
             aiData = parseFallback(text);
         }
 
@@ -225,7 +245,7 @@ vk.updates.on('message_new', async (context) => {
                 await context.send('🔐 Ваш аккаунт на сайте IronAds создан!\nЛогин: ' + vkUsername + '\nПароль: ' + randomPassword + '\n(Рекомендуем сменить пароль в личном кабинете)');
             } else {
                 dbUserId = userRes.rows[0].id;
-                await client.query('UPDATE users SET vk_id = $1 WHERE id = $2 AND (vk_id IS NULL OR vk_id = \'\')', [vkIdStr, dbUserId]);
+                await client.query("UPDATE users SET vk_id = $1 WHERE id = $2 AND (vk_id IS NULL OR vk_id = '')", [vkIdStr, dbUserId]);
             }
 
             let cityId = null;
