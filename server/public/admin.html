@@ -144,6 +144,7 @@
             <button class="tab-btn" data-tab="logs">📜 Аудит админов</button>
             <button class="tab-btn" data-tab="userActions">👥 Журнал юзеров</button>
             <button class="tab-btn" data-tab="settings">⚙️ Настройки</button>
+            <button class="tab-btn" data-tab="insta">📱 Instagram-агент</button>
             <button class="tab-btn" data-tab="newsletter">📧 Рассылка</button>
             <button class="tab-btn" data-tab="grantSubscription">🎁 Выдать подписку</button>
             <button class="tab-btn" data-tab="subscriptionsList">📋 Подписки</button>
@@ -324,6 +325,34 @@
             <button class="btn btn-primary" id="saveAllSettings">Сохранить всё</button>
         </div>
     </div>
+        <!-- ===== INSTAGRAM-АГЕНТ ===== -->
+        <div id="instaSection" class="tab-content hidden">
+            <h2>📱 Instagram-агент</h2>
+            <div class="card">
+                <p><label><input type="checkbox" id="insta_enabled"> Агент включён</label></p>
+                <p><label>Черновиков за прогон: <input type="number" id="insta_limit" min="1" max="50" style="width:80px"></label></p>
+                <p><label>Ссылка на сайт: <input id="insta_site_url" style="width:100%"></label></p>
+                <p><label>Телефон в подписи: <input id="insta_agent_phone" placeholder="+7..." style="width:100%"></label></p>
+                <p><label>Папка черновиков: <input id="insta_outbox" style="width:100%"></label></p>
+                <p><label>Формат цены:
+                    <select id="insta_price_format">
+                        <option value="short">Короткий (1,5 млн ₽)</option>
+                        <option value="full">Полный (1 500 000 ₽)</option>
+                    </select>
+                </label></p>
+                <p><label>Расписание (cron): <input id="insta_schedule" placeholder="0 9,13,19 * * *" style="width:100%"></label></p>
+                <p><b>Категории (пусто = все):</b></p>
+                <div id="instaCats" style="max-height:200px;overflow:auto;border:1px solid #ddd;padding:8px"></div>
+                <p>
+                    <button class="btn btn-primary" onclick="saveInsta()">Сохранить</button>
+                    <button class="btn" onclick="runInsta()">▶ Запустить сейчас</button>
+                    <button class="btn" onclick="loadInstaStatus()">Обновить статус</button>
+                </p>
+                <pre id="instaLog" style="max-height:260px;overflow:auto;background:#111;color:#9f9;padding:10px;font-size:12px"></pre>
+            </div>
+            <h3>Очередь черновиков</h3>
+            <div id="instaQueue"></div>
+        </div>
 
     <!-- ===== РАССЫЛКА ===== -->
     <div id="newsletterSection" class="tab-content hidden">
@@ -519,6 +548,18 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="/admin-frontend.js"></script>
 <script>
+    const IN_TOKEN = localStorage.getItem('token');
+    // INSTA_AUTH_SHIM: токен для всех запросов /api/admin/insta
+    (function () {
+        const rawFetch = window.fetch;
+        window.fetch = function (url, opts) {
+            if (typeof url === 'string' && String(url).includes('/api/admin/insta')) {
+                opts = opts || {};
+                opts.headers = Object.assign({}, opts.headers || {}, { Authorization: 'Bearer ' + (localStorage.getItem('token') || '') });
+            }
+            return rawFetch(url, opts);
+        };
+    })();
     // ========== БУРГЕР-МЕНЮ ==========
     const burger = document.getElementById('burgerBtn');
     const navLinks = document.getElementById('navLinks');
@@ -569,5 +610,100 @@
         }
     });
 </script>
+    <script>
+    async function loadInsta() {
+        try {
+            const r = await fetch('/api/admin/insta/settings', { credentials: 'same-origin' });
+            const d = await r.json();
+            const map = {};
+            (d.settings || []).forEach(s => map[s.key] = s.value);
+            document.getElementById('insta_enabled').checked = String(map.insta_enabled === undefined ? '1' : map.insta_enabled) === '1';
+            document.getElementById('insta_limit').value = map.insta_limit || '10';
+            document.getElementById('insta_site_url').value = map.insta_site_url || 'https://ironads.ru';
+            document.getElementById('insta_agent_phone').value = map.insta_agent_phone || '';
+            document.getElementById('insta_outbox').value = map.insta_outbox || '';
+            document.getElementById('insta_price_format').value = map.insta_price_format || 'short';
+            document.getElementById('insta_schedule').value = map.insta_schedule || '0 9,13,19 * * *';
+            let selected = [];
+            try { selected = JSON.parse(map.insta_categories || '[]'); } catch (e) {}
+            await loadInstaCats(selected);
+            loadInstaQueue();
+            loadInstaStatus();
+        } catch (e) { console.error(e); }
+    }
+    async function loadInstaCats(selected) {
+        const el = document.getElementById('instaCats');
+        let roots = [];
+        for (const url of ['/api/admin/categories', '/api/admin/categories/tree']) {
+            try {
+                const r = await fetch(url, { credentials: 'same-origin' });
+                if (!r.ok) continue;
+                const d = await r.json();
+                const arr = Array.isArray(d) ? d : (d.categories || d.roots || []);
+                if (arr.length) { roots = arr; break; }
+            } catch (e) {}
+        }
+        if (!roots.length) {
+            el.innerHTML = '<input id="insta_categories_manual" placeholder="id категорий через запятую, напр. 4,5,6" style="width:100%">';
+            return;
+        }
+        el.innerHTML = roots.map(c =>
+            `<label style="display:inline-block;margin:4px 12px 4px 0">
+                <input type="checkbox" class="insta-cat" value="${c.id}"
+                    ${selected.includes(Number(c.id)) ? 'checked' : ''}> ${c.name}
+            </label>`).join('');
+    }
+    async function saveInsta() {
+        const body = {
+            insta_enabled: document.getElementById('insta_enabled').checked ? '1' : '0',
+            insta_limit: document.getElementById('insta_limit').value,
+            insta_site_url: document.getElementById('insta_site_url').value,
+            insta_agent_phone: document.getElementById('insta_agent_phone').value,
+            insta_outbox: document.getElementById('insta_outbox').value,
+            insta_price_format: document.getElementById('insta_price_format').value,
+            insta_schedule: document.getElementById('insta_schedule').value
+        };
+        const manual = document.getElementById('insta_categories_manual');
+        if (manual) {
+            body.insta_categories = JSON.stringify(manual.value.split(',').map(s => parseInt(s.trim(), 10)).filter(Boolean));
+        } else {
+            body.insta_categories = JSON.stringify(
+                [...document.querySelectorAll('#instaCats input:checked')].map(i => Number(i.value)));
+        }
+        const r = await fetch('/api/admin/insta/settings', {
+            method: 'PUT', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const d = await r.json();
+        alert(d.message || 'Готово');
+    }
+    async function runInsta() {
+        const r = await fetch('/api/admin/insta/run', { method: 'POST', credentials: 'same-origin' });
+        const d = await r.json();
+        alert(d.message || 'Запущено');
+        setTimeout(() => { loadInstaStatus(); loadInstaQueue(); }, 15000);
+    }
+    async function loadInstaStatus() {
+        const r = await fetch('/api/admin/insta/status', { credentials: 'same-origin' });
+        const d = await r.json();
+        document.getElementById('instaLog').textContent =
+            (d.running ? '▶ Агент сейчас работает\n\n' : '') + (d.log || 'Лог пуст');
+    }
+    async function loadInstaQueue() {
+        const r = await fetch('/api/admin/insta/queue', { credentials: 'same-origin' });
+        const d = await r.json();
+        const q = d.queue || [];
+        document.getElementById('instaQueue').innerHTML = q.length
+            ? '<ul>' + q.map(p =>
+                `<li><b>post-${p.id}</b> — ${p.title || 'объявление удалено'}${p.city ? ', ' + p.city : ''}
+                 <div style="color:#888;white-space:pre-wrap;font-size:12px">${(p.caption || '').replace(/</g, '&lt;')}</div></li>`).join('') + '</ul>'
+            : '<p>Очередь пуста</p>';
+    }
+    (function () {
+        const btn = document.querySelector('[data-tab="insta"]');
+        if (btn) btn.addEventListener('click', loadInsta);
+    })();
+    </script>
 </body>
 </html>

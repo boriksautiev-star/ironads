@@ -371,6 +371,7 @@ app.use('/api/chats', chatsRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin', require('./routes/insta-admin'));
 app.use('/api/support', supportRoutes);
 app.use('/api/cities', citiesRoutes);
 app.use('/api/contact', contactRoutes);
@@ -611,3 +612,5 @@ if (cron && isPrimaryInstance) {
     if (!cron) console.log('ℹ️ Cron не доступен, расписания не настроены');
     if (!isPrimaryInstance) console.log('ℹ️ Инстанс не первичный (NODE_APP_INSTANCE != 0), расписания не настроены');
 }
+
+require('./cron/insta-cron');

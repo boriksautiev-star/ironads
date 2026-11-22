@@ -967,6 +967,7 @@ async function loadSettings() {
         if (!container) return;
         container.innerHTML = '';
         for (const s of settings) {
+            if (s.key.startsWith('insta_')) continue;
             const div = document.createElement('div');
             div.style.marginBottom = '1rem';
             const label = document.createElement('label');
