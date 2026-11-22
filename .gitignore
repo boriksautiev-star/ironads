@@ -30,3 +30,9 @@ Thumbs.db
 .idea/
 app.js.bak*
 check-*.js
+
+backup-cities.sql
+cities-dump.txt
+cities-feed.txt
+regions-dump.txt
+server/temp_uploads/
