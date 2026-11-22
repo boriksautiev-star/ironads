@@ -28,3 +28,5 @@ mobile/ios/Pods/
 Thumbs.db
 .vscode/
 .idea/
+app.js.bak*
+check-*.js

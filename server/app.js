@@ -171,9 +171,21 @@ app.use(express.urlencoded({ extended: true, limit: '500mb' }));
 // ========== SEO: SITEMAP, ROBOTS, МИКРОРАЗМЕТКА ==========
 app.get('/sitemap.xml', async (req, res) => {
     try {
-        const result = await pool.query("SELECT id, updated_at FROM listings WHERE deleted_at IS NULL ORDER BY updated_at DESC LIMIT 50000");
         let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
         xml += '  <url>\n    <loc>https://ironads.ru/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n';
+        try {
+            const cities = await pool.query('SELECT slug FROM city_pages ORDER BY city_id');
+            cities.rows.forEach(row => {
+                xml += `  <url>\n    <loc>https://ironads.ru/city/${row.slug}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+            });
+        } catch (e) { console.error('Sitemap cities:', e.message); }
+        try {
+            const cats = await pool.query('SELECT id FROM categories ORDER BY id');
+            cats.rows.forEach(row => {
+                xml += `  <url>\n    <loc>https://ironads.ru/?category_id=${row.id}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
+            });
+        } catch (e) { console.error('Sitemap categories:', e.message); }
+        const result = await pool.query("SELECT id, updated_at FROM listings WHERE deleted_at IS NULL ORDER BY updated_at DESC LIMIT 50000");
         result.rows.forEach(row => {
             xml += `  <url>\n    <loc>https://ironads.ru/listing.html?id=${row.id}</loc>\n    <lastmod>${new Date(row.updated_at).toISOString()}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
         });
@@ -238,10 +250,34 @@ app.get(['/listing/:id', '/listing.html'], async (req, res, next) => {
 });
 // ================================================
 // ========== ВНЕДРЕНИЕ РАЗМЕТКИ НА ГЛАВНУЮ ==========
-app.get('/', (req, res, next) => {
-    const indexPath = path.join(__dirname, 'public', 'index.html');
-    require('fs').readFile(indexPath, 'utf8', (err, html) => {
-        if (err) return next(err);
+app.get('/', async (req, res, next) => {
+    try {
+        const catId = parseInt(req.query.category_id || req.query.category, 10);
+        const indexPath = path.join(__dirname, 'public', 'index.html');
+        let html = require('fs').readFileSync(indexPath, 'utf8');
+
+        if (catId && !isNaN(catId)) {
+            const catRes = await pool.query('SELECT name FROM categories WHERE id = $1::int', [catId]);
+            const cat = catRes.rows[0];
+            if (cat) {
+                const pageTitle = cat.name + ' — объявления по всей России | IronAds';
+                const pageDescription = 'Объявления в категории «' + cat.name + '»: покупка и продажа по всей России. Размещение на IronAds — бесплатно.';
+                html = html.replace('</head>', () => '<link rel="canonical" href="https://ironads.ru/?category_id=' + catId + '">\n</head>');
+                const titleStart = html.indexOf('<title>');
+                const titleEnd = html.indexOf('</title>');
+                if (titleStart !== -1 && titleEnd !== -1) {
+                    html = html.substring(0, titleStart) + '<title>' + pageTitle + '</title>' + html.substring(titleEnd + 8);
+                }
+                const descStart = html.indexOf('<meta name="description"');
+                if (descStart !== -1) {
+                    const descEnd = html.indexOf('>', descStart);
+                    if (descEnd !== -1) {
+                        html = html.substring(0, descStart) + '<meta name="description" content="' + pageDescription.replace(/"/g, '&quot;') + '">' + html.substring(descEnd + 1);
+                    }
+                }
+            }
+        }
+
         const orgSchema = {
             "@context": "https://schema.org",
             "@type": "Organization",
@@ -257,7 +293,9 @@ app.get('/', (req, res, next) => {
         };
         const finalHtml = html.replace('</head>', `<script type="application/ld+json">\n${JSON.stringify(orgSchema, null, 2)}\n</script>\n</head>`);
         res.send(finalHtml);
-    });
+    } catch (err) {
+        next(err);
+    }
 });
 // ====================================================
 app.use(express.static(path.join(__dirname, 'public')));
@@ -421,8 +459,53 @@ app.get('/api/public-prices', async (req, res) => {
 });
 
 // ========== ОТДАЧА HTML ==========
-app.get('/city/:slug', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'city.html'));
+// ========== SEO-ИНЪЕКЦИЯ НА СТРАНИЦЫ ГОРОДОВ ==========
+let citiesCache = null;
+let citiesCacheTime = 0;
+
+function getCitySlug(name) {
+    const map = {
+        'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','з':'z','и':'i','й':'y',
+        'к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f',
+        'х':'h','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'
+    };
+    return String(name).toLowerCase().split('').map(ch => map[ch] !== undefined ? map[ch] : ch)
+        .join('').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+// ========== SEO-ИНЪЕКЦИЯ НА СТРАНИЦЫ ГОРОДОВ ==========
+app.get('/city/:slug', async (req, res) => {
+    try {
+        const slug = req.params.slug;
+        const result = await pool.query(
+            `SELECT cp.title, cp.description, cp.seo_title, cp.seo_description, c.id as city_id, c.name as city_name
+             FROM city_pages cp JOIN cities c ON cp.city_id = c.id WHERE cp.slug = $1`,
+            [slug]
+        );
+        const page = result.rows[0];
+        let html = require('fs').readFileSync(path.join(__dirname, 'public', 'city.html'), 'utf8');
+        if (page) {
+            const pageTitle = page.seo_title || page.title || ('Объявления в ' + page.city_name + ' — IronAds');
+            const pageDescription = page.seo_description || page.description || ('Бесплатные объявления в ' + page.city_name + ': покупка, продажа, услуги. Размещение на IronAds — бесплатно.');
+            html = html.replace('</head>', () => '<link rel="canonical" href="https://ironads.ru/city/' + encodeURIComponent(slug) + '">\n</head>');
+            const titleStart = html.indexOf('<title>');
+            const titleEnd = html.indexOf('</title>');
+            if (titleStart !== -1 && titleEnd !== -1) {
+                html = html.substring(0, titleStart) + '<title>' + pageTitle + '</title>' + html.substring(titleEnd + 8);
+            }
+            const descStart = html.indexOf('<meta name="description"');
+            if (descStart !== -1) {
+                const descEnd = html.indexOf('>', descStart);
+                if (descEnd !== -1) {
+                    html = html.substring(0, descStart) + '<meta name="description" content="' + pageDescription.replace(/"/g, '&quot;') + '">' + html.substring(descEnd + 1);
+                }
+            }
+        }
+        res.send(html);
+    } catch (err) {
+        console.error('SEO city error:', err.message);
+        res.sendFile(path.join(__dirname, 'public', 'city.html'));
+    }
 });
 
 // ========== ОТДАЧА HTML ==========
