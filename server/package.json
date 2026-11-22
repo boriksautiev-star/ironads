@@ -32,15 +32,20 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
     "node-cron": "^4.6.0",
-    "nodemailer": "^9.0.4",
+    "nodemailer": "^10.6.1",
     "passport": "^0.7.0",
     "passport-yandex": "^0.0.5",
     "pg": "^8.21.0",
     "redis": "^4.7.1",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.5",
     "socket.io": "^4.8.3",
     "uuid": "^14.0.1",
     "vk-io": "^4.10.1",
     "xlsx": "^0.18.5"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "^11.1.1"
+    }
   }
 }
